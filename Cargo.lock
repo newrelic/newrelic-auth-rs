@@ -2746,6 +2746,7 @@ dependencies = [
  "httpmock",
  "jsonwebtoken",
  "mockall",
+ "mockall_double",
  "serde",
  "serde_json",
  "thiserror",
