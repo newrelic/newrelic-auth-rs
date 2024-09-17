@@ -1,41 +1,24 @@
-[workspace]
-resolver = "2"
+[package]
+name = "nr-auth"
+description = "Crate to manage NR System Identity Service authentication"
+version = "0.0.2"
+edition = "2021"
+authors = ["The New Relic Agent Control Team"]
+publish = false
 
-members = [
-  "config-migrate",
-  "super-agent",
-  "resource-detection",
-  "fs",
-  "license",
-  "nr-auth",
-]
-
-[workspace.dependencies]
-serde_json = "1.0.108"
-serde = "1.0.193"
-tempfile = "3.9.0"
-thiserror = "1.0.56"
-ulid = "1.0.1"
-tracing = "0.1.40"
-regex = "1.10.2"
-mockall = "0.12.0"
-clap = "4.4.3"
-nix = "0.28.0"
-tracing-subscriber = "0.3.17"
-tracing-test = "0.2.4"
-assert_cmd = "2.0.12"
-assert_fs = "1.0.13"
-assert_matches = "1.5.0"
-bollard = "0.16.0"
-tower-test = "0.4.0"
-serde_yaml = "0.9.25"
-schemars = "0.8.15"
-http = "1.1.0"
-mockall_double = "0.3.0"
-predicates = "3.0.3"
-hyper = "1.3.1"
-konst = "0.3.8"
-ureq = "2.9.1"
-semver = "1.0.22"
+[dependencies]
 chrono = "0.4"
+thiserror = "1.0.56"
+ureq = { version = "2.9.1", features = ["json"] }
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
 jsonwebtoken = "9.3.0"
+url = { version = "2.5.0", features = ["serde"] }
+uuid = { version = "1.8.0", features = ["serde", "v7"] }
+tracing = "0.1.40"
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+httpmock = "0.7.0"
+mockall = "0.12.0"
+mockall_double = "0.3.0"

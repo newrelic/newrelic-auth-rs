@@ -54,4 +54,3 @@ classDiagram
     class JWTSignerVault
 
     class SystemIdentityService
-```
