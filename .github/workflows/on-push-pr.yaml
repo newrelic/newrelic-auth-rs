@@ -1,0 +1,65 @@
+name: 🧪 On PR testing
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  codespell:
+    name: codespell
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: codespell-project/actions-codespell@v2.1
+
+  fmt:
+    runs-on: ubuntu-latest
+    name: Format test / stable
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - run: cargo fmt --check
+
+  build_and_test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+    steps:
+      - uses: actions/checkout@v4
+      - run: >-
+          rustup update ${{ matrix.toolchain }} &&
+          rustup default ${{ matrix.toolchain }}
+      - run: cargo build --verbose
+      - run: cargo test --all-targets --verbose
+
+  clippy_packages:
+    runs-on: ubuntu-latest
+    name: clippy / ${{ matrix.toolchain }}
+    permissions:
+      contents: read
+      checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+    steps:
+      - uses: actions/checkout@v4
+      - run: >-
+          rustup update ${{ matrix.toolchain }} &&
+          rustup default ${{ matrix.toolchain }} &&
+          rustup component add clippy --toolchain=${{ matrix.toolchain }}
+      - run: cargo clippy --tests -- -D clippy::all
