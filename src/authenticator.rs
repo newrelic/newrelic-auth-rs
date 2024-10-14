@@ -1,3 +1,5 @@
+use http::header::CONTENT_TYPE;
+use http::method::Method;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::Url;
@@ -52,12 +54,20 @@ where
 {
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
     fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError> {
-        let serialized_req = serde_json::to_string(&req)
-            .map_err(|e| AuthenticateError::SerializeError(e.to_string()))?;
+        let serialized_req = serde_json::to_string(&req).map_err(|e| {
+            AuthenticateError::SerializeError(format!("serializing request body: {}", e))
+        })?;
+
+        let req = http::Request::builder()
+            .method(Method::POST.as_str())
+            .uri(self.url.as_str())
+            .header(CONTENT_TYPE, "application/json")
+            .body(serialized_req.into_bytes())
+            .map_err(|e| AuthenticateError::SerializeError(format!("building request: {}", e)))?;
 
         let response = self
             .http_client
-            .post(self.url.as_str(), serialized_req.into_bytes())
+            .send(req)
             .map_err(|e| AuthenticateError::HttpTransportError(e.to_string()))?;
 
         let body: String = String::from_utf8(response.body().clone()).map_err(|e| {
@@ -140,6 +150,7 @@ pub mod test {
         let mock = identity_server.mock(|when, then| {
             when.method(POST)
                 .path(identity_server_path)
+                .header("content-type", "application/json")
                 .json_body(serde_json::to_value(request.clone()).unwrap());
             then.status(200)
                 .json_body(serde_json::to_value(expected_response.clone()).unwrap());
@@ -166,7 +177,9 @@ pub mod test {
         let identity_server_path = "/v1/authorize";
         let identity_server = MockServer::start();
         let mock = identity_server.mock(|when, then| {
-            when.method(POST).path(identity_server_path);
+            when.method(POST)
+                .path(identity_server_path)
+                .header("content-type", "application/json");
             then.status(200)
                 .delay(timeout.saturating_add(Duration::from_millis(1)));
         });
