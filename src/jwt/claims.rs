@@ -11,7 +11,7 @@ pub struct Claims {
     pub(crate) sub: String,
     /// Audience. Full URL to the token generation endpoint.
     pub(crate) aud: String,
-    /// JWT ID. Must not be re-used. Using ULID.
+    /// JWT ID. Must not be reused. Using UID.
     pub(crate) jti: Uuid,
     /// Expiration time (as UTC timestamp).
     pub(crate) exp: u64,
