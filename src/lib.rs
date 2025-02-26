@@ -1,3 +1,28 @@
+#![warn(missing_docs)]
+//! # nr-auth library
+//!
+//! `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
+//! authorization tokens to make authenticated and authorized requests to Fleet Control.
+//!
+//! It exposes the trait [`TokenRetriever`] which exposes a single method [`retrieve`](TokenRetriever::retrieve) which will retrieve a token with
+//! an expiration time:
+//!
+//! ```rust
+//! pub trait TokenRetriever {
+//!     fn retrieve(&self) -> Result<Token, TokenRetrieverError>;
+//! }
+//! ```
+//!
+//! Token:
+//!
+//! ```rust
+//! pub struct Token {
+//!     expires_at: DateTime<Utc>,
+//!     access_token: AccessToken,
+//!     token_type: TokenType,
+//! }
+//! ```
+
 pub mod authenticator;
 pub mod http_client;
 pub mod jwt;

@@ -1,39 +1,34 @@
-# [Name of Project] [build badges go here when available]
+# `nr-auth`
 
->[Brief description - what is the project and value does it provide? How often should users expect to get releases? How is versioning set up? Where does this project want to go?]
+[![🧪 On PR testing](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml) [![pages-build-deployment](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment)
+
+`nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
+authorization tokens to make authenticated and authorized requests to Fleet Control.
 
 ## Installation
 
-> [Include a step-by-step procedure on how to get your code installed. Be sure to include any third-party dependencies that need to be installed separately]
+The library is not available on [`crates.io`](https://crates.io/) for now, but you can still use it from this repository by adding the following line to your project's `Cargo.toml`:
+
+```toml
+[dependencies]
+nr-auth = { git = "ssh://git@github.com/newrelic/newrelic-oauth-client-rs.git", tag = "0.0.3" }
+```
 
 ## Getting Started
->[Simple steps to start working with the software similar to a "Hello World"]
 
-## Usage
->[**Optional** - Include more thorough instructions on how to use the software. This section might not be needed if the Getting Started section is enough. Remove this section if it's not needed.]
-
-
-## Building
-
->[**Optional** - Include this section if users will need to follow specific instructions to build the software from source. Be sure to include any third party build dependencies that need to be installed separately. Remove this section if it's not needed.]
-
-## Testing
-
->[**Optional** - Include instructions on how to run tests if we include tests with the codebase. Remove this section if it's not needed.]
+See the [top level module](./src/lib.rs) documentation for details.
 
 ## Support
 
-New Relic hosts and moderates an online forum where you can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
-
->Add the url for the support thread here: discuss.newrelic.com
+If you find any problems while using the library or have a doubt, please feel free to open an [Issue](https://github.com/newrelic/newrelic-oauth-client-rs/issues), where the New Relic maintainers of this project will be able to help.
 
 ## Contribute
 
 We encourage your contributions to improve [project name]! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 
-If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
+If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at <opensource@newrelic.com>.
 
-**A note about vulnerabilities**
+### A note about vulnerabilities
 
 As noted in our [security policy](../../security/policy), New Relic is committed to the privacy and security of our customers and their data. We believe that providing coordinated disclosure by security researchers and engaging with the security community are important means to achieve our security goals.
 
@@ -41,8 +36,10 @@ If you believe you have found a security vulnerability in this project or any of
 
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
-To all contributors, we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to [Project Name](<LINK TO https://opensource.newrelic.com/projects/... PAGE>).
+To all contributors, we thank you! Without your contribution, this project would not be what it is today.
 
 ## License
-[Project Name] is licensed under the New Relic Prerelease Software License.
->[If applicable: The [project name] also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.]
+
+`newrelic-oauth-client-rs` is licensed under the New Relic Prerelease Software License.
+
+This project also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.

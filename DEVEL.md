@@ -1,7 +1,7 @@
 # nr-auth
 
 `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
-authorization tokens to make authenticated and authorized requests to Fleet Management.
+authorization tokens to make authenticated and authorized requests to Fleet Control.
 
 It exposes the trait `TokenRetriever` which exposes a single method `retrieve` which will retrieve a token with
 an expiration time:
