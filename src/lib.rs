@@ -1,4 +1,3 @@
-#![warn(missing_docs)]
 //! # nr-auth library
 //!
 //! `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve

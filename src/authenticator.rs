@@ -19,17 +19,6 @@ pub enum AuthenticateError {
     HttpTransportError(String),
 }
 
-impl From<ureq::Error> for AuthenticateError {
-    fn from(value: ureq::Error) -> Self {
-        match value {
-            ureq::Error::Status(code, resp) => {
-                AuthenticateError::HttpResponseError(code, resp.status_text().to_string())
-            }
-            ureq::Error::Transport(e) => AuthenticateError::HttpTransportError(e.to_string()),
-        }
-    }
-}
-
 pub trait Authenticator {
     fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError>;
 }
@@ -129,8 +118,10 @@ pub mod test {
         ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator, Request,
         Response,
     };
-    use crate::authenticator::{AuthenticateError, Authenticator};
-    use crate::http_client::HttpClientUreq;
+    use crate::{
+        authenticator::{AuthenticateError, Authenticator},
+        http_client::tests::HttpClientUreq,
+    };
 
     mock! {
          pub AuthenticatorMock {}
