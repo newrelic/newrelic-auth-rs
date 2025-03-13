@@ -3,8 +3,6 @@
 
 # `nr-auth`
 
-[![🧪 On PR testing](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/on-push-pr.yaml/badge.svg)](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/on-push-pr.yaml) [![docs](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/docs.yaml/badge.svg)](https://newrelic.github.io/newrelic-auth-rs/)
-
 `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
 authorization tokens to make authenticated and authorized requests to Fleet Control.
 
@@ -14,12 +12,12 @@ The library is not available on [`crates.io`](https://crates.io/) for now, but y
 
 ```toml
 [dependencies]
-nr-auth = { git = "ssh://git@github.com/newrelic/newrelic-auth-rs.git", tag = "0.0.4" }
+nr-auth = { git = "https://github.com/newrelic/newrelic-auth-rs.git", tag = "0.0.4" }
 ```
 
 ## Getting Started
 
-See the [top level module](./src/lib.rs) documentation for details.
+See the [documentation](https://newrelic.github.io/newrelic-auth-rs/) documentation for details.
 
 ## Support
 
