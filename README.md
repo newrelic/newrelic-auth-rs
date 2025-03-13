@@ -47,6 +47,6 @@ To all contributors, we thank you! Without your contribution, this project would
 
 This project also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.
 
-## Tracking of old Pull Requests
+## Upstream archive
 
-Head to the [private archive](https://github.com/newrelic/newrelic-oauth-client-rs).
+[Link](https://github.com/newrelic/newrelic-oauth-client-rs) (private, for NR employees).
