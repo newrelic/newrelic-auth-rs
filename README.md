@@ -3,7 +3,7 @@
 
 # `nr-auth`
 
-[![🧪 On PR testing](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml) [![pages-build-deployment](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment)
+[![🧪 On PR testing](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml) [![pages-build-deployment](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment) [![docs](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/docs.yaml/badge.svg)](https://newrelic.github.io/newrelic-auth-rs/)
 
 `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
 authorization tokens to make authenticated and authorized requests to Fleet Control.
@@ -43,6 +43,10 @@ To all contributors, we thank you! Without your contribution, this project would
 
 ## License
 
-`newrelic-oauth-client-rs` is licensed under the New Relic Prerelease Software License.
+`newrelic-auth-rs` is licensed under the New Relic Prerelease Software License.
 
 This project also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.
+
+## Tracking of old Pull Requests
+
+Head to the [private archive](https://github.com/newrelic/newrelic-oauth-client-rs).
