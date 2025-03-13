@@ -17,7 +17,7 @@ nr-auth = { git = "https://github.com/newrelic/newrelic-auth-rs.git", tag = "0.0
 
 ## Getting Started
 
-See the [top level module](./src/lib.rs) documentation for details.
+See the [documentation](https://newrelic.github.io/newrelic-auth-rs/) documentation for details.
 
 ## Support
 
