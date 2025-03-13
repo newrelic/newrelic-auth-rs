@@ -3,8 +3,6 @@
 
 # `nr-auth`
 
-[![🧪 On PR testing](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/on-push-pr.yaml/badge.svg)](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/on-push-pr.yaml) [![docs](https://github.com/newrelic/newrelic-auth-rs/actions/workflows/docs.yaml/badge.svg)](https://newrelic.github.io/newrelic-auth-rs/)
-
 `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
 authorization tokens to make authenticated and authorized requests to Fleet Control.
 
