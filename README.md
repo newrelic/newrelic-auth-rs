@@ -12,7 +12,7 @@ The library is not available on [`crates.io`](https://crates.io/) for now, but y
 
 ```toml
 [dependencies]
-nr-auth = { git = "ssh://git@github.com/newrelic/newrelic-auth-rs.git", tag = "0.0.4" }
+nr-auth = { git = "https://github.com/newrelic/newrelic-auth-rs.git", tag = "0.0.4" }
 ```
 
 ## Getting Started
