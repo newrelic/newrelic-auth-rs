@@ -1,3 +1,6 @@
+| ⚠️ | `nr-auth` is in preview and licensed under the New Relic Pre-Release Software Notice. |
+|----|:----------------------------------------------------------------------------------------------------|
+
 # `nr-auth`
 
 [![🧪 On PR testing](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/on-push-pr.yaml) [![pages-build-deployment](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/newrelic/newrelic-oauth-client-rs/actions/workflows/pages/pages-build-deployment)
