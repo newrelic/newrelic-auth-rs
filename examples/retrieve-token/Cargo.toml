@@ -10,8 +10,8 @@ license-file = "./../LICENSE.md"
 [dependencies]
 nr-auth = { path = "../../" }
 http-client = {path = "../http-client"}
-url = "2.5.4"
-dotenvy = "0.15.7"
+url = "2"
+dotenvy = "0"
 
 [[bin]]
 name = "retrieve-token-example"
