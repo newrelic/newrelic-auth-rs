@@ -1,5 +1,4 @@
-//! # Helpers to build a reqwest blocking client and handle responses and handle responses
-//!
+/// Shared HTTP Client that implements newrelic-auth-rs HTTP Client Trait
 use http::Response as HttpResponse;
 use http::{Request, Response};
 use nr_auth::http_client::HttpClient as OauthHttpClient;
