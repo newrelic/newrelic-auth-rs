@@ -1,7 +1,5 @@
-pub mod http;
-
-use crate::http::client::HttpClient;
 use dotenvy::dotenv;
+use http_client::client::HttpClient;
 use nr_auth::authenticator::HttpAuthenticator;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::jwt::signer::JwtSignerImpl;
