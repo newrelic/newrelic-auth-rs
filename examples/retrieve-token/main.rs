@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use url::Url;
 
 /// Main function to retrieve and print an access token.
-/// It requires the followinf environment variables to be set:
+/// It requires the following environment variables to be set:
 ///
 /// PRIVATE_KEY_PATH: Absolute path to the private key associated with the identity
 /// TOKEN_URL: Token verification URL
