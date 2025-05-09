@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-init
+  namespace: default
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: vault
+
+      containers:
+      - name: create-certs-mount
+        image: "vault:1.10.3"
+        env:
+        - name: VAULT_ADDR
+          value: "http://vault:8200"
+        - name: VAULT_TOKEN
+          value: root
+        command:
+        - /bin/sh
+        - -c
+        - |
+          vault secrets enable transit
+          vault write -f transit/keys/ac-test type=rsa-4096 exportable=true

@@ -8,6 +8,9 @@
 #[path = "../http/client.rs"]
 mod client;
 
+#[path = "../utils/mod.rs"]
+mod utils;
+
 use client::HttpClient;
 use dotenvy::dotenv;
 use nr_auth::authenticator::HttpAuthenticator;
@@ -40,9 +43,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv()
         .map_err(|_| ".env file not found. Copy .env.dist file to .env and fill the variables")?;
 
-    let private_key_path = env::var("PRIVATE_KEY_PATH")?;
-    let token_url = env::var("TOKEN_URL")?;
-    let client_id = env::var("CLIENT_ID")?;
+    let private_key_path = utils::os::env("PRIVATE_KEY_PATH")?;
+    let token_url = utils::os::env("TOKEN_URL")?;
+    let client_id = utils::os::env("CLIENT_ID")?;
 
     let signer = LocalPrivateKeySigner::try_from(PathBuf::from(private_key_path).as_path())?;
     let jwt_signer = JwtSignerImpl::Local(signer);
