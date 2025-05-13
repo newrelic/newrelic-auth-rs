@@ -63,7 +63,7 @@ pub(super) mod tests {
 
             for (header_name, header_value) in request.headers() {
                 let header_val = header_value.to_str().map_err(|e| {
-                    HttpClientError::EncoderError(format!("setting request header: {}", e))
+                    HttpClientError::EncoderError(format!("setting request header: {e}"))
                 })?;
                 req = req.set(header_name.as_str(), header_val);
             }

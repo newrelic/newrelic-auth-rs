@@ -44,7 +44,7 @@ where
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
     fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError> {
         let serialized_req = serde_json::to_string(&req).map_err(|e| {
-            AuthenticateError::SerializeError(format!("serializing request body: {}", e))
+            AuthenticateError::SerializeError(format!("serializing request body: {e}"))
         })?;
 
         let req = http::Request::builder()
@@ -52,7 +52,7 @@ where
             .uri(self.url.as_str())
             .header(CONTENT_TYPE, "application/json")
             .body(serialized_req.into_bytes())
-            .map_err(|e| AuthenticateError::SerializeError(format!("building request: {}", e)))?;
+            .map_err(|e| AuthenticateError::SerializeError(format!("building request: {e}")))?;
 
         let response = self
             .http_client
@@ -60,7 +60,7 @@ where
             .map_err(|e| AuthenticateError::HttpTransportError(e.to_string()))?;
 
         let body: String = String::from_utf8(response.body().clone()).map_err(|e| {
-            AuthenticateError::DeserializeError(format!("invalid utf8 response: {}", e))
+            AuthenticateError::DeserializeError(format!("invalid utf8 response: {e}"))
         })?;
 
         if !response.status().is_success() {
