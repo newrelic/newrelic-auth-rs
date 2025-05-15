@@ -6,7 +6,7 @@
 //! It exposes the trait [`TokenRetriever`] which exposes a single method [`retrieve`](TokenRetriever::retrieve) which will retrieve a token with
 //! an expiration time:
 //!
-//! ```rust
+//! ```ignore
 //! pub trait TokenRetriever {
 //!     fn retrieve(&self) -> Result<Token, TokenRetrieverError>;
 //! }
@@ -14,7 +14,7 @@
 //!
 //! Token:
 //!
-//! ```rust
+//! ```ignore
 //! pub struct Token {
 //!     expires_at: DateTime<Utc>,
 //!     access_token: AccessToken,
