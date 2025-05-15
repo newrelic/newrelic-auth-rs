@@ -5,11 +5,7 @@
 //! - Configure and use a token retriever with caching.
 //! - Retrieve and print an access token.
 //!
-#[path = "../http/client.rs"]
 mod client;
-
-#[path = "../utils/mod.rs"]
-mod utils;
 
 use client::HttpClient;
 use dotenvy::dotenv;
@@ -38,14 +34,14 @@ use url::Url;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
     let example_dir = Path::new("examples/retrieve-token");
-    env::set_current_dir(&example_dir).expect("Failed to change directory");
+    env::set_current_dir(example_dir).expect("Failed to change directory");
 
     dotenv()
         .map_err(|_| ".env file not found. Copy .env.dist file to .env and fill the variables")?;
 
-    let private_key_path = utils::os::env("PRIVATE_KEY_PATH")?;
-    let token_url = utils::os::env("TOKEN_URL")?;
-    let client_id = utils::os::env("CLIENT_ID")?;
+    let private_key_path = env::var("PRIVATE_KEY_PATH")?;
+    let token_url = env::var("TOKEN_URL")?;
+    let client_id = env::var("CLIENT_ID")?;
 
     let signer = LocalPrivateKeySigner::try_from(PathBuf::from(private_key_path).as_path())?;
     let jwt_signer = JwtSignerImpl::Local(signer);
