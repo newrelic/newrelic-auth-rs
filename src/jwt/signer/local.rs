@@ -1,4 +1,5 @@
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
+use std::path::PathBuf;
 use std::{io, path::Path};
 use thiserror::Error;
 
@@ -16,9 +17,19 @@ pub enum LocalPrivateKeySignerError {
 }
 
 /// Signer structure that uses a local private key to sign JWTs.
+pub enum LocalPrivateKeySignerConfig {
+    Pem(Vec<u8>),
+    File(PathBuf),
+}
+/// Signer structure that uses a local private key to sign JWTs.
 pub struct LocalPrivateKeySigner {
     encoding_key: EncodingKey,
     algorithm: Algorithm,
+}
+impl LocalPrivateKeySigner {
+    pub fn new(_config: LocalPrivateKeySignerConfig) -> Self {
+        unimplemented!()
+    }
 }
 
 /// Attempt to create a LocalPrivateKeySigner from a PemFileContents.
