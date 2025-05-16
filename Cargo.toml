@@ -7,8 +7,6 @@ authors = ["The New Relic Agent Control Team"]
 publish = false
 license-file = "./LICENSE.md"
 
-[lints.rust]
-missing_docs = "warn"
 
 [dependencies]
 chrono = "0.4"
@@ -26,7 +24,6 @@ assert_matches = "1.5.0"
 httpmock = "0.7.0"
 mockall = "0.13.1"
 mockall_double = "0.3.1"
-ureq = "2"
 url = "2"
 http = "1"
 thiserror = "2"

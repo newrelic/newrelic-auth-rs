@@ -107,10 +107,8 @@ pub struct Response {
 
 #[cfg(test)]
 pub mod test {
-    use std::time::Duration;
-
     use assert_matches::assert_matches;
-    use httpmock::{Method::POST, MockServer};
+    use http::Method;
     use mockall::mock;
     use url::Url;
 
@@ -120,7 +118,7 @@ pub mod test {
     };
     use crate::{
         authenticator::{AuthenticateError, Authenticator},
-        http_client::tests::HttpClientUreq,
+        http_client::{tests::MockHttpClient, HttpClientError},
     };
 
     mock! {
@@ -133,107 +131,96 @@ pub mod test {
     }
 
     #[test]
-    fn authentication_succeed() {
+    fn test_authentication_succeed() {
         let (request, expected_response) = fake_request_response();
 
-        let identity_server_path = "/v1/authorize";
-        let identity_server = MockServer::start();
-        let mock = identity_server.mock(|when, then| {
-            when.method(POST)
-                .path(identity_server_path)
-                .header("content-type", "application/json")
-                .json_body(serde_json::to_value(request.clone()).unwrap());
-            then.status(200)
-                .json_body(serde_json::to_value(expected_response.clone()).unwrap());
-        });
+        let expected_body = serde_json::to_string(&request).unwrap().as_bytes().to_vec();
 
-        let timeout = Duration::from_millis(100);
-        let http_client = HttpClientUreq::new(timeout);
-        let authenticator = HttpAuthenticator::new(
-            http_client,
-            Url::parse(&identity_server.url(identity_server_path)).unwrap(),
-        );
+        let http_response = http::Response::builder()
+            .status(200)
+            .body(
+                serde_json::to_string(&expected_response)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+            )
+            .unwrap();
+
+        let mut http_client = MockHttpClient::new();
+        http_client
+            .expect_send()
+            .once()
+            .withf(move |req| {
+                req.method().eq(&Method::POST)
+                    && req.uri().to_string().eq(TEST_URL)
+                    && req.body().eq(&expected_body)
+            })
+            .returning(move |_| Ok(http_response.clone()));
+
+        let authenticator = HttpAuthenticator::new(http_client, fake_url());
 
         let response = authenticator.authenticate(request).unwrap();
 
         assert_eq!(response, expected_response);
-        mock.assert()
     }
 
     #[test]
-    fn authentication_timeout() {
+    fn test_authentication_http_client_transport_error() {
         let (request, _) = fake_request_response();
-        let timeout = Duration::from_millis(10);
 
-        let identity_server_path = "/v1/authorize";
-        let identity_server = MockServer::start();
-        let mock = identity_server.mock(|when, then| {
-            when.method(POST)
-                .path(identity_server_path)
-                .header("content-type", "application/json");
-            then.status(200)
-                .delay(timeout.saturating_add(Duration::from_millis(1)));
-        });
+        let mut http_client = MockHttpClient::new();
+        http_client
+            .expect_send()
+            .once()
+            .returning(move |_| Err(HttpClientError::TransportError("foo".to_string())));
 
-        let http_client = HttpClientUreq::new(timeout);
-        let authenticator = HttpAuthenticator::new(
-            http_client,
-            Url::parse(&identity_server.url(identity_server_path)).unwrap(),
-        );
+        let authenticator = HttpAuthenticator::new(http_client, fake_url());
 
         let error = authenticator.authenticate(request).unwrap_err();
 
-        assert!(error.to_string().to_ascii_lowercase().contains("timed out"));
+        assert!(error.to_string().to_ascii_lowercase().contains("foo"));
         assert_matches!(error, AuthenticateError::HttpTransportError(_));
-        mock.assert()
     }
 
     #[test]
-    fn authentication_deserialize_error() {
+    fn test_authentication_deserialize_error() {
         let (request, _) = fake_request_response();
 
-        let identity_server_path = "/v1/authorize";
-        let identity_server = MockServer::start();
-        let mock = identity_server.mock(|when, then| {
-            when.method(POST).path(identity_server_path);
-            then.status(200)
-                .body("this body should fail to be deserialized as Response");
-        });
+        let http_response = http::Response::builder()
+            .status(200)
+            .body("this body should fail to be deserialized as Response".into())
+            .unwrap();
 
-        let timeout = Duration::from_millis(100);
-        let http_client = HttpClientUreq::new(timeout);
-        let authenticator = HttpAuthenticator::new(
-            http_client,
-            Url::parse(&identity_server.url(identity_server_path)).unwrap(),
-        );
+        let mut http_client = MockHttpClient::new();
+        http_client
+            .expect_send()
+            .once()
+            .returning(move |_| Ok(http_response.clone()));
+
+        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+
         let error = authenticator.authenticate(request).unwrap_err();
 
         assert_matches!(error, AuthenticateError::DeserializeError(_));
-        mock.assert()
     }
 
     #[test]
-    fn authentication_server_response_error() {
+    fn test_authentication_server_response_error() {
         let (request, _) = fake_request_response();
 
-        let identity_server_path = "/v1/authorize";
-        let identity_server = MockServer::start();
-        let mock = identity_server.mock(|when, then| {
-            when.method(POST).path(identity_server_path);
-            then.status(401);
-        });
+        let http_response = http::Response::builder().status(500).body(vec![]).unwrap();
 
-        let timeout = Duration::from_millis(100);
-        let http_client = HttpClientUreq::new(timeout);
-        let authenticator = HttpAuthenticator::new(
-            http_client,
-            Url::parse(&identity_server.url(identity_server_path)).unwrap(),
-        );
+        let mut http_client = MockHttpClient::new();
+        http_client
+            .expect_send()
+            .once()
+            .returning(move |_| Ok(http_response.clone()));
+
+        let authenticator = HttpAuthenticator::new(http_client, fake_url());
 
         let error = authenticator.authenticate(request).unwrap_err();
 
-        assert_matches!(error, AuthenticateError::HttpResponseError(401, _));
-        mock.assert()
+        assert_matches!(error, AuthenticateError::HttpResponseError(500, _));
     }
 
     #[test]
@@ -248,6 +235,12 @@ pub mod test {
 
         assert_eq!(serde_json::to_string(&request).unwrap(), serialized);
         assert_eq!(request, serde_json::from_str(serialized).unwrap());
+    }
+
+    const TEST_URL: &str = "https://newrelic.com/v1/authorize";
+
+    fn fake_url() -> Url {
+        Url::parse(TEST_URL).unwrap()
     }
 
     fn fake_request_response() -> (Request, Response) {
