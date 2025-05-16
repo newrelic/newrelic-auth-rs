@@ -1,10 +1,4 @@
 //! Example to sign a JWT token using a local private key
-#[path = "../http/client.rs"]
-mod client;
-
-#[path = "../utils/mod.rs"]
-mod utils;
-
 use std::env;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -38,13 +32,13 @@ const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
     let example_dir = Path::new("examples/jwt-signer-local");
-    env::set_current_dir(&example_dir).expect("Failed to change directory");
+    env::set_current_dir(example_dir).expect("Failed to change directory");
 
     dotenv()
         .map_err(|_| ".env file not found. Copy .env.dist file to .env and fill the variables")?;
 
-    let private_key_path = utils::os::env("PRIVATE_KEY_PATH")?;
-    let client_id = utils::os::env("CLIENT_ID")?;
+    let private_key_path = env::var("PRIVATE_KEY_PATH")?;
+    let client_id = env::var("CLIENT_ID")?;
     let url = Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value");
 
     let signer = LocalPrivateKeySigner::try_from(PathBuf::from(private_key_path).as_path())?;
