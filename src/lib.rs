@@ -24,7 +24,11 @@
 
 pub mod authenticator;
 pub mod http_client;
+pub mod iam_client;
 pub mod jwt;
+pub mod key_pair_generator;
+pub mod system_identity;
+pub mod system_identity_generator;
 pub mod token;
 pub mod token_retriever;
 
@@ -32,6 +36,7 @@ use crate::token::Token;
 use thiserror::Error;
 
 pub type ClientID = String;
+pub type OrganizationID = String;
 
 #[derive(Error, Debug)]
 pub enum TokenRetrieverError {
