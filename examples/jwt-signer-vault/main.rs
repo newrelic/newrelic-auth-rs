@@ -1,10 +1,4 @@
 //! Example to sign a JWT token using Vault
-#[path = "../http/client.rs"]
-mod client;
-
-#[path = "../utils/mod.rs"]
-mod utils;
-
 use std::env;
 use std::path::Path;
 use std::str::FromStr;
@@ -16,7 +10,6 @@ use dotenvy::dotenv;
 use jsonwebtoken::{Algorithm, Header};
 use sha2::{Digest, Sha512};
 use tracing::debug;
-use tracing_subscriber;
 use url::Url;
 use vaultrs::api::transit::requests::SignDataRequestBuilder;
 use vaultrs::api::transit::MarshalingAlgorithm;
@@ -47,7 +40,7 @@ const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
     let example_dir = Path::new("examples/jwt-signer-vault");
-    env::set_current_dir(&example_dir).expect("Failed to change directory");
+    env::set_current_dir(example_dir).expect("Failed to change directory");
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -56,10 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv()
         .map_err(|_| ".env file not found. Copy .env.dist file to .env and fill the variables")?;
 
-    let vault_addr = utils::os::env("VAULT_ADDRESS")?;
-    let token = utils::os::env("VAULT_TOKEN")?;
-    let key_name = utils::os::env("TRANSIT_KEY_NAME")?;
-    let client_id = utils::os::env("SYSTEM_IDENTITY_CLIENT_ID")?;
+    let vault_addr = env::var("VAULT_ADDRESS")?;
+    let token = env::var("VAULT_TOKEN")?;
+    let key_name = env::var("TRANSIT_KEY_NAME")?;
+    let client_id = env::var("SYSTEM_IDENTITY_CLIENT_ID")?;
 
     // Create a vault client
     let client = VaultClient::new(
