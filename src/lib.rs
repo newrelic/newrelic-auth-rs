@@ -27,7 +27,7 @@ pub mod http_client;
 pub mod jwt;
 pub mod token;
 pub mod token_retriever;
-mod key;
+pub mod key;
 
 use crate::token::Token;
 use thiserror::Error;

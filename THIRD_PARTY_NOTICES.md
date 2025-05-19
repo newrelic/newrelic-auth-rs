@@ -12,6 +12,13 @@ or by e-mailing [open-source@newrelic.com](mailto:open-source@newrelic.com).
 For any licenses that require the disclosure of source code, the source code
 can be found at https://github.com/newrelic/newrelic-oauth-client-rs.
 
+## aho-corasick <https://crates.io/crates/aho-corasick>
+
+Distributed under the following license(s):
+
+* Unlicense
+* MIT
+
 ## android-tzdata <https://crates.io/crates/android-tzdata>
 
 Distributed under the following license(s):
@@ -33,12 +40,33 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## aws-lc-rs <https://crates.io/crates/aws-lc-rs>
+
+Distributed under the following license(s):
+
+* ISC
+* Apache-2.0
+
+## aws-lc-sys <https://crates.io/crates/aws-lc-sys>
+
+Distributed under the following license(s):
+
+* ISC
+* Apache-2.0
+* OpenSSL
+
 ## base64 <https://crates.io/crates/base64>
 
 Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
+
+## bindgen <https://crates.io/crates/bindgen>
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
 
 ## bitflags <https://crates.io/crates/bitflags>
 
@@ -67,6 +95,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## cexpr <https://crates.io/crates/cexpr>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## cfg-if <https://crates.io/crates/cfg-if>
 
 Distributed under the following license(s):
@@ -75,6 +110,19 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## chrono <https://crates.io/crates/chrono>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## clang-sys <https://crates.io/crates/clang-sys>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+## cmake <https://crates.io/crates/cmake>
 
 Distributed under the following license(s):
 
@@ -102,6 +150,28 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## dunce <https://crates.io/crates/dunce>
+
+Distributed under the following license(s):
+
+* CC0-1.0
+* MIT-0
+* Apache-2.0
+
+## either <https://crates.io/crates/either>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## errno <https://crates.io/crates/errno>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## fnv <https://crates.io/crates/fnv>
 
 Distributed under the following license(s):
@@ -116,7 +186,27 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## fs_extra <https://crates.io/crates/fs_extra>
+
+Distributed under the following license(s):
+
+* MIT
+
 ## getrandom <https://crates.io/crates/getrandom>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## glob <https://crates.io/crates/glob>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## home <https://crates.io/crates/home>
 
 Distributed under the following license(s):
 
@@ -218,7 +308,21 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## itertools <https://crates.io/crates/itertools>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## itoa <https://crates.io/crates/itoa>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## jobserver <https://crates.io/crates/jobserver>
 
 Distributed under the following license(s):
 
@@ -238,12 +342,40 @@ Distributed under the following license(s):
 
 * MIT
 
+## lazy_static <https://crates.io/crates/lazy_static>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## lazycell <https://crates.io/crates/lazycell>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## libc <https://crates.io/crates/libc>
 
 Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
+
+## libloading <https://crates.io/crates/libloading>
+
+Distributed under the following license(s):
+
+* ISC
+
+## linux-raw-sys <https://crates.io/crates/linux-raw-sys>
+
+Distributed under the following license(s):
+
+* Apache-2.0 WITH LLVM-exception
+* Apache-2.0
+* MIT
 
 ## litemap <https://crates.io/crates/litemap>
 
@@ -263,6 +395,19 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * Unlicense
+* MIT
+
+## minimal-lexical <https://crates.io/crates/minimal-lexical>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## nom <https://crates.io/crates/nom>
+
+Distributed under the following license(s):
+
 * MIT
 
 ## num-bigint <https://crates.io/crates/num-bigint>
@@ -327,6 +472,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## prettyplease <https://crates.io/crates/prettyplease>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## proc-macro2 <https://crates.io/crates/proc-macro2>
 
 Distributed under the following license(s):
@@ -341,12 +493,62 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## rcgen <https://crates.io/crates/rcgen>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## regex <https://crates.io/crates/regex>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## regex-automata <https://crates.io/crates/regex-automata>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## regex-syntax <https://crates.io/crates/regex-syntax>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## ring <https://crates.io/crates/ring>
 
 Distributed under the following license(s):
 
 * Apache-2.0
 * ISC
+
+## rustc-hash <https://crates.io/crates/rustc-hash>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
+## rustix <https://crates.io/crates/rustix>
+
+Distributed under the following license(s):
+
+* Apache-2.0 WITH LLVM-exception
+* Apache-2.0
+* MIT
+
+## rustls-pki-types <https://crates.io/crates/rustls-pki-types>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
 
 ## rustversion <https://crates.io/crates/rustversion>
 
@@ -574,6 +776,12 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## which <https://crates.io/crates/which>
+
+Distributed under the following license(s):
+
+* MIT
+
 ## windows-core <https://crates.io/crates/windows-core>
 
 Distributed under the following license(s):
@@ -679,6 +887,13 @@ Distributed under the following license(s):
 
 * Unicode-3.0
 
+## yasna <https://crates.io/crates/yasna>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## yoke <https://crates.io/crates/yoke>
 
 Distributed under the following license(s):
@@ -702,6 +917,13 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * Unicode-3.0
+
+## zeroize <https://crates.io/crates/zeroize>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
 
 ## zerovec <https://crates.io/crates/zerovec>
 
