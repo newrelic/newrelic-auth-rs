@@ -22,7 +22,10 @@ pub struct KeyPair {
 /// A trait for creating cryptographic keys.
 pub trait Creator {
     type Error;
-    /// Creates a cryptographic key based on the provided options.
+    /// Creates and persists a cryptographic key based on the provided options. The created private
+    /// key will not be accessible/exposed. Depending on the implementation it could be accessible
+    /// (i.e. Local key pair) but others like Vault, KMS... will not. In any case, the private key
+    /// will not be exposed.
     ///
     /// Return created public key in PEM format, or an error if key creation fails.
     fn create(&self) -> Result<PublicKeyPem, Self::Error>;
