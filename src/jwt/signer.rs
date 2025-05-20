@@ -1,5 +1,5 @@
 use super::{claims::Claims, error::JwtEncoderError, signed::SignedJwt};
-use local::{LocalPrivateKeySigner, LocalPrivateKeySignerError};
+use local::{LocalPrivateKeySigner, LocalPrivateKeySignerConfig, LocalPrivateKeySignerError};
 use thiserror::Error;
 
 pub mod local;
@@ -11,9 +11,17 @@ pub trait JwtSigner {
     fn sign(&self, claims: Claims) -> Result<SignedJwt, JwtEncoderError>;
 }
 
+pub trait JwtSignerBuilder {
+    // TODO Add error
+    fn build(&self, config: JwtSignerConfigImpl) -> impl JwtSigner;
+}
+
 /// Enumerates all implementations for `JwtSigner` for static dispatching reasons.
 pub enum JwtSignerImpl {
     Local(LocalPrivateKeySigner),
+}
+pub enum JwtSignerConfigImpl {
+    Local(LocalPrivateKeySignerConfig),
 }
 
 #[cfg_attr(test, mockall::automock)]
