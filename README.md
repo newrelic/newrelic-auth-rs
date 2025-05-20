@@ -21,7 +21,7 @@ See the [documentation](https://newrelic.github.io/newrelic-auth-rs/) documentat
 
 ## Support
 
-If you find any problems while using the library or have a doubt, please feel free to open an [Issue](https://github.com/newrelic/newrelic-oauth-client-rs/issues), where the New Relic maintainers of this project will be able to help.
+If you find any problems while using the library or have a doubt, please feel free to open an [Issue](https://github.com/newrelic/newrelic-auth-rs/issues), where the New Relic maintainers of this project will be able to help.
 
 ## Contribute
 
