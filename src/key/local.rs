@@ -1,11 +1,11 @@
+use crate::key::creator::{Creator, KeyPair, KeyType, PublicKeyPem};
 use rcgen::KeyPair as RcKeyPair;
 use rcgen::{RsaKeySize, PKCS_RSA_SHA512};
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-
-use crate::key::creator::{Creator, KeyPair, KeyType, PublicKeyPem};
+use tracing::debug;
 
 /// Errors that can occur during local key creation.
 #[derive(Error, Debug)]
@@ -73,6 +73,7 @@ impl LocalCreator {
 
     /// Persists the private key to the specified file path.
     fn persist_private_key(&self, key: &[u8]) -> Result<(), LocalKeyCreationError> {
+        debug!("persisting local private key in {}", self.path.as_path().display());
         Self::validate_path(self.path.as_path())?;
 
         let mut file = File::create(self.path.join(&self.name).as_path())
