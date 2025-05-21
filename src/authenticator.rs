@@ -1,8 +1,8 @@
 use http::header::CONTENT_TYPE;
 use http::method::Method;
+use http::Uri;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use url::Url;
 
 use crate::http_client::HttpClient;
 use crate::{token::AccessToken, ClientID};
@@ -24,23 +24,20 @@ pub trait Authenticator {
 }
 
 /// The Authenticator is responsible for obtaining a valid JWT token from System Identity Service.
-pub struct HttpAuthenticator<C> {
+pub struct HttpAuthenticator<'a, C: HttpClient> {
     /// HTTP client
-    http_client: C,
+    http_client: &'a C,
     /// System Identity Service URL
-    url: Url,
+    uri: &'a Uri,
 }
 
-impl<C> HttpAuthenticator<C> {
-    pub fn new(http_client: C, url: Url) -> Self {
-        Self { http_client, url }
+impl<'a, C: HttpClient> HttpAuthenticator<'a, C> {
+    pub fn new(http_client: &'a C, uri: &'a Uri) -> Self {
+        Self { http_client, uri }
     }
 }
 
-impl<C> Authenticator for HttpAuthenticator<C>
-where
-    C: HttpClient,
-{
+impl<C: HttpClient> Authenticator for HttpAuthenticator<'_, C> {
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
     fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError> {
         let serialized_req = serde_json::to_string(&req).map_err(|e| {
@@ -48,8 +45,8 @@ where
         })?;
 
         let req = http::Request::builder()
-            .method(Method::POST.as_str())
-            .uri(self.url.as_str())
+            .method(Method::POST)
+            .uri(self.uri)
             .header(CONTENT_TYPE, "application/json")
             .body(serialized_req.into_bytes())
             .map_err(|e| AuthenticateError::SerializeError(format!("building request: {e}")))?;
@@ -108,9 +105,8 @@ pub struct Response {
 #[cfg(test)]
 pub mod test {
     use assert_matches::assert_matches;
-    use http::Method;
+    use http::{Method, Uri};
     use mockall::mock;
-    use url::Url;
 
     use super::{
         ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator, Request,
@@ -157,7 +153,8 @@ pub mod test {
             })
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(&http_client, &uri);
 
         let response = authenticator.authenticate(request).unwrap();
 
@@ -174,7 +171,8 @@ pub mod test {
             .once()
             .returning(move |_| Err(HttpClientError::TransportError("foo".to_string())));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(&http_client, &uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -197,7 +195,8 @@ pub mod test {
             .once()
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(&http_client, &uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -216,7 +215,8 @@ pub mod test {
             .once()
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(&http_client, &uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -239,8 +239,8 @@ pub mod test {
 
     const TEST_URL: &str = "https://newrelic.com/v1/authorize";
 
-    fn fake_url() -> Url {
-        Url::parse(TEST_URL).unwrap()
+    fn fake_uri() -> Uri {
+        Uri::try_from(TEST_URL).unwrap()
     }
 
     fn fake_request_response() -> (Request, Response) {
