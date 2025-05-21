@@ -1,3 +1,5 @@
+use core::fmt;
+
 use http::header::CONTENT_TYPE;
 use http::method::Method;
 use http::Uri;
@@ -34,6 +36,15 @@ pub struct HttpAuthenticator<'a, C: HttpClient> {
 impl<'a, C: HttpClient> HttpAuthenticator<'a, C> {
     pub fn new(http_client: &'a C, uri: &'a Uri) -> Self {
         Self { http_client, uri }
+    }
+}
+
+impl<C: HttpClient> fmt::Debug for HttpAuthenticator<'_, C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HttpAuthenticator")
+            .field("http_client", &"impl HttpClient")
+            .field("uri", &self.uri)
+            .finish()
     }
 }
 

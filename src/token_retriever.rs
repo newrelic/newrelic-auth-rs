@@ -14,6 +14,7 @@ const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 pub const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
+#[derive(Debug)]
 pub struct TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
