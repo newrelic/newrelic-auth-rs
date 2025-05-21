@@ -30,3 +30,17 @@ pub trait Creator {
     /// Return created public key in PEM format, or an error if key creation fails.
     fn create(&self) -> Result<PublicKeyPem, Self::Error>;
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use mockall::mock;
+
+    mock! {
+        pub Creator {}
+        impl Creator for Creator {
+            type Error = String;
+            fn create(&self) -> Result<PublicKeyPem, String>;
+        }
+    }
+}
