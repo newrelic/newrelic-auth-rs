@@ -17,7 +17,7 @@ pub enum HttpClientError {
     /// Represents a compression error.
     #[error("error compressing data: `{0}`")]
     CompressionError(String),
-    /// Represents a compression error.
+    /// Represents an unexpected response.
     #[error("invalid http response: `{0}`")]
     InvalidResponse(String),
 }
