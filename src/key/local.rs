@@ -73,7 +73,10 @@ impl LocalCreator {
 
     /// Persists the private key to the specified file path.
     fn persist_private_key(&self, key: &[u8]) -> Result<(), LocalKeyCreationError> {
-        debug!("persisting local private key in {}", self.path.as_path().display());
+        debug!(
+            "persisting local private key in {}",
+            self.path.as_path().display()
+        );
         Self::validate_path(self.path.as_path())?;
 
         let mut file = File::create(self.path.join(&self.name).as_path())
