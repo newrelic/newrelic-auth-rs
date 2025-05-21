@@ -14,21 +14,23 @@ const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 pub const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
-pub struct TokenRetrieverWithCache<A>
+pub struct TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     client_id: ClientID,
     aud: Url,
     tokens: Mutex<Option<Token>>,
-    jwt_signer: JwtSignerImpl,
+    jwt_signer: J,
     authenticator: A,
     retries: u8,
 }
 
-impl<A> TokenRetriever for TokenRetrieverWithCache<A>
+impl<A, J> TokenRetriever for TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let mut cached_token = self
@@ -72,15 +74,16 @@ where
     }
 }
 
-impl<A> TokenRetrieverWithCache<A>
+impl<A, J> TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     pub fn new(
         client_id: ClientID,
-        jwt_signer: JwtSignerImpl,
+        jwt_signer: J,
         authenticator: A,
-    ) -> TokenRetrieverWithCache<A> {
+    ) -> TokenRetrieverWithCache<A, J> {
         TokenRetrieverWithCache {
             client_id,
             aud: Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value"),
