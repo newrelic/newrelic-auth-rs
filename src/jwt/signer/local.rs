@@ -22,15 +22,15 @@ pub struct LocalPrivateKeySigner {
 }
 
 /// Attempt to create a LocalPrivateKeySigner from a PemFileContents.
-impl TryFrom<Vec<u8>> for LocalPrivateKeySigner {
+impl TryFrom<&[u8]> for LocalPrivateKeySigner {
     type Error = LocalPrivateKeySignerError;
 
-    fn try_from(pem: Vec<u8>) -> Result<Self, Self::Error> {
+    fn try_from(pem: &[u8]) -> Result<Self, Self::Error> {
         // Algorithm is hardcoded to RS256, so decoding key is also fixed. Here we load it from
         // a PEM file.
         Ok(Self {
             // This will call pem::parse
-            encoding_key: EncodingKey::from_rsa_pem(pem.as_ref())?,
+            encoding_key: EncodingKey::from_rsa_pem(pem)?,
             algorithm: Algorithm::RS256,
         })
     }
@@ -42,7 +42,7 @@ impl TryFrom<&Path> for LocalPrivateKeySigner {
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {
         let pem = std::fs::read(path)?;
-        Self::try_from(pem)
+        Self::try_from(pem.as_slice())
     }
 }
 
@@ -124,8 +124,7 @@ BrPkB8yrZjJU/fpF2D6HzGfinKRboBTcmo7mUF2wuYARj/IsuEklh0gz7rseIf7G
         validation.set_required_spec_claims(&["exp", "sub", "aud"]);
 
         // Create local signer
-        let signer =
-            LocalPrivateKeySigner::try_from(RS256_PRIVATE_KEY.as_bytes().to_vec()).unwrap();
+        let signer = LocalPrivateKeySigner::try_from(RS256_PRIVATE_KEY.as_bytes()).unwrap();
 
         // Sign the token
         let signed_jwt = signer.sign(claims);
@@ -149,7 +148,7 @@ BrPkB8yrZjJU/fpF2D6HzGfinKRboBTcmo7mUF2wuYARj/IsuEklh0gz7rseIf7G
 
     #[test]
     fn bad_pem_file() {
-        let signer = LocalPrivateKeySigner::try_from("WRONG".as_bytes().to_vec());
+        let signer = LocalPrivateKeySigner::try_from("WRONG".as_bytes());
         assert!(signer.is_err());
     }
 }
