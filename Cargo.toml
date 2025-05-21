@@ -19,6 +19,7 @@ uuid = { version = "1", features = ["serde", "v7"] }
 tracing = "0.1"
 http = "1"
 rcgen = { version = "0.13", features = ["aws_lc_rs"] }
+base64 = "0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
@@ -32,6 +33,7 @@ reqwest = { version = "0", default-features = false, features = [
   "rustls-tls",
   "rustls-tls-native-roots",
   "socks",
+  "json",
 ] }
 dotenvy = "0"
 vaultrs = { version = "0", default-features = false, features = ["native-tls"] }
@@ -40,6 +42,7 @@ tracing-subscriber = "0"
 base64 = "0"
 sha2 = "0"
 tempfile = "3"
+serde_json = "1"
 
 [[bin]]
 name = "newrelic-auth-cli"
