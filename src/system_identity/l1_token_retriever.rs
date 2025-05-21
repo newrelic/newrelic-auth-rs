@@ -99,14 +99,14 @@ fn token_from_client_secret<C: HttpClient>(
         "grant_type": "client_credentials",
     });
     let json_body = serde_json::to_vec(&json_body_string)
-        .map_err(|e| HttpClientError::EncoderError(format!("Failed to encode JSON: {}", e)))?;
+        .map_err(|e| HttpClientError::EncoderError(format!("Failed to encode JSON: {e}")))?;
 
     let request = http::Request::builder()
         .uri(token_retrieval_uri)
         .method("POST")
         .header(CONTENT_TYPE, "application/json")
         .body(json_body)
-        .map_err(|e| HttpClientError::EncoderError(format!("Failed to build request: {}", e)))?;
+        .map_err(|e| HttpClientError::EncoderError(format!("Failed to build request: {e}")))?;
 
     let response = http_client.send(request)?;
     let body = response.body();
@@ -114,7 +114,7 @@ fn token_from_client_secret<C: HttpClient>(
         StatusCode::OK => {
             let decoded_body: TokenRetrievalResponse =
                 serde_json::from_slice(body).map_err(|e| {
-                    HttpClientError::DecoderError(format!("Failed to decode JSON: {}", e))
+                    HttpClientError::DecoderError(format!("Failed to decode JSON: {e}"))
                 })?;
             Token::try_from(decoded_body)
                 .map_err(|e| HttpClientError::InvalidResponse(e.to_string()))

@@ -66,17 +66,15 @@ impl<'a, C: HttpClient> HttpIAMClientImpl<'a, C> {
             ),
         });
         let json_body = serde_json::to_vec(&json_body_string)
-            .map_err(|e| HttpClientError::EncoderError(format!("Failed to encode JSON: {}", e)))?;
+            .map_err(|e| HttpClientError::EncoderError(format!("Failed to encode JSON: {e}")))?;
 
         let request = http::Request::builder()
             .uri(system_identity_creation_uri)
             .method("POST")
             .header(CONTENT_TYPE, "application/json")
-            .header(AUTHORIZATION, format!("Bearer {}", token))
+            .header(AUTHORIZATION, format!("Bearer {token}"))
             .body(json_body)
-            .map_err(|e| {
-                HttpClientError::EncoderError(format!("Failed to build request: {}", e))
-            })?;
+            .map_err(|e| HttpClientError::EncoderError(format!("Failed to build request: {e}")))?;
 
         let response = http_client.send(request)?;
         let body = response.body();
@@ -84,7 +82,7 @@ impl<'a, C: HttpClient> HttpIAMClientImpl<'a, C> {
             StatusCode::OK => {
                 let system_identity_response: SystemIdentityCreationResponseData =
                     serde_json::from_slice(body).map_err(|e| {
-                        HttpClientError::DecoderError(format!("Failed to decode JSON: {}", e))
+                        HttpClientError::DecoderError(format!("Failed to decode JSON: {e}"))
                     })?;
                 Ok(system_identity_response)
             }

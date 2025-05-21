@@ -13,7 +13,7 @@ impl TryFrom<&str> for TokenType {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "Bearer" => Ok(TokenType::Bearer),
-            _ => Err(format!("Invalid token type: {}", value)),
+            _ => Err(format!("Invalid token type: {value}")),
         }
     }
 }
