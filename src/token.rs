@@ -7,6 +7,17 @@ pub enum TokenType {
     Bearer,
 }
 
+impl TryFrom<&str> for TokenType {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "Bearer" => Ok(TokenType::Bearer),
+            _ => Err(format!("Invalid token type: {}", value)),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Token {
     expires_at: DateTime<Utc>,
