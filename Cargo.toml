@@ -19,7 +19,7 @@ uuid = { version = "1", features = ["serde", "v7"] }
 tracing = "0.1"
 http = "1"
 rcgen = { version = "0.13", features = ["aws_lc_rs"] }
-base64 = "0"
+base64 = "0.22"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
