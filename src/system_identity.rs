@@ -6,6 +6,13 @@ mod iam_client;
 mod l1_token_retriever;
 mod output_platform;
 
+#[derive(Debug, Clone, Default)]
+pub struct SystemIdentity {
+    pub name: String,
+    pub client_id: String,// TODO type better
+    pub pub_key: Vec<u8>, // TODO type better
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::{TimeDelta, Utc};

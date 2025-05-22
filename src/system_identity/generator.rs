@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::{key::creator::Creator as KeyCreator, TokenRetriever};
 
-use super::iam_client::{IAMClient, SystemIdentityCreationResponseData};
+use super::{iam_client::{IAMClient, SystemIdentityCreationResponseData}, SystemIdentity};
 
 #[derive(Debug, Clone, Error)]
 pub enum SystemIdentityGenerationError {
@@ -27,12 +27,7 @@ where
     pub(super) iam_client: I,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct SystemIdentity {
-    pub name: String,
-    pub client_id: String,
-    pub pub_key: Vec<u8>,
-}
+
 
 impl<K, T, I> SystemIdentityGenerator<K, T, I>
 where
