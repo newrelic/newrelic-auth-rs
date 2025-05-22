@@ -9,8 +9,8 @@ mod output_platform;
 #[derive(Debug, Clone, Default)]
 pub struct SystemIdentity {
     pub name: String,
-    pub client_id: String,// TODO type better
-    pub pub_key: Vec<u8>, // TODO type better
+    pub client_id: String, // TODO type better
+    pub pub_key: Vec<u8>,  // TODO type better
 }
 
 #[cfg(test)]
@@ -32,8 +32,8 @@ mod tests {
     };
 
     use super::{
-        environment::SystemIdentityCreationEnvironment,
-        http_token_retriever::HttpTokenRetrieverImpl, iam_client::tests::MockIAMClient,
+        environment::SystemIdentityCreationEnvironment, http_token_retriever::HttpTokenRetriever,
+        iam_client::tests::MockIAMClient,
     };
 
     // The idea here is emulate what would be the flow of a CLI call to create a system identity.
@@ -124,7 +124,7 @@ mod tests {
                 Ok(response)
             });
 
-        let token_retriever = HttpTokenRetrieverImpl::from_auth_method(
+        let token_retriever = HttpTokenRetriever::from_auth_method(
             &http_client,
             cli_input.auth_method,
             cli_input.environment.token_renewal_endpoint(),
@@ -251,7 +251,7 @@ mod tests {
                 Ok(response)
             });
 
-        let token_retriever = HttpTokenRetrieverImpl::from_auth_method(
+        let token_retriever = HttpTokenRetriever::from_auth_method(
             &http_client,
             cli_input.auth_method,
             cli_input.environment.token_renewal_endpoint(),

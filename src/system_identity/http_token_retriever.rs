@@ -13,19 +13,19 @@ use crate::{
 
 use super::{client_input::AuthMethod, l1_token_retriever::L1TokenRetriever};
 
-pub enum HttpTokenRetrieverImpl<'a, C: HttpClient> {
+pub enum HttpTokenRetriever<'a, C: HttpClient> {
     ClientSecretRetriever(L1TokenRetriever<'a, C>),
     PrivateKeyRetriever(TokenRetrieverWithCache<HttpAuthenticator<'a, C>, JwtSignerImpl>),
 }
 
-impl<C: HttpClient> fmt::Debug for HttpTokenRetrieverImpl<'_, C> {
+impl<C: HttpClient> fmt::Debug for HttpTokenRetriever<'_, C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            HttpTokenRetrieverImpl::ClientSecretRetriever(retriever) => f
+            HttpTokenRetriever::ClientSecretRetriever(retriever) => f
                 .debug_tuple("ClientSecretRetriever")
                 .field(retriever)
                 .finish(),
-            HttpTokenRetrieverImpl::PrivateKeyRetriever(retriever) => f
+            HttpTokenRetriever::PrivateKeyRetriever(retriever) => f
                 .debug_tuple("PrivateKeyRetriever")
                 .field(retriever)
                 .finish(),
@@ -33,19 +33,19 @@ impl<C: HttpClient> fmt::Debug for HttpTokenRetrieverImpl<'_, C> {
     }
 }
 
-impl<C> TokenRetriever for HttpTokenRetrieverImpl<'_, C>
+impl<C> TokenRetriever for HttpTokenRetriever<'_, C>
 where
     C: HttpClient,
 {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         match self {
-            HttpTokenRetrieverImpl::ClientSecretRetriever(retriever) => retriever.retrieve(),
-            HttpTokenRetrieverImpl::PrivateKeyRetriever(retriever) => retriever.retrieve(),
+            HttpTokenRetriever::ClientSecretRetriever(retriever) => retriever.retrieve(),
+            HttpTokenRetriever::PrivateKeyRetriever(retriever) => retriever.retrieve(),
         }
     }
 }
 
-impl<'a, C> HttpTokenRetrieverImpl<'a, C>
+impl<'a, C> HttpTokenRetriever<'a, C>
 where
     C: HttpClient,
 {
@@ -57,7 +57,7 @@ where
     ) -> Result<Self, TokenRetrieverError> {
         match auth_method {
             AuthMethod::ClientSecret(client_secret) => Ok(
-                HttpTokenRetrieverImpl::ClientSecretRetriever(L1TokenRetriever::new(
+                HttpTokenRetriever::ClientSecretRetriever(L1TokenRetriever::new(
                     client_id,
                     client_secret,
                     http_client,
@@ -70,7 +70,7 @@ where
                 let jwt_signer = JwtSignerImpl::Local(signer);
                 let authenticator = HttpAuthenticator::new(http_client, token_retrieval_uri);
 
-                Ok(HttpTokenRetrieverImpl::PrivateKeyRetriever(
+                Ok(HttpTokenRetriever::PrivateKeyRetriever(
                     TokenRetrieverWithCache::new(client_id, jwt_signer, authenticator),
                 ))
             }

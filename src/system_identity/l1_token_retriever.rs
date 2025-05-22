@@ -24,7 +24,7 @@ impl<C: HttpClient> fmt::Debug for L1TokenRetriever<'_, C> {
             .field("client_id", &self.client_id)
             .field("client_secret", &self.client_secret)
             .field("token_retrieval_uri", &self.token_retrieval_uri)
-            .field("http_client", &"impl HttpClient")
+            .field("http_client", &"impl HttpClient") // HttpClient does not implement Debug
             .finish()
     }
 }
