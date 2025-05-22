@@ -31,6 +31,18 @@ pub trait Creator {
     fn create(&self) -> Result<PublicKeyPem, Self::Error>;
 }
 
+// Accept closures as Creator implementations
+impl<F> Creator for F
+where
+    F: Fn() -> Result<PublicKeyPem, String>,
+{
+    type Error = String;
+
+    fn create(&self) -> Result<PublicKeyPem, Self::Error> {
+        self()
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;

@@ -14,6 +14,19 @@ pub trait IAMClient {
     ) -> Result<SystemIdentityCreationResponseData, IAMClientError>;
 }
 
+// Accept closures as IAMClient implementations
+impl<F> IAMClient for F
+where
+    F: Fn(&[u8]) -> Result<SystemIdentityCreationResponseData, IAMClientError>,
+{
+    fn create_system_identity(
+        &self,
+        pub_key: &[u8],
+    ) -> Result<SystemIdentityCreationResponseData, IAMClientError> {
+        self(pub_key)
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use mockall::mock;
