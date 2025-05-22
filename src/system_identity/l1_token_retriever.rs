@@ -43,17 +43,55 @@ impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
             token_retrieval_uri,
         }
     }
+
+    fn retrieve_token(&self) -> Result<Token, TokenRetrieverError> {
+        let json_body_string = json!({
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "grant_type": "client_credentials",
+        });
+        let json_body = serde_json::to_vec(&json_body_string).map_err(|e| {
+            TokenRetrieverError::TokenRetrieverError(format!("Failed to encode JSON: {e}"))
+        })?;
+
+        let request = http::Request::builder()
+            .uri(self.token_retrieval_uri)
+            .method("POST")
+            .header(CONTENT_TYPE, "application/json")
+            .body(json_body)
+            .map_err(|e| {
+                TokenRetrieverError::TokenRetrieverError(format!("Failed to build request: {e}"))
+            })?;
+
+        let response = self.http_client.send(request).map_err(|e| {
+            TokenRetrieverError::TokenRetrieverError(format!("Failed to send HTTP request: {e}"))
+        })?;
+        let body = response.body();
+        match response.status() {
+            StatusCode::OK => {
+                let decoded_body: TokenRetrievalResponse =
+                    serde_json::from_slice(body).map_err(|e| {
+                        TokenRetrieverError::TokenRetrieverError(format!(
+                            "Failed to decode JSON response: {e}"
+                        ))
+                    })?;
+                Token::try_from(decoded_body)
+                    .map_err(|e| HttpClientError::InvalidResponse(e.to_string()))
+            }
+            status => Err(HttpClientError::UnsuccessfulResponse(
+                status.as_u16(),
+                String::from_utf8_lossy(body).to_string(),
+            )),
+        }
+        .map_err(|e| {
+            TokenRetrieverError::TokenRetrieverError(format!("Failed to retrieve token: {e}"))
+        })
+    }
 }
 
 impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
-        token_from_client_secret(
-            self.http_client,
-            &self.client_id,
-            &self.client_secret,
-            self.token_retrieval_uri,
-        )
-        .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))
+        self.retrieve_token()
     }
 }
 
@@ -84,44 +122,5 @@ impl TryFrom<TokenRetrievalResponse> for Token {
         })?;
 
         Ok(Token::new(access_token, token_type, expires_at))
-    }
-}
-
-fn token_from_client_secret<C: HttpClient>(
-    http_client: &C,
-    client_id: &str,     // type
-    client_secret: &str, // type
-    token_retrieval_uri: &Uri,
-) -> Result<Token, HttpClientError> {
-    let json_body_string = json!({
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "grant_type": "client_credentials",
-    });
-    let json_body = serde_json::to_vec(&json_body_string)
-        .map_err(|e| HttpClientError::EncoderError(format!("Failed to encode JSON: {e}")))?;
-
-    let request = http::Request::builder()
-        .uri(token_retrieval_uri)
-        .method("POST")
-        .header(CONTENT_TYPE, "application/json")
-        .body(json_body)
-        .map_err(|e| HttpClientError::EncoderError(format!("Failed to build request: {e}")))?;
-
-    let response = http_client.send(request)?;
-    let body = response.body();
-    match response.status() {
-        StatusCode::OK => {
-            let decoded_body: TokenRetrievalResponse =
-                serde_json::from_slice(body).map_err(|e| {
-                    HttpClientError::DecoderError(format!("Failed to decode JSON: {e}"))
-                })?;
-            Token::try_from(decoded_body)
-                .map_err(|e| HttpClientError::InvalidResponse(e.to_string()))
-        }
-        status => Err(HttpClientError::UnsuccessfulResponse(
-            status.as_u16(),
-            String::from_utf8_lossy(body).to_string(),
-        )),
     }
 }

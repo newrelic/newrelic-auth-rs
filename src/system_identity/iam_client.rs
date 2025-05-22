@@ -7,15 +7,18 @@ use serde::{Deserialize, Deserializer};
 use serde_json::json;
 use thiserror::Error;
 
-use crate::{
-    http_client::{HttpClient, HttpClientError},
-    token::AccessToken,
-};
+use crate::{http_client::HttpClient, token::AccessToken};
 
 #[derive(Debug, Clone, Error)]
 pub enum IAMClientError {
     #[error("error creating system identity: `{0}`")]
-    IAMClientError(String),
+    IAMClient(String),
+    #[error("error computing the payload: `{0}`")]
+    Encoder(String),
+    #[error("error decoding the response payload: `{0}`")]
+    Decoder(String),
+    #[error("transport error: `{0}`")]
+    Transport(String),
 }
 
 pub trait IAMClient {
@@ -50,46 +53,46 @@ impl<'a, C: HttpClient> HttpIAMClientImpl<'a, C> {
         }
     }
 
-    fn system_identity_from_token(
-        http_client: &C,
-        name: &str,
-        organization_id: &str,
-        token: &str,    // type
-        pub_key: &[u8], // type and provenance, other modes accepted?
-        system_identity_creation_uri: &Uri,
-    ) -> Result<SystemIdentityCreationResponseData, HttpClientError> {
+    fn create_system_identity(
+        &self,
+        token: &AccessToken,
+        pub_key: &[u8],
+    ) -> Result<SystemIdentityCreationResponseData, IAMClientError> {
         let pub_key_b64 = general_purpose::STANDARD.encode(pub_key);
         let json_body_string = json!({
             "query": format!(
                 "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\", publicKey: \"{}\") {{ clientId, name }} }}",
-                name, organization_id, pub_key_b64
+                self.name, self.organization_id, pub_key_b64
             ),
         });
         let json_body = serde_json::to_vec(&json_body_string)
-            .map_err(|e| HttpClientError::EncoderError(format!("Failed to encode JSON: {e}")))?;
+            .map_err(|e| IAMClientError::Encoder(format!("Failed to encode JSON: {e}")))?;
 
         let request = http::Request::builder()
-            .uri(system_identity_creation_uri)
+            .uri(self.system_identity_creation_uri)
             .method("POST")
             .header(CONTENT_TYPE, "application/json")
             .header(AUTHORIZATION, format!("Bearer {token}"))
             .body(json_body)
-            .map_err(|e| HttpClientError::EncoderError(format!("Failed to build request: {e}")))?;
+            .map_err(|e| IAMClientError::Encoder(format!("Failed to build request: {e}")))?;
 
-        let response = http_client.send(request)?;
+        let response = self
+            .http_client
+            .send(request)
+            .map_err(|e| IAMClientError::Transport(format!("Failed to send HTTP request: {e}")))?;
         let body = response.body();
         match response.status() {
             StatusCode::OK => {
                 let system_identity_response: SystemIdentityCreationResponseData =
                     serde_json::from_slice(body).map_err(|e| {
-                        HttpClientError::DecoderError(format!("Failed to decode JSON: {e}"))
+                        IAMClientError::Decoder(format!("Failed to decode JSON: {e}"))
                     })?;
                 Ok(system_identity_response)
             }
-            status => Err(HttpClientError::UnsuccessfulResponse(
-                status.as_u16(),
-                String::from_utf8_lossy(body).to_string(),
-            )),
+            status => Err(IAMClientError::Transport(format!(
+                "Unsuccessful HTTP response: {status}. Body: {}",
+                String::from_utf8_lossy(body)
+            ))),
         }
     }
 }
@@ -100,15 +103,7 @@ impl<C: HttpClient> IAMClient for HttpIAMClientImpl<'_, C> {
         token: &AccessToken,
         pub_key: &[u8],
     ) -> Result<SystemIdentityCreationResponseData, IAMClientError> {
-        Self::system_identity_from_token(
-            self.http_client,
-            self.name.as_str(),
-            self.organization_id.as_str(),
-            token,
-            pub_key,
-            self.system_identity_creation_uri,
-        )
-        .map_err(|e| IAMClientError::IAMClientError(e.to_string()))
+        self.create_system_identity(token, pub_key)
     }
 }
 
