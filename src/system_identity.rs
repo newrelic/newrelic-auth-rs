@@ -1,9 +1,7 @@
 mod client_input;
 mod environment;
 mod generator;
-mod http_token_retriever;
 mod iam_client;
-mod l1_token_retriever;
 mod output_platform;
 
 #[derive(Debug, Clone, Default)]
@@ -15,7 +13,6 @@ pub struct SystemIdentity {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{TimeDelta, Utc};
     use mockall::Sequence;
 
     use crate::{
@@ -25,16 +22,14 @@ mod tests {
         system_identity::{
             client_input::{AuthMethod, SystemIdentityCreationMetadata},
             generator::SystemIdentityGenerator,
-            iam_client::{HttpIAMClient, SystemIdentityCreationResponseData},
+            iam_client::{
+                http_iam_client::HttpIAMClient, response_data::SystemIdentityCreationResponseData,
+                tests::MockIAMClient,
+            },
         },
-        token::{Token, TokenType},
-        token_retriever::test::MockTokenRetriever,
     };
 
-    use super::{
-        environment::SystemIdentityCreationEnvironment, http_token_retriever::HttpTokenRetriever,
-        iam_client::tests::MockIAMClient,
-    };
+    use super::environment::SystemIdentityCreationEnvironment;
 
     // The idea here is emulate what would be the flow of a CLI call to create a system identity.
     // The CLI would parse the command line arguments into a type with the actual concretions
@@ -124,16 +119,6 @@ mod tests {
                 Ok(response)
             });
 
-        let token_retriever = HttpTokenRetriever::from_auth_method(
-            &http_client,
-            cli_input.auth_method,
-            cli_input.environment.token_renewal_endpoint(),
-            cli_input.client_id.to_owned(), // I compare with this value later, keep it
-        );
-
-        assert!(token_retriever.is_ok());
-        let token_retriever = token_retriever.unwrap();
-
         // More mocks, this time for the key creator
         let mut key_creator = MockCreator::new();
         key_creator
@@ -144,9 +129,7 @@ mod tests {
         // IAMClient from HttpClient
         let iam_client = HttpIAMClient::new(
             &http_client,
-            cli_input.name.to_owned(), // I compare with this value later, keep it
-            cli_input.organization_id.clone(),
-            cli_input.environment.identity_creation_endpoint(),
+            cli_input.to_owned(), // I compare with this value later, keep it
         );
 
         // As we are creating concretions, we only need to set expectations for the key creator
@@ -156,7 +139,6 @@ mod tests {
         // implementations.
         let system_identity_generator = SystemIdentityGenerator {
             key_creator,
-            token_retriever,
             iam_client,
         };
 
@@ -251,16 +233,6 @@ mod tests {
                 Ok(response)
             });
 
-        let token_retriever = HttpTokenRetriever::from_auth_method(
-            &http_client,
-            cli_input.auth_method,
-            cli_input.environment.token_renewal_endpoint(),
-            cli_input.client_id.to_owned(), // I compare with this value later, keep it
-        );
-
-        assert!(token_retriever.is_ok());
-        let token_retriever = token_retriever.unwrap();
-
         // More mocks, this time for the key creator
         let mut key_creator = MockCreator::new();
         key_creator
@@ -271,9 +243,7 @@ mod tests {
         // IAMClient from HttpClient
         let iam_client = HttpIAMClient::new(
             &http_client,
-            cli_input.name.to_owned(), // I compare with this value later, keep it
-            cli_input.organization_id.clone(),
-            cli_input.environment.identity_creation_endpoint(),
+            cli_input.to_owned(), // I compare with this value later, keep it
         );
 
         // As we are creating concretions, we only need to set expectations for the key creator
@@ -283,7 +253,6 @@ mod tests {
         // implementations.
         let system_identity_generator = SystemIdentityGenerator {
             key_creator,
-            token_retriever,
             iam_client,
         };
 
@@ -298,24 +267,10 @@ mod tests {
 
     #[test]
     fn create_system_identity_mocked() {
-        let mut token_retriever = MockTokenRetriever::new();
         let mut key_creator = MockCreator::new();
         let mut iam_client = MockIAMClient::new();
-
         let mut sequence = Sequence::new();
-        token_retriever
-            .expect_retrieve()
-            .once()
-            .in_sequence(&mut sequence)
-            .returning(|| {
-                Ok(Token::new(
-                    "some-access-token".to_string(),
-                    TokenType::Bearer,
-                    Utc::now()
-                        .checked_add_signed(TimeDelta::seconds(3600))
-                        .unwrap(),
-                ))
-            });
+
         key_creator
             .expect_create()
             .once()
@@ -325,7 +280,7 @@ mod tests {
             .expect_create_system_identity()
             .once()
             .in_sequence(&mut sequence)
-            .returning(|_, _| {
+            .returning(|_| {
                 Ok(SystemIdentityCreationResponseData {
                     client_id: "client-id".to_string(),
                     name: "test".to_string(),
@@ -334,7 +289,6 @@ mod tests {
 
         let system_identity_generator = SystemIdentityGenerator {
             key_creator,
-            token_retriever,
             iam_client,
         };
         let result = system_identity_generator.generate();

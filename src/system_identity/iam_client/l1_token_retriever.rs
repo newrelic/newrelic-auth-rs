@@ -11,7 +11,7 @@ use crate::{
     TokenRetriever, TokenRetrieverError,
 };
 
-pub struct L1TokenRetriever<'a, C: HttpClient> {
+pub(super) struct L1TokenRetriever<'a, C: HttpClient> {
     client_id: String,
     client_secret: String,
     http_client: &'a C,
@@ -30,7 +30,7 @@ impl<C: HttpClient> fmt::Debug for L1TokenRetriever<'_, C> {
 }
 
 impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
-    pub fn new(
+    pub(super) fn new(
         client_id: String,
         client_secret: String,
         http_client: &'a C,

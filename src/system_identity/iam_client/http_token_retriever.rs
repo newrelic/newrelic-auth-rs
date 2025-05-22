@@ -6,14 +6,15 @@ use crate::{
     authenticator::HttpAuthenticator,
     http_client::HttpClient,
     jwt::signer::{local::LocalPrivateKeySigner, JwtSignerImpl},
+    system_identity::client_input::AuthMethod,
     token::Token,
     token_retriever::TokenRetrieverWithCache,
     TokenRetriever, TokenRetrieverError,
 };
 
-use super::{client_input::AuthMethod, l1_token_retriever::L1TokenRetriever};
+use super::l1_token_retriever::L1TokenRetriever;
 
-pub enum HttpTokenRetriever<'a, C: HttpClient> {
+pub(super) enum HttpTokenRetriever<'a, C: HttpClient> {
     ClientSecretRetriever(L1TokenRetriever<'a, C>),
     PrivateKeyRetriever(TokenRetrieverWithCache<HttpAuthenticator<'a, C>, JwtSignerImpl>),
 }
@@ -51,7 +52,7 @@ where
 {
     pub fn from_auth_method(
         http_client: &'a C,
-        auth_method: AuthMethod,
+        auth_method: &AuthMethod,
         token_retrieval_uri: &'a Uri,
         client_id: String,
     ) -> Result<Self, TokenRetrieverError> {
@@ -59,7 +60,7 @@ where
             AuthMethod::ClientSecret(client_secret) => Ok(
                 HttpTokenRetriever::ClientSecretRetriever(L1TokenRetriever::new(
                     client_id,
-                    client_secret,
+                    client_secret.to_owned(),
                     http_client,
                     token_retrieval_uri,
                 )),
