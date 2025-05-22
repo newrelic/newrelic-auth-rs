@@ -25,7 +25,7 @@ mod tests {
         system_identity::{
             client_input::{AuthMethod, SystemIdentityCreationMetadata},
             generator::SystemIdentityGenerator,
-            iam_client::{HttpIAMClientImpl, SystemIdentityCreationResponseData},
+            iam_client::{HttpIAMClient, SystemIdentityCreationResponseData},
         },
         token::{Token, TokenType},
         token_retriever::test::MockTokenRetriever,
@@ -142,7 +142,7 @@ mod tests {
             .returning(|| Ok(vec![1, 2, 3]));
 
         // IAMClient from HttpClient
-        let iam_client = HttpIAMClientImpl::new(
+        let iam_client = HttpIAMClient::new(
             &http_client,
             cli_input.name.to_owned(), // I compare with this value later, keep it
             cli_input.organization_id.clone(),
@@ -269,7 +269,7 @@ mod tests {
             .returning(|| Ok(vec![1, 2, 3]));
 
         // IAMClient from HttpClient
-        let iam_client = HttpIAMClientImpl::new(
+        let iam_client = HttpIAMClient::new(
             &http_client,
             cli_input.name.to_owned(), // I compare with this value later, keep it
             cli_input.organization_id.clone(),

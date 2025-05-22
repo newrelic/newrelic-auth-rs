@@ -30,7 +30,7 @@ pub trait IAMClient {
 }
 
 /// Implementation of the IAMClient trait for a generic HTTP client.
-pub struct HttpIAMClientImpl<'a, C: HttpClient> {
+pub struct HttpIAMClient<'a, C: HttpClient> {
     http_client: &'a C,
     name: String,
     organization_id: String,
@@ -38,7 +38,7 @@ pub struct HttpIAMClientImpl<'a, C: HttpClient> {
     // other required data? Like access token retriever or auth mechanism? key pair generator?
 }
 
-impl<'a, C: HttpClient> HttpIAMClientImpl<'a, C> {
+impl<'a, C: HttpClient> HttpIAMClient<'a, C> {
     pub fn new(
         http_client: &'a C,
         name: String,
@@ -97,7 +97,7 @@ impl<'a, C: HttpClient> HttpIAMClientImpl<'a, C> {
     }
 }
 
-impl<C: HttpClient> IAMClient for HttpIAMClientImpl<'_, C> {
+impl<C: HttpClient> IAMClient for HttpIAMClient<'_, C> {
     fn create_system_identity(
         &self,
         token: &AccessToken,
