@@ -156,7 +156,7 @@ mod tests {
         let result = system_identity_generator.generate();
         assert!(result.is_ok());
 
-        let result = dbg!(result.unwrap());
+        let result = result.unwrap();
         assert_eq!(result.name, cli_input.name);
         assert_eq!(result.client_id, cli_input.client_id);
         assert_eq!(result.pub_key, vec![1, 2, 3]);
