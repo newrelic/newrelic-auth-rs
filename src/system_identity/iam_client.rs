@@ -116,7 +116,6 @@ pub struct SystemIdentityCreationResponseData {
 
 /// Manual implementation of Deserialize to handle nested structure that comes as response
 /// from the System Identity service.
-// TODO do we need this data at all?
 impl<'de> Deserialize<'de> for SystemIdentityCreationResponseData {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
