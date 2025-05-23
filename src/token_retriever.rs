@@ -1,8 +1,6 @@
 use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, Request};
 use crate::jwt::claims::Claims;
 use crate::jwt::signer::JwtSigner;
-#[cfg_attr(test, mockall_double::double)]
-use crate::jwt::signer::JwtSignerImpl;
 use crate::token::{Token, TokenType};
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 use chrono::{TimeDelta, Utc};
@@ -16,21 +14,24 @@ const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 pub const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
-pub struct TokenRetrieverWithCache<A>
+#[derive(Debug)]
+pub struct TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     client_id: ClientID,
     aud: Url,
     tokens: Mutex<Option<Token>>,
-    jwt_signer: JwtSignerImpl,
+    jwt_signer: J,
     authenticator: A,
     retries: u8,
 }
 
-impl<A> TokenRetriever for TokenRetrieverWithCache<A>
+impl<A, J> TokenRetriever for TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let mut cached_token = self
@@ -74,15 +75,16 @@ where
     }
 }
 
-impl<A> TokenRetrieverWithCache<A>
+impl<A, J> TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     pub fn new(
         client_id: ClientID,
-        jwt_signer: JwtSignerImpl,
+        jwt_signer: J,
         authenticator: A,
-    ) -> TokenRetrieverWithCache<A> {
+    ) -> TokenRetrieverWithCache<A, J> {
         TokenRetrieverWithCache {
             client_id,
             aud: Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value"),
@@ -132,24 +134,32 @@ where
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use std::{thread, time};
 
     use chrono::{TimeDelta, Utc};
+    use mockall::mock;
     use mockall::{predicate::eq, Sequence};
 
     use crate::authenticator::test::MockAuthenticatorMock;
-    #[cfg_attr(test, mockall_double::double)]
-    use crate::jwt::signer::JwtSignerImpl;
+
+    use crate::jwt::signer::tests::MockJwtSigner;
     use crate::{
         authenticator::{AuthenticateError, ClientAssertionType, GrantType, Request, Response},
         jwt::signed::SignedJwt,
         token::{Token, TokenType},
         token_retriever::DEFAULT_JWT_CLAIM_EXP,
-        TokenRetriever,
+        TokenRetriever, TokenRetrieverError,
     };
 
     use super::{TokenRetrieverWithCache, DEFAULT_AUDIENCE};
+
+    mock! {
+        pub TokenRetriever {}
+        impl TokenRetriever for TokenRetriever {
+            fn retrieve(&self) -> Result<Token, TokenRetrieverError>;
+        }
+    }
 
     #[test]
     // Test that a new token is retrieved when there is no cache and a cached token is
@@ -161,7 +171,7 @@ mod test {
         let fake_client_assertion = "client_assertion";
         let fake_token = "fakeToken";
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         jwt_signer
             .expect_sign()
             .once()
@@ -225,7 +235,7 @@ mod test {
         let client_id = "client_id";
         let token_expires_in = 2;
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         jwt_signer.expect_sign().times(2).returning(move |_| {
             Ok(SignedJwt {
                 value: "client_assertion".into(),
@@ -267,7 +277,7 @@ mod test {
     fn no_retries_and_fail_calls_retrieve_once() {
         let client_id = "client_id";
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         // This actually tests TokenRetrieverWithCache's `refresh_token`.
         // Calling `retrieve` makes calls to both first `sign` and then to `authenticate`.
         // We instruct the `authenticate` call to fail every time and check that `sign` is called only the number of times we expect.
@@ -303,7 +313,7 @@ mod test {
         let fake_token = "fake";
         let token_expires_in = 5;
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         // This actually tests TokenRetrieverWithCache's `refresh_token`.
         // Calling `retrieve` makes calls to both first `sign` and then to `authenticate`.
         // We instruct the `authenticate` call to fail every time and check that `sign` is called only the number of times we expect.
@@ -360,7 +370,7 @@ mod test {
     fn retries_fail() {
         let client_id = "client_id";
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         // This actually tests TokenRetrieverWithCache's `refresh_token`. Calling `retrieve` makes calls to both first `sign` and then to `authenticate`. We instruct the `authenticate` call to fail every time and check that `sign` is called only the number of times we expect.
         jwt_signer.expect_sign().times(3).returning(move |_| {
             Ok(SignedJwt {

@@ -17,7 +17,7 @@ pub enum HttpClientError {
     /// Represents a compression error.
     #[error("error compressing data: `{0}`")]
     CompressionError(String),
-    /// Represents a compression error.
+    /// Represents an unexpected response.
     #[error("invalid http response: `{0}`")]
     InvalidResponse(String),
 }
@@ -26,6 +26,16 @@ pub enum HttpClientError {
 pub trait HttpClient {
     /// A synchronous function sends a request. The method and url are defined inside the Request.
     fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError>;
+}
+
+// Accept closures as HttpClient implementations
+impl<F> HttpClient for F
+where
+    F: Fn(Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError>,
+{
+    fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError> {
+        self(req)
+    }
 }
 
 #[cfg(test)]

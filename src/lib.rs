@@ -32,6 +32,7 @@ pub mod authenticator;
 pub mod http_client;
 pub mod jwt;
 pub mod key;
+pub mod system_identity;
 pub mod token;
 pub mod token_retriever;
 
