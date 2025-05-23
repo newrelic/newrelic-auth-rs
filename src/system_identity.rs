@@ -23,8 +23,8 @@ mod tests {
             client_input::{AuthMethod, SystemIdentityCreationMetadata},
             generator::SystemIdentityGenerator,
             iam_client::{
-                http_iam_client::HttpIAMClient, response_data::SystemIdentityCreationResponseData,
-                tests::MockIAMClient,
+                http_iam_client::HttpIAMClient, http_token_retriever::HttpTokenRetriever,
+                response_data::SystemIdentityCreationResponseData, tests::MockIAMClient,
             },
         },
     };
@@ -126,16 +126,25 @@ mod tests {
             .once()
             .returning(|| Ok(vec![1, 2, 3]));
 
+        let http_token_retriever = HttpTokenRetriever::from_auth_method(
+            &http_client,
+            &cli_input.auth_method,
+            cli_input.environment.token_renewal_endpoint(),
+            cli_input.client_id.to_owned(),
+        )
+        .unwrap();
+
         // IAMClient from HttpClient
         let iam_client = HttpIAMClient::new(
             &http_client,
-            cli_input.to_owned(), // I compare with this value later, keep it
+            http_token_retriever,
+            cli_input.to_owned(), // I compare with this value later, keep it around
         );
 
         // As we are creating concretions, we only need to set expectations for the key creator
         // (which could be just abstracting the filesystem) and the HTTP client.
         // However, the final structures that I create are actually generic over
-        // `IAMClient`s and `TokenRetriever`s, so that makes it extensible for other, non-HTTP-based
+        // `IAMClient`s and `KeyCreator`s, so that makes it extensible for other, non-HTTP-based
         // implementations.
         let system_identity_generator = SystemIdentityGenerator {
             key_creator,
@@ -157,7 +166,7 @@ mod tests {
             name: "test".to_string(),
             organization_id: "org-id".to_string(),
             client_id: "client-id".to_string(),
-            auth_method: AuthMethod::FromLocalPrivateKey(RS256_PRIVATE_KEY.as_bytes().to_vec()),
+            auth_method: AuthMethod::FromLocalPrivateKey(RS256_PRIVATE_KEY.as_bytes().into()),
             environment: SystemIdentityCreationEnvironment::Staging,
         };
 
@@ -240,16 +249,25 @@ mod tests {
             .once()
             .returning(|| Ok(vec![1, 2, 3]));
 
+        let http_token_retriever = HttpTokenRetriever::from_auth_method(
+            &http_client,
+            &cli_input.auth_method,
+            cli_input.environment.token_renewal_endpoint(),
+            cli_input.client_id.to_owned(),
+        )
+        .unwrap();
+
         // IAMClient from HttpClient
         let iam_client = HttpIAMClient::new(
             &http_client,
-            cli_input.to_owned(), // I compare with this value later, keep it
+            http_token_retriever,
+            cli_input.to_owned(), // I compare with this value later, keep it around
         );
 
         // As we are creating concretions, we only need to set expectations for the key creator
         // (which could be just abstracting the filesystem) and the HTTP client.
         // However, the final structures that I create are actually generic over
-        // `IAMClient`s and `TokenRetriever`s, so that makes it extensible for other, non-HTTP-based
+        // `IAMClient`s and `KeyCreator`s, so that makes it extensible for other, non-HTTP-based
         // implementations.
         let system_identity_generator = SystemIdentityGenerator {
             key_creator,
@@ -259,7 +277,7 @@ mod tests {
         let result = system_identity_generator.generate();
         assert!(result.is_ok());
 
-        let result = dbg!(result.unwrap());
+        let result = result.unwrap();
         assert_eq!(result.name, cli_input.name);
         assert_eq!(result.client_id, cli_input.client_id);
         assert_eq!(result.pub_key, vec![1, 2, 3]);

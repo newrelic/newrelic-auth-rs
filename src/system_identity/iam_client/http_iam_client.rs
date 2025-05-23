@@ -10,27 +10,32 @@ use crate::{
     token::AccessToken, TokenRetriever,
 };
 
-use super::{
-    error::IAMClientError, http_token_retriever::HttpTokenRetriever,
-    response_data::SystemIdentityCreationResponseData, IAMClient,
-};
+use super::{error::IAMClientError, response_data::SystemIdentityCreationResponseData, IAMClient};
 
 /// Implementation of the IAMClient trait for a generic HTTP client.
-pub struct HttpIAMClient<'a, C>
+pub struct HttpIAMClient<'a, C, T>
 where
     C: HttpClient,
+    T: TokenRetriever,
 {
     http_client: &'a C,
+    token_retriever: T,
     metadata: SystemIdentityCreationMetadata,
 }
 
-impl<'a, C> HttpIAMClient<'a, C>
+impl<'a, C, T> HttpIAMClient<'a, C, T>
 where
     C: HttpClient,
+    T: TokenRetriever,
 {
-    pub fn new(http_client: &'a C, metadata: SystemIdentityCreationMetadata) -> Self {
+    pub fn new(
+        http_client: &'a C,
+        token_retriever: T,
+        metadata: SystemIdentityCreationMetadata,
+    ) -> Self {
         Self {
             http_client,
+            token_retriever,
             metadata,
         }
     }
@@ -87,23 +92,18 @@ where
     }
 }
 
-impl<C> IAMClient for HttpIAMClient<'_, C>
+impl<C, T> IAMClient for HttpIAMClient<'_, C, T>
 where
     C: HttpClient,
+    T: TokenRetriever,
 {
     type Error = IAMClientError;
     fn create_system_identity(
         &self,
         pub_key: &[u8],
     ) -> Result<SystemIdentityCreationResponseData, Self::Error> {
-        let http_token_retriever = HttpTokenRetriever::from_auth_method(
-            self.http_client,
-            &self.metadata.auth_method,
-            self.metadata.environment.token_renewal_endpoint(),
-            self.metadata.client_id.to_owned(),
-        )
-        .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
-        let token = http_token_retriever
+        let token = self
+            .token_retriever
             .retrieve()
             .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
         self.create_system_identity(token.access_token(), pub_key)

@@ -7,13 +7,14 @@ use serde_json::json;
 
 use crate::{
     http_client::{HttpClient, HttpClientError},
+    system_identity::client_input::ClientSecret,
     token::{Token, TokenType},
     TokenRetriever, TokenRetrieverError,
 };
 
-pub(super) struct L1TokenRetriever<'a, C: HttpClient> {
+pub struct L1TokenRetriever<'a, C: HttpClient> {
     client_id: String,
-    client_secret: String,
+    client_secret: ClientSecret,
     http_client: &'a C,
     token_retrieval_uri: &'a Uri,
 }
@@ -22,7 +23,7 @@ impl<C: HttpClient> fmt::Debug for L1TokenRetriever<'_, C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("L1TokenRetriever")
             .field("client_id", &self.client_id)
-            .field("client_secret", &self.client_secret)
+            .field("client_secret", &"<hidden>") // Do not print the secret
             .field("token_retrieval_uri", &self.token_retrieval_uri)
             .field("http_client", &"impl HttpClient") // HttpClient does not implement Debug
             .finish()
@@ -32,7 +33,7 @@ impl<C: HttpClient> fmt::Debug for L1TokenRetriever<'_, C> {
 impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
     pub(super) fn new(
         client_id: String,
-        client_secret: String,
+        client_secret: ClientSecret,
         http_client: &'a C,
         token_retrieval_uri: &'a Uri,
     ) -> Self {

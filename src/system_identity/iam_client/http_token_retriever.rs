@@ -14,7 +14,7 @@ use crate::{
 
 use super::l1_token_retriever::L1TokenRetriever;
 
-pub(super) enum HttpTokenRetriever<'a, C: HttpClient> {
+pub enum HttpTokenRetriever<'a, C: HttpClient> {
     ClientSecretRetriever(L1TokenRetriever<'a, C>),
     PrivateKeyRetriever(TokenRetrieverWithCache<HttpAuthenticator<'a, C>, JwtSignerImpl>),
 }
@@ -66,7 +66,7 @@ where
                 )),
             ),
             AuthMethod::FromLocalPrivateKey(private_key_pem) => {
-                let signer = LocalPrivateKeySigner::try_from(private_key_pem.as_slice())
+                let signer = LocalPrivateKeySigner::try_from(private_key_pem)
                     .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
                 let jwt_signer = JwtSignerImpl::Local(signer);
                 let authenticator = HttpAuthenticator::new(http_client, token_retrieval_uri);
