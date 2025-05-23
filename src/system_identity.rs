@@ -1,4 +1,4 @@
-mod client_input;
+pub mod client_input;
 mod environment;
 mod generator;
 mod iam_client;
@@ -7,8 +7,8 @@ mod output_platform;
 #[derive(Debug, Clone, Default)]
 pub struct SystemIdentity {
     pub name: String,
-    pub client_id: String, // TODO type better
-    pub pub_key: Vec<u8>,  // TODO type better
+    pub client_id: String,
+    pub pub_key: Vec<u8>,
 }
 
 #[cfg(test)]
@@ -41,7 +41,7 @@ mod tests {
             name: "test".to_string(),
             organization_id: "org-id".to_string(),
             client_id: "client-id".to_string(),
-            auth_method: AuthMethod::ClientSecret("client-secret".to_string()),
+            auth_method: AuthMethod::ClientSecret("client-secret".into()),
             environment: SystemIdentityCreationEnvironment::Staging,
         };
 
