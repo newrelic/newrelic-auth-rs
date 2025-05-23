@@ -91,10 +91,11 @@ impl<C> IAMClient for HttpIAMClient<'_, C>
 where
     C: HttpClient,
 {
+    type Error = IAMClientError;
     fn create_system_identity(
         &self,
         pub_key: &[u8],
-    ) -> Result<SystemIdentityCreationResponseData, IAMClientError> {
+    ) -> Result<SystemIdentityCreationResponseData, Self::Error> {
         let http_token_retriever = HttpTokenRetriever::from_auth_method(
             self.http_client,
             &self.metadata.auth_method,

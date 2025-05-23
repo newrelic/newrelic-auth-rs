@@ -1,3 +1,5 @@
+use std::fmt;
+
 use thiserror::Error;
 
 use crate::key::creator::Creator as KeyCreator;
@@ -7,14 +9,35 @@ use super::{
     SystemIdentity,
 };
 
-#[derive(Debug, Clone, Error)]
-pub enum SystemIdentityGenerationError {
-    // This should probably leverage associated types for the involved traits, so we
-    // can gain automatic conversions via #[from] annotations...
+#[derive(Error)]
+pub enum SystemIdentityGenerationError<K, I>
+where
+    K: KeyCreator,
+    I: IAMClient,
+{
     #[error("error creating key pair: `{0}`")]
-    KeyPairCreator(String),
+    KeyPairCreator(K::Error),
     #[error("error retrieving the system identity: `{0}`")]
-    IAMClient(String),
+    IAMClient(I::Error),
+}
+
+impl<K, I> fmt::Debug for SystemIdentityGenerationError<K, I>
+where
+    K: KeyCreator,
+    I: IAMClient,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SystemIdentityGenerationError::KeyPairCreator(err) => f
+                .debug_tuple("SystemIdentityGenerationError::KeyPairCreator")
+                .field(err)
+                .finish(),
+            SystemIdentityGenerationError::IAMClient(err) => f
+                .debug_tuple("SystemIdentityGenerationError::IAMClient")
+                .field(err)
+                .finish(),
+        }
+    }
 }
 
 pub struct SystemIdentityGenerator<K, I>
@@ -31,16 +54,15 @@ where
     K: KeyCreator,
     I: IAMClient,
 {
-    pub fn generate(self) -> Result<SystemIdentity, SystemIdentityGenerationError> {
-        let pub_key = self.key_creator.create().map_err(|_| {
-            SystemIdentityGenerationError::KeyPairCreator(String::from(
-                "Could not obtain public key",
-            ))
-        })?; // FIXME Creator::Error does not implement std::error::Error, should be convertible to something we can work with
+    pub fn generate(self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
+        let pub_key = self
+            .key_creator
+            .create()
+            .map_err(SystemIdentityGenerationError::KeyPairCreator)?; // FIXME Creator::Error does not implement std::error::Error, should be convertible to something we can work with
         let SystemIdentityCreationResponseData { client_id, name } = self
             .iam_client
             .create_system_identity(pub_key.as_slice())
-            .map_err(|e| SystemIdentityGenerationError::IAMClient(e.to_string()))?;
+            .map_err(SystemIdentityGenerationError::IAMClient)?;
 
         Ok(SystemIdentity {
             name,
