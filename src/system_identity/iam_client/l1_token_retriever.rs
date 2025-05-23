@@ -43,8 +43,10 @@ impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
             token_retrieval_uri,
         }
     }
+}
 
-    fn retrieve_token(&self) -> Result<Token, TokenRetrieverError> {
+impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
+    fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let json_body_string = json!({
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -86,12 +88,6 @@ impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
         .map_err(|e| {
             TokenRetrieverError::TokenRetrieverError(format!("Failed to retrieve token: {e}"))
         })
-    }
-}
-
-impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
-    fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
-        self.retrieve_token()
     }
 }
 
