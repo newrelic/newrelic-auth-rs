@@ -11,8 +11,6 @@ use super::{
 pub enum SystemIdentityGenerationError {
     // This should probably leverage associated types for the involved traits, so we
     // can gain automatic conversions via #[from] annotations...
-    #[error("error retrieving token: `{0}`")]
-    TokenRetriever(String),
     #[error("error creating key pair: `{0}`")]
     KeyPairCreator(String),
     #[error("error retrieving the system identity: `{0}`")]
