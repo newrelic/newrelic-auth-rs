@@ -2,10 +2,10 @@ use std::{fmt, time::Duration};
 
 use chrono::{TimeDelta, Utc};
 use http::{header::CONTENT_TYPE, StatusCode, Uri};
-use serde::Deserialize;
 use serde_json::json;
 
 use crate::{
+    authenticator::TokenRetrievalResponse,
     http_client::{HttpClient, HttpClientError},
     system_identity::client_input::ClientSecret,
     token::{Token, TokenType},
@@ -104,14 +104,6 @@ impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
             TokenRetrieverError::TokenRetrieverError(format!("Failed to retrieve token: {e}"))
         })
     }
-}
-
-/// Basic response coming from the NR token retrieval endpoint
-#[derive(Debug, PartialEq, Deserialize)]
-struct TokenRetrievalResponse {
-    access_token: String,
-    expires_in: u64,
-    token_type: String,
 }
 
 impl TryFrom<TokenRetrievalResponse> for Token {

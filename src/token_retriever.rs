@@ -1,7 +1,7 @@
 use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, Request};
 use crate::jwt::claims::Claims;
 use crate::jwt::signer::JwtSigner;
-use crate::token::{Token, TokenType};
+use crate::token::Token;
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 use chrono::{TimeDelta, Utc};
 use std::str::FromStr;
@@ -125,11 +125,8 @@ where
 
         let response = self.authenticator.authenticate(request)?;
 
-        Ok(Token::new(
-            response.access_token,
-            TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(response.expires_in.into()),
-        ))
+        Token::try_from(response)
+            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))
     }
 }
 
@@ -145,7 +142,9 @@ pub mod test {
 
     use crate::jwt::signer::tests::MockJwtSigner;
     use crate::{
-        authenticator::{AuthenticateError, ClientAssertionType, GrantType, Request, Response},
+        authenticator::{
+            AuthenticateError, ClientAssertionType, GrantType, Request, TokenRetrievalResponse,
+        },
         jwt::signed::SignedJwt,
         token::{Token, TokenType},
         token_retriever::DEFAULT_JWT_CLAIM_EXP,
@@ -200,10 +199,10 @@ pub mod test {
             .once()
             .with(eq(expected_request))
             .returning(move |_| {
-                Ok(Response {
+                Ok(TokenRetrievalResponse {
                     access_token: fake_token.into(),
                     expires_in: token_expires_in,
-                    token_type: "".into(),
+                    token_type: "Bearer".into(),
                 })
             });
 
@@ -213,7 +212,7 @@ pub mod test {
         let expected_token = Token::new(
             fake_token.into(),
             TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(token_expires_in.into()),
+            Utc::now() + TimeDelta::seconds(token_expires_in as i64),
         );
 
         let cache_miss_token = token_retriever.retrieve().unwrap();
@@ -247,11 +246,11 @@ pub mod test {
             .expect_authenticate()
             .times(2)
             .returning(move |_| {
-                Ok(Response {
+                Ok(TokenRetrievalResponse {
                     // generates a different token each time.
                     access_token: Utc::now().to_string(),
                     expires_in: token_expires_in,
-                    token_type: "bearer".into(),
+                    token_type: "Bearer".into(),
                 })
             });
 
@@ -261,9 +260,7 @@ pub mod test {
         let cache_miss_token = token_retriever.retrieve().unwrap();
 
         // waits until the cached token expired + buffer to avoid flaky failures.
-        thread::sleep(
-            time::Duration::from_secs(token_expires_in.into()) + time::Duration::from_secs(1),
-        );
+        thread::sleep(time::Duration::from_secs(token_expires_in) + time::Duration::from_secs(1));
 
         let cache_expired_token = token_retriever.retrieve().unwrap();
 
@@ -339,11 +336,11 @@ pub mod test {
             .expect_authenticate()
             .once()
             .returning(move |_| {
-                Ok(Response {
+                Ok(TokenRetrievalResponse {
                     // generates a different token each time.
                     access_token: fake_token.into(),
                     expires_in: token_expires_in,
-                    token_type: "bearer".into(),
+                    token_type: "Bearer".into(),
                 })
             });
 
@@ -354,7 +351,7 @@ pub mod test {
         let expected_token = Token::new(
             fake_token.into(),
             TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(token_expires_in.into()),
+            Utc::now() + TimeDelta::seconds(token_expires_in as i64),
         );
 
         // Retries expired, error returned
