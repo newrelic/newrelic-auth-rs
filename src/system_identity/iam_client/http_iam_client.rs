@@ -7,7 +7,7 @@ use serde_json::json;
 
 use crate::{
     http_client::HttpClient, system_identity::client_input::SystemIdentityCreationMetadata,
-    token::AccessToken, TokenRetriever,
+    token::Token, TokenRetriever,
 };
 
 use super::{error::IAMClientError, response_data::SystemIdentityCreationResponseData, IAMClient};
@@ -44,7 +44,7 @@ where
         name: &str,
         organization_id: &str,
         pub_key_b64: &str,
-        token: &AccessToken,
+        token: &Token,
         system_identity_creation_endpoint: &Uri,
     ) -> Result<Request<Vec<u8>>, IAMClientError> {
         let json_body_string = json!({
@@ -57,7 +57,7 @@ where
             .map_err(|e| IAMClientError::Encoder(format!("Failed to encode JSON: {e}")))?;
 
         let mut bearer_token_header =
-            HeaderValue::from_str(&format!("Bearer {token}")).map_err(|_| {
+            HeaderValue::from_str(&format!("Bearer {}", token.access_token())).map_err(|_| {
                 IAMClientError::Transport(
                     "invalid HTTP header value set for Authorization".to_string(),
                 )
@@ -75,7 +75,7 @@ where
 
     fn create_system_identity(
         &self,
-        token: &AccessToken,
+        token: &Token,
         pub_key: &[u8],
     ) -> Result<SystemIdentityCreationResponseData, IAMClientError> {
         let pub_key_b64 = general_purpose::STANDARD.encode(pub_key);
@@ -122,23 +122,32 @@ where
             .token_retriever
             .retrieve()
             .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
-        self.create_system_identity(token.access_token(), pub_key)
+        self.create_system_identity(&token, pub_key)
     }
 }
 
 #[cfg(test)]
 mod tests {
 
+    use chrono::Utc;
     use http::Method;
 
-    use crate::{http_client::tests::MockHttpClient, token_retriever::test::MockTokenRetriever};
+    use crate::{
+        http_client::tests::MockHttpClient,
+        token::{AccessToken, TokenType},
+        token_retriever::test::MockTokenRetriever,
+    };
 
     use super::*;
 
     #[test]
     fn build_request() {
         let uri: Uri = "https://example.com/graphql".parse().unwrap();
-        let token = AccessToken::from("test_token");
+        let token = Token::new(
+            AccessToken::from("test_token"),
+            TokenType::Bearer,
+            Utc::now(),
+        );
         let name = "test_identity";
         let org_id = "org_123";
         let pub_key_b64 = "cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==";
@@ -160,7 +169,7 @@ mod tests {
         );
         assert_eq!(
             request.headers().get(AUTHORIZATION).unwrap(),
-            &HeaderValue::from_str(&format!("Bearer {token}")).unwrap()
+            &HeaderValue::from_str(&format!("Bearer {}", token.access_token())).unwrap()
         );
         assert!(request.headers().get(AUTHORIZATION).unwrap().is_sensitive());
         let body: serde_json::Value = serde_json::from_slice(request.body()).unwrap();
