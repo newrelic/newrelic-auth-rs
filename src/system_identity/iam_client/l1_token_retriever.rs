@@ -45,32 +45,45 @@ impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
             token_retrieval_uri,
         }
     }
-}
 
-impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
-    fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
+    fn build_request(
+        client_id: &str,
+        client_secret: &ClientSecret,
+        uri: &Uri,
+    ) -> Result<http::Request<Vec<u8>>, TokenRetrieverError> {
         let json_body_string = json!({
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
+            "client_id": client_id,
+            "client_secret": client_secret,
             "grant_type": "client_credentials",
         });
         let json_body = serde_json::to_vec(&json_body_string).map_err(|e| {
             TokenRetrieverError::TokenRetrieverError(format!("Failed to encode JSON: {e}"))
         })?;
 
-        let request = http::Request::builder()
-            .uri(self.token_retrieval_uri)
+        http::Request::builder()
+            .uri(uri)
             .method("POST")
             .header(CONTENT_TYPE, "application/json")
             .body(json_body)
             .map_err(|e| {
                 TokenRetrieverError::TokenRetrieverError(format!("Failed to build request: {e}"))
-            })?;
+            })
+    }
+}
+
+impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
+    fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
+        let request = Self::build_request(
+            &self.client_id,
+            &self.client_secret,
+            self.token_retrieval_uri,
+        )?;
 
         let response = self.http_client.send(request).map_err(|e| {
             TokenRetrieverError::TokenRetrieverError(format!("Failed to send HTTP request: {e}"))
         })?;
         let body = response.body();
+
         match response.status() {
             StatusCode::OK => {
                 let decoded_body: TokenRetrievalResponse =
@@ -120,5 +133,41 @@ impl TryFrom<TokenRetrievalResponse> for Token {
         })?;
 
         Ok(Token::new(access_token, token_type, expires_at))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use crate::http_client::tests::MockHttpClient;
+
+    use super::*;
+
+    #[test]
+    fn build_request() {
+        let uri: Uri = "https://example.com/token".parse().unwrap();
+        let client_id = "test_client_id".to_string();
+        let client_secret = ClientSecret::from("test_client");
+
+        let request =
+            L1TokenRetriever::<MockHttpClient>::build_request(&client_id, &client_secret, &uri)
+                .unwrap();
+
+        assert!(request.method() == http::Method::POST);
+        assert!(request.uri() == &uri);
+        assert!(request.headers().get(CONTENT_TYPE).is_some());
+        assert_eq!(
+            request.headers().get(CONTENT_TYPE).unwrap(),
+            "application/json"
+        );
+        let body = request.body();
+        let expected_body = json!({
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "grant_type": "client_credentials",
+        });
+        let body_value: Value = serde_json::from_slice(body).unwrap();
+        assert_eq!(body_value, expected_body);
     }
 }
