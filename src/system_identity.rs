@@ -143,7 +143,7 @@ mod tests {
 
         // As we are creating concretions, we only need to set expectations for the key creator
         // (which could be just abstracting the filesystem) and the HTTP client.
-        // However, the final structures that I create are actually generic over
+        // However, the final structures that we create are actually generic over
         // `IAMClient`s and `KeyCreator`s, so that makes it extensible for other, non-HTTP-based
         // implementations.
         let system_identity_generator = SystemIdentityGenerator {
@@ -266,7 +266,7 @@ mod tests {
 
         // As we are creating concretions, we only need to set expectations for the key creator
         // (which could be just abstracting the filesystem) and the HTTP client.
-        // However, the final structures that I create are actually generic over
+        // However, the final structures that we create are actually generic over
         // `IAMClient`s and `KeyCreator`s, so that makes it extensible for other, non-HTTP-based
         // implementations.
         let system_identity_generator = SystemIdentityGenerator {
