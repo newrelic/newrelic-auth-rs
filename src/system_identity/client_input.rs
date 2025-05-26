@@ -1,10 +1,12 @@
+//! The types contained inside this module are the required inputs for the System Identity creation
+//! supported methods.
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
 use crate::jwt::signer::local::{LocalPrivateKeySigner, LocalPrivateKeySignerError};
 
-use super::environment::SystemIdentityCreationEnvironment;
+use super::{environment::SystemIdentityCreationEnvironment, output_platform::AuthOutputPlatform};
 
 /// Represents the input data required to create a System Identity.
 #[derive(Debug, Clone, PartialEq)]
@@ -14,6 +16,7 @@ pub struct SystemIdentityCreationMetadata {
     pub client_id: String,
     pub auth_method: AuthMethod,
     pub environment: SystemIdentityCreationEnvironment,
+    pub output_platform: AuthOutputPlatform,
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -48,17 +51,18 @@ impl TryFrom<&PrivateKeyPem> for LocalPrivateKeySigner {
     }
 }
 
+/// Represents the supported authentication methods with which a System Identity can be created.
 #[derive(Clone, PartialEq)]
 pub enum AuthMethod {
-    ClientSecret(ClientSecret),         // L1 method
-    FromLocalPrivateKey(PrivateKeyPem), // L2 method
+    ClientSecret(ClientSecret), // L1 method
+    PrivateKey(PrivateKeyPem),  // L2 method
 }
 
 impl fmt::Debug for AuthMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AuthMethod::ClientSecret(_) => write!(f, "ClientSecret"),
-            AuthMethod::FromLocalPrivateKey(_) => write!(f, "FromLocalPrivateKey"),
+            AuthMethod::PrivateKey(_) => write!(f, "FromLocalPrivateKey"),
         }
     }
 }

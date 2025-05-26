@@ -14,6 +14,9 @@ use crate::{
 
 use super::l1_token_retriever::L1TokenRetriever;
 
+/// HTTP-based token retriever.
+///
+/// It will work with both L1 and L2 authentication methods, informed by [`AuthMethod`].
 pub enum HttpTokenRetriever<'a, C: HttpClient> {
     ClientSecretRetriever(L1TokenRetriever<'a, C>),
     PrivateKeyRetriever(TokenRetrieverWithCache<HttpAuthenticator<'a, C>, JwtSignerImpl>),
@@ -50,6 +53,7 @@ impl<'a, C> HttpTokenRetriever<'a, C>
 where
     C: HttpClient,
 {
+    /// Creates a new [`HttpTokenRetriever`] based on the provided authentication method.
     pub fn from_auth_method(
         http_client: &'a C,
         auth_method: &AuthMethod,
@@ -65,7 +69,7 @@ where
                     token_retrieval_uri,
                 )),
             ),
-            AuthMethod::FromLocalPrivateKey(private_key_pem) => {
+            AuthMethod::PrivateKey(private_key_pem) => {
                 let signer = LocalPrivateKeySigner::try_from(private_key_pem)
                     .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
                 let jwt_signer = JwtSignerImpl::Local(signer);

@@ -1,3 +1,5 @@
+//! Module containing the structures that interact with New Relic services to create the
+//! System Identity.
 use response_data::SystemIdentityCreationResponseData;
 
 mod error;
@@ -6,6 +8,7 @@ pub mod http_token_retriever;
 mod l1_token_retriever;
 pub mod response_data;
 
+/// Interface for the system identity client.
 pub trait IAMClient {
     // TODO type Output;
     type Error: std::error::Error;

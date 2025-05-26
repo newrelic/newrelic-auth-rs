@@ -9,6 +9,39 @@ use super::{
     SystemIdentity,
 };
 
+/// This type is responsible for generating a System Identity and its associated key pair.
+pub struct SystemIdentityGenerator<K, I>
+where
+    K: KeyCreator,
+    I: IAMClient,
+{
+    pub(super) key_creator: K,
+    pub(super) iam_client: I,
+}
+
+impl<K, I> SystemIdentityGenerator<K, I>
+where
+    K: KeyCreator,
+    I: IAMClient,
+{
+    pub fn generate(self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
+        let pub_key = self
+            .key_creator
+            .create()
+            .map_err(SystemIdentityGenerationError::KeyPairCreator)?;
+        let SystemIdentityCreationResponseData { client_id, name } = self
+            .iam_client
+            .create_system_identity(pub_key.as_slice())
+            .map_err(SystemIdentityGenerationError::IAMClient)?;
+
+        Ok(SystemIdentity {
+            name,
+            client_id,
+            pub_key,
+        })
+    }
+}
+
 #[derive(Error)]
 pub enum SystemIdentityGenerationError<K, I>
 where
@@ -37,37 +70,5 @@ where
                 .field(err)
                 .finish(),
         }
-    }
-}
-
-pub struct SystemIdentityGenerator<K, I>
-where
-    K: KeyCreator,
-    I: IAMClient,
-{
-    pub(super) key_creator: K,
-    pub(super) iam_client: I,
-}
-
-impl<K, I> SystemIdentityGenerator<K, I>
-where
-    K: KeyCreator,
-    I: IAMClient,
-{
-    pub fn generate(self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
-        let pub_key = self
-            .key_creator
-            .create()
-            .map_err(SystemIdentityGenerationError::KeyPairCreator)?; // FIXME Creator::Error does not implement std::error::Error, should be convertible to something we can work with
-        let SystemIdentityCreationResponseData { client_id, name } = self
-            .iam_client
-            .create_system_identity(pub_key.as_slice())
-            .map_err(SystemIdentityGenerationError::IAMClient)?;
-
-        Ok(SystemIdentity {
-            name,
-            client_id,
-            pub_key,
-        })
     }
 }

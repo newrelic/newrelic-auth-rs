@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
-// TODO: Currently this is the only supported output for the application, so we are
-// not actually using this enum yet.
+/// This type represents the output platform for the authentication credentials created with
+/// the System Identity.
+#[derive(Debug, Clone, PartialEq)]
 pub enum AuthOutputPlatform {
     LocalPrivateKeyPath(PathBuf),
     // Vault(VaultConfig), // TODO: Vault

@@ -12,6 +12,7 @@ use crate::{
     TokenRetriever, TokenRetrieverError,
 };
 
+/// HTTP-based token retriever for L1 authentication method (client ID + client secret)
 pub struct L1TokenRetriever<'a, C: HttpClient> {
     client_id: String,
     client_secret: ClientSecret,

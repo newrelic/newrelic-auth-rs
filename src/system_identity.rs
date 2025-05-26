@@ -1,9 +1,13 @@
+//! Module containing the types and logic in charge of generating System Identities for New Relic.
+//!
+//! Refer to the submodules for more information.
 pub mod client_input;
 mod environment;
 mod generator;
 mod iam_client;
 mod output_platform;
 
+/// System identity information.
 #[derive(Debug, Clone, Default)]
 pub struct SystemIdentity {
     pub name: String,
@@ -13,6 +17,8 @@ pub struct SystemIdentity {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use mockall::Sequence;
 
     use crate::{
@@ -26,6 +32,7 @@ mod tests {
                 http_iam_client::HttpIAMClient, http_token_retriever::HttpTokenRetriever,
                 response_data::SystemIdentityCreationResponseData, tests::MockIAMClient,
             },
+            output_platform::AuthOutputPlatform,
         },
     };
 
@@ -43,6 +50,7 @@ mod tests {
             client_id: "client-id".to_string(),
             auth_method: AuthMethod::ClientSecret("client-secret".into()),
             environment: SystemIdentityCreationEnvironment::Staging,
+            output_platform: AuthOutputPlatform::LocalPrivateKeyPath(PathBuf::default()),
         };
 
         // When creating a system identity from a client secret, the HTTP client implementation
@@ -166,8 +174,9 @@ mod tests {
             name: "test".to_string(),
             organization_id: "org-id".to_string(),
             client_id: "client-id".to_string(),
-            auth_method: AuthMethod::FromLocalPrivateKey(RS256_PRIVATE_KEY.as_bytes().into()),
+            auth_method: AuthMethod::PrivateKey(RS256_PRIVATE_KEY.as_bytes().into()),
             environment: SystemIdentityCreationEnvironment::Staging,
+            output_platform: AuthOutputPlatform::LocalPrivateKeyPath(PathBuf::default()),
         };
 
         // When creating a system identity from a private key, the HTTP client implementation

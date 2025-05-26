@@ -44,6 +44,7 @@ static US_IDENTITY_CREATION_ENDPOINT: LazyLock<Uri> = LazyLock::new(|| {
         .expect("Failed to parse known URL: US_IDENTITY_CREATION_ENDPOINT")
 });
 
+/// Represents the environment in which a System Identity is created (US, EU, Staging).
 #[derive(Debug, Clone, PartialEq)]
 pub enum SystemIdentityCreationEnvironment {
     US,
@@ -56,6 +57,8 @@ pub enum SystemIdentityCreationEnvironment {
 }
 
 impl SystemIdentityCreationEnvironment {
+    /// Get a reference to the URI for the System Identity creation endpoint
+    /// for the current environment.
     pub fn identity_creation_endpoint(&self) -> &Uri {
         match self {
             SystemIdentityCreationEnvironment::US => &US_IDENTITY_CREATION_ENDPOINT,
@@ -68,6 +71,7 @@ impl SystemIdentityCreationEnvironment {
         }
     }
 
+    /// Get a reference to the URI for the token renewal endpoint for the current environment.
     pub fn token_renewal_endpoint(&self) -> &Uri {
         match self {
             SystemIdentityCreationEnvironment::US => &US_TOKEN_RENEWAL_ENDPOINT,
