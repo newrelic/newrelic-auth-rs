@@ -1,0 +1,77 @@
+name: 📞 Build container images
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      image-tag:
+        description: 'Image tag'
+        type: string
+        required: true
+      push:
+        description: 'Push image'
+        type: boolean
+        required: true
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    name: Build/Push images
+    env:
+      DOCKER_IMAGE_NAME_AUTH: newrelic/newrelic-auth-cli
+      DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Obtain Rust version from project
+        run: |
+          RUST_VERSION=$(grep "rust-version" Cargo.toml | cut -d "=" -f2 | tr -d "[:space:]")
+          echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
+
+      - name: Install Rust ${{ env.RUST_VERSION }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Build newrelic auth cli
+        run: |
+          which cross || cargo install cross
+          export RUSTFLAGS="-C target-feature=+crt-static"
+          cross build --target "aarch64-unknown-linux-musl" --profile release 
+          cross build --target "x86_64-unknown-linux-musl" --profile release 
+          cp ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli ./target/newrelic-auth-cli-arm64
+          cp ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli ./target/newrelic-auth-cli-amd64
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
+
+      - name: Build and push images
+        if: ${{ inputs.push }}
+        run: |
+          docker buildx build \
+            --push \
+            --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME_AUTH:${{ inputs.image-tag }} \
+            --attest type=provenance,mode=max \
+            --attest type=sbom \
+            .
+
+      - name: Build images
+        if: ${{ ! inputs.push }}
+        run: |
+          docker buildx build \
+            --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME_AUTH:${{ inputs.image-tag }} \
+            --attest type=provenance,mode=max \
+            --attest type=sbom \
+            .

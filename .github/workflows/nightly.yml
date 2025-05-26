@@ -1,0 +1,24 @@
+name: Nightly release
+permissions:
+  contents: read
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1-5"
+
+jobs:
+  build-image:
+    name: Build and Push nightly image
+    uses: ./.github/workflows/component_image.yml
+    with:
+      image-tag: nightly
+      push: true
+    secrets: inherit
+
+  security-image:
+    name: Security scan
+    needs: [ build-image ]
+    uses: ./.github/workflows/component_image_security.yml
+    with:
+      image-tag: nightly
+    secrets: inherit
