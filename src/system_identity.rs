@@ -28,10 +28,11 @@ mod tests {
         key::creator::tests::MockCreator,
         system_identity::{
             client_input::{AuthMethod, ClientSecret, SystemIdentityCreationMetadata},
-            generator::SystemIdentityGenerator,
+            generator::L2SystemIdentityGenerator,
             iam_client::{
                 http_iam_client::HttpIAMClient, http_token_retriever::HttpTokenRetriever,
-                response_data::SystemIdentityCreationResponseData, tests::MockIAMClient,
+                l2_creator::tests::MockL2IAMClient,
+                response_data::SystemIdentityCreationResponseData,
             },
             output_platform::AuthOutputPlatform,
         },
@@ -155,7 +156,7 @@ mod tests {
         // However, the final structures that we create are actually generic over
         // `IAMClient`s and `KeyCreator`s, so that makes it extensible for other, non-HTTP-based
         // implementations.
-        let system_identity_generator = SystemIdentityGenerator {
+        let system_identity_generator = L2SystemIdentityGenerator {
             key_creator,
             iam_client,
         };
@@ -172,7 +173,7 @@ mod tests {
     #[test]
     fn create_system_identity_mocked() {
         let mut key_creator = MockCreator::new();
-        let mut iam_client = MockIAMClient::new();
+        let mut iam_client = MockL2IAMClient::new();
         let mut sequence = Sequence::new();
 
         key_creator
@@ -181,7 +182,7 @@ mod tests {
             .in_sequence(&mut sequence)
             .returning(|| Ok(vec![1, 2, 3]));
         iam_client
-            .expect_create_system_identity()
+            .expect_create_l2_system_identity()
             .once()
             .in_sequence(&mut sequence)
             .returning(|_| {
@@ -191,7 +192,7 @@ mod tests {
                 })
             });
 
-        let system_identity_generator = SystemIdentityGenerator {
+        let system_identity_generator = L2SystemIdentityGenerator {
             key_creator,
             iam_client,
         };

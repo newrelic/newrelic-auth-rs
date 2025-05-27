@@ -5,24 +5,26 @@ use thiserror::Error;
 use crate::key::creator::Creator as KeyCreator;
 
 use super::{
-    iam_client::{response_data::SystemIdentityCreationResponseData, IAMClient},
+    iam_client::{
+        l2_creator::L2IdentityCreator, response_data::SystemIdentityCreationResponseData,
+    },
     SystemIdentity,
 };
 
 /// This type is responsible for generating a System Identity and its associated key pair.
-pub struct SystemIdentityGenerator<K, I>
+pub struct L2SystemIdentityGenerator<K, I>
 where
     K: KeyCreator,
-    I: IAMClient,
+    I: L2IdentityCreator,
 {
     pub(super) key_creator: K,
     pub(super) iam_client: I,
 }
 
-impl<K, I> SystemIdentityGenerator<K, I>
+impl<K, I> L2SystemIdentityGenerator<K, I>
 where
     K: KeyCreator,
-    I: IAMClient,
+    I: L2IdentityCreator,
 {
     pub fn generate(self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
         let pub_key = self
@@ -31,7 +33,7 @@ where
             .map_err(SystemIdentityGenerationError::KeyPairCreator)?;
         let SystemIdentityCreationResponseData { client_id, name } = self
             .iam_client
-            .create_system_identity(pub_key.as_slice())
+            .create_l2_system_identity(pub_key.as_slice())
             .map_err(SystemIdentityGenerationError::IAMClient)?;
 
         Ok(SystemIdentity {
@@ -46,7 +48,7 @@ where
 pub enum SystemIdentityGenerationError<K, I>
 where
     K: KeyCreator,
-    I: IAMClient,
+    I: L2IdentityCreator,
 {
     #[error("error creating key pair: `{0}`")]
     KeyPairCreator(K::Error),
@@ -57,7 +59,7 @@ where
 impl<K, I> fmt::Debug for SystemIdentityGenerationError<K, I>
 where
     K: KeyCreator,
-    I: IAMClient,
+    I: L2IdentityCreator,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

@@ -10,7 +10,7 @@ use crate::{
     token::Token, TokenRetriever,
 };
 
-use super::{error::IAMClientError, response_data::SystemIdentityCreationResponseData, IAMClient};
+use super::{error::IAMClientError, l2_creator::L2IdentityCreator, response_data::SystemIdentityCreationResponseData};
 
 /// Implementation of the IAMClient trait for a generic HTTP client.
 pub struct HttpIAMClient<'a, C, T>
@@ -108,13 +108,13 @@ where
     }
 }
 
-impl<C, T> IAMClient for HttpIAMClient<'_, C, T>
+impl<C, T> L2IdentityCreator for HttpIAMClient<'_, C, T>
 where
     C: HttpClient,
     T: TokenRetriever,
 {
     type Error = IAMClientError;
-    fn create_system_identity(
+    fn create_l2_system_identity(
         &self,
         pub_key: &[u8],
     ) -> Result<SystemIdentityCreationResponseData, Self::Error> {
