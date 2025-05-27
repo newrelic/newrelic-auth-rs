@@ -50,8 +50,14 @@ pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
 }
 
 impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
-    pub fn generate(&self) -> Result<SystemIdentityCreationResponseData, I::Error> {
-        self.iam_client.create_l1_system_identity()
+    pub fn generate(&self) -> Result<SystemIdentity, I::Error> {
+        let SystemIdentityCreationResponseData { client_id, name } =
+            self.iam_client.create_l1_system_identity()?;
+        Ok(SystemIdentity {
+            client_id,
+            name,
+            pub_key: Vec::default(),
+        })
     }
 }
 
