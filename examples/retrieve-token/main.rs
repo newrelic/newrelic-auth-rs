@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = HttpClient::new()?;
     let token_url = Uri::try_from(&token_url)?;
-    let authenticator = HttpAuthenticator::new(&client, &token_url);
+    let authenticator = HttpAuthenticator::new(client.clone(), token_url);
 
     let token_retriever = TokenRetrieverWithCache::new(client_id, jwt_signer, authenticator);
     let token = token_retriever.retrieve()?;

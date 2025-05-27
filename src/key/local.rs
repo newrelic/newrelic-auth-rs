@@ -62,15 +62,23 @@ impl Creator for LocalCreator {
     }
 }
 
-impl LocalCreator {
-    pub fn new(config: KeyPairGeneratorLocalConfig) -> Self {
+impl From<KeyPairGeneratorLocalConfig> for LocalCreator {
+    fn from(
+        KeyPairGeneratorLocalConfig {
+            key_type,
+            name,
+            path,
+        }: KeyPairGeneratorLocalConfig,
+    ) -> Self {
         Self {
-            key_type: config.key_type,
-            name: config.name,
-            path: config.path,
+            key_type,
+            name,
+            path,
         }
     }
+}
 
+impl LocalCreator {
     /// Persists the private key to the specified file path.
     fn persist_private_key(&self, key: &[u8]) -> Result<(), LocalKeyCreationError> {
         debug!(
@@ -152,7 +160,7 @@ mod tests {
             name: "key".to_string(),
             path: key_path.clone(),
         };
-        let creator = LocalCreator::new(config);
+        let creator = LocalCreator::from(config);
         let result = creator.create();
         assert_matches!(
             result,
@@ -170,7 +178,7 @@ mod tests {
             name: "key".to_string(),
             path: tmp_file.path().to_path_buf(),
         };
-        let creator = LocalCreator::new(config);
+        let creator = LocalCreator::from(config);
         let result = creator.create();
         assert_matches!(
             result,
@@ -192,7 +200,7 @@ mod tests {
             path: key_path.to_path_buf(),
         };
 
-        let creator = LocalCreator::new(config);
+        let creator = LocalCreator::from(config);
 
         let pub_key = creator.create().expect("Failed to create key pair");
         let pub_key_content =

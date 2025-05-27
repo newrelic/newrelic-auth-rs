@@ -2,10 +2,10 @@
 //!
 //! Refer to the submodules for more information.
 pub mod client_input;
-mod environment;
-mod generator;
-mod iam_client;
-mod output_platform;
+pub mod environment;
+pub mod generator;
+pub mod iam_client;
+pub mod output_platform;
 
 /// System identity information.
 #[derive(Debug, Clone, Default)]
@@ -22,6 +22,7 @@ mod tests {
     use mockall::Sequence;
     use rstest::rstest;
 
+    use crate::system_identity::iam_client::http_token_retriever::HttpTokenRetriever;
     use crate::{
         http_client::tests::MockHttpClient,
         jwt::signer::local::test::RS256_PRIVATE_KEY,
@@ -30,8 +31,7 @@ mod tests {
             client_input::{AuthMethod, ClientSecret, SystemIdentityCreationMetadata},
             generator::L2SystemIdentityGenerator,
             iam_client::{
-                http_iam_client::HttpIAMClient, http_token_retriever::HttpTokenRetriever,
-                l2_creator::tests::MockL2IAMClient,
+                http_iam_client::HttpIAMClient, l2_creator::tests::MockL2IAMClient,
                 response_data::SystemIdentityCreationResponseData,
             },
             output_platform::AuthOutputPlatform,
@@ -57,21 +57,16 @@ mod tests {
             output_platform: AuthOutputPlatform::LocalPrivateKeyPath(PathBuf::default()),
         };
 
-        // When creating a system identity using the HTTP-based implementations, the HTTP client
-        // that we use will be called two times: One to retrieve/sign the token and another to
-        // create the system identity itself.
-        let mut http_client = MockHttpClient::new();
-        let mut sequence = Sequence::new();
+        let mut token_retriever_http_client = MockHttpClient::new();
         // 1. Sign the token
-        http_client
+        token_retriever_http_client
             .expect_send()
             .once()
-            .in_sequence(&mut sequence)
             .withf({
                 let env = cli_input.environment.clone();
                 move |req| {
                     req.method().eq(&http::Method::POST)
-                        && req.uri().eq(env.token_renewal_endpoint())
+                        && req.uri().eq(&env.token_renewal_endpoint())
                         && req
                             .headers()
                             .get("Content-Type")
@@ -94,15 +89,16 @@ mod tests {
                     .unwrap();
                 Ok(response)
             });
-        http_client
+
+        let mut iam_client_http_client = MockHttpClient::new();
+        iam_client_http_client
             .expect_send()
             .once()
-            .in_sequence(&mut sequence)
             .withf({
                 let env = cli_input.environment.clone();
                 move |req| {
                     req.method().eq(&http::Method::POST)
-                        && req.uri().eq(env.identity_creation_endpoint())
+                        && req.uri().eq(&env.identity_creation_endpoint())
                         && req
                             .headers()
                             .get("Content-Type")
@@ -136,19 +132,14 @@ mod tests {
             .once()
             .returning(|| Ok(vec![1, 2, 3]));
 
-        let http_token_retriever = HttpTokenRetriever::from_auth_method(
-            &http_client,
-            &cli_input.auth_method,
-            cli_input.environment.token_renewal_endpoint(),
-            cli_input.client_id.to_owned(),
-        )
-        .unwrap();
+        let http_token_retriever =
+            HttpTokenRetriever::new(token_retriever_http_client, &cli_input).unwrap();
 
         // IAMClient from HttpClient
         let iam_client = HttpIAMClient::new(
-            &http_client,
+            iam_client_http_client,
             http_token_retriever,
-            cli_input.to_owned(), // I compare with this value later, keep it around
+            cli_input.to_owned(), // I compare with this value later on, so we keep it here
         );
 
         // As we are creating concretions, we only need to set expectations for the key creator

@@ -13,14 +13,14 @@ use crate::{
 };
 
 /// HTTP-based token retriever for L1 authentication method (client ID + client secret)
-pub struct L1TokenRetriever<'a, C: HttpClient> {
+pub struct L1TokenRetriever<C: HttpClient> {
     client_id: String,
     client_secret: ClientSecret,
-    http_client: &'a C,
-    token_retrieval_uri: &'a Uri,
+    http_client: C,
+    token_retrieval_uri: Uri,
 }
 
-impl<C: HttpClient> fmt::Debug for L1TokenRetriever<'_, C> {
+impl<C: HttpClient> fmt::Debug for L1TokenRetriever<C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("L1TokenRetriever")
             .field("client_id", &self.client_id)
@@ -31,12 +31,12 @@ impl<C: HttpClient> fmt::Debug for L1TokenRetriever<'_, C> {
     }
 }
 
-impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
+impl<C: HttpClient> L1TokenRetriever<C> {
     pub(super) fn new(
         client_id: String,
         client_secret: ClientSecret,
-        http_client: &'a C,
-        token_retrieval_uri: &'a Uri,
+        http_client: C,
+        token_retrieval_uri: Uri,
     ) -> Self {
         Self {
             client_id,
@@ -71,12 +71,12 @@ impl<'a, C: HttpClient> L1TokenRetriever<'a, C> {
     }
 }
 
-impl<C: HttpClient> TokenRetriever for L1TokenRetriever<'_, C> {
+impl<C: HttpClient> TokenRetriever for L1TokenRetriever<C> {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let request = Self::build_request(
             &self.client_id,
             &self.client_secret,
-            self.token_retrieval_uri,
+            &self.token_retrieval_uri,
         )?;
 
         let response = self.http_client.send(request).map_err(|e| {

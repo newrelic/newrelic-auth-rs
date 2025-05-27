@@ -17,8 +17,8 @@ where
     K: KeyCreator,
     I: L2IdentityCreator,
 {
-    pub(super) key_creator: K,
-    pub(super) iam_client: I,
+    pub key_creator: K,
+    pub iam_client: I,
 }
 
 impl<K, I> L2SystemIdentityGenerator<K, I>
@@ -26,7 +26,7 @@ where
     K: KeyCreator,
     I: L2IdentityCreator,
 {
-    pub fn generate(self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
+    pub fn generate(&self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
         let pub_key = self
             .key_creator
             .create()

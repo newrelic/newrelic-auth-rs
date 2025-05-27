@@ -26,20 +26,20 @@ pub trait Authenticator {
 }
 
 /// The Authenticator is responsible for obtaining a valid JWT token from System Identity Service.
-pub struct HttpAuthenticator<'a, C: HttpClient> {
+pub struct HttpAuthenticator<C: HttpClient> {
     /// HTTP client
-    http_client: &'a C,
+    http_client: C,
     /// System Identity Service URL
-    uri: &'a Uri,
+    uri: Uri,
 }
 
-impl<'a, C: HttpClient> HttpAuthenticator<'a, C> {
-    pub fn new(http_client: &'a C, uri: &'a Uri) -> Self {
+impl<C: HttpClient> HttpAuthenticator<C> {
+    pub fn new(http_client: C, uri: Uri) -> Self {
         Self { http_client, uri }
     }
 }
 
-impl<C: HttpClient> fmt::Debug for HttpAuthenticator<'_, C> {
+impl<C: HttpClient> fmt::Debug for HttpAuthenticator<C> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("HttpAuthenticator")
             .field("http_client", &"impl HttpClient")
@@ -48,7 +48,7 @@ impl<C: HttpClient> fmt::Debug for HttpAuthenticator<'_, C> {
     }
 }
 
-impl<C: HttpClient> Authenticator for HttpAuthenticator<'_, C> {
+impl<C: HttpClient> Authenticator for HttpAuthenticator<C> {
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
     fn authenticate(&self, req: Request) -> Result<TokenRetrievalResponse, AuthenticateError> {
         let serialized_req = serde_json::to_string(&req).map_err(|e| {
@@ -57,7 +57,7 @@ impl<C: HttpClient> Authenticator for HttpAuthenticator<'_, C> {
 
         let req = http::Request::builder()
             .method(Method::POST)
-            .uri(self.uri)
+            .uri(&self.uri)
             .header(CONTENT_TYPE, "application/json")
             .body(serialized_req.into_bytes())
             .map_err(|e| AuthenticateError::SerializeError(format!("building request: {e}")))?;
@@ -166,7 +166,7 @@ pub mod test {
             .returning(move |_| Ok(http_response.clone()));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(&http_client, &uri);
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let response = authenticator.authenticate(request).unwrap();
 
@@ -184,7 +184,7 @@ pub mod test {
             .returning(move |_| Err(HttpClientError::TransportError("foo".to_string())));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(&http_client, &uri);
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -208,7 +208,7 @@ pub mod test {
             .returning(move |_| Ok(http_response.clone()));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(&http_client, &uri);
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -228,7 +228,7 @@ pub mod test {
             .returning(move |_| Ok(http_response.clone()));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(&http_client, &uri);
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
