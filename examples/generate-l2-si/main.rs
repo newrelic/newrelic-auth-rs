@@ -1,10 +1,4 @@
 //! Full example to generate an L2 System Identity using the `newrelic-auth-rs` library.
-//!
-//! This example demonstrates how to:
-//! - Use a LocalPrivateKeySigner to sign the JWT
-//! - Configure and use a token retriever with caching.
-//! - Retrieve and print an access token.
-//!
 mod client;
 
 use client::HttpClient;
@@ -69,13 +63,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let environment = SystemIdentityCreationEnvironment::Staging;
 
+    let key_path = env::current_dir()?.join("private_key.pem");
+    let output_platform = AuthOutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
     let system_identity_creation_metadata = SystemIdentityCreationMetadata {
         name: format!("example-{}", env!("CARGO_BIN_NAME")),
         organization_id,
         client_id,
         auth_method,
         environment,
-        output_platform: AuthOutputPlatform::LocalPrivateKeyPath(PathBuf::from("private_key.pem")),
+        output_platform,
     };
 
     let http_client = HttpClient::new()?;
@@ -91,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,
         name: "example-created-key".to_string(),
-        path: example_dir,
+        path: key_path, // Note how this is related to AuthOutputPlatform above!
     });
 
     let system_identity_generator = L2SystemIdentityGenerator {
