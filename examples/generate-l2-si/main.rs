@@ -49,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
 
     let client_id = env::var("CLIENT_ID")?;
+    let organization_id = env::var("ORGANIZATION_ID")?;
     // Has a client secret been set?
     let client_secret_auth_method = env::var("CLIENT_SECRET")
         .map(ClientSecret::from)
@@ -69,8 +70,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let environment = SystemIdentityCreationEnvironment::Staging;
 
     let system_identity_creation_metadata = SystemIdentityCreationMetadata {
-        name: "example-system-identity".to_string(),
-        organization_id: "example-org-id".to_string(),
+        name: format!("example-{}", env!("CARGO_BIN_NAME")),
+        organization_id,
         client_id,
         auth_method,
         environment,
@@ -90,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,
         name: "example-created-key".to_string(),
-        path: example_dir.join("keys"),
+        path: example_dir,
     });
 
     let system_identity_generator = L2SystemIdentityGenerator {

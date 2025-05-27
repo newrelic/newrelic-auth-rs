@@ -90,16 +90,19 @@ where
             &self.metadata.environment.identity_creation_endpoint(),
         )?;
 
-        let response = self
-            .http_client
-            .send(request)
-            .map_err(|e| IAMClientError::Transport(format!("Failed to send HTTP request: {e}")))?;
+        let response = self.http_client.send(request).map_err(|e| {
+            IAMClientError::Transport(format!(
+                "Failed to send HTTP request for system identity creation: {e}"
+            ))
+        })?;
         let body = response.body();
         match response.status() {
             StatusCode::OK => {
                 let system_identity_response: SystemIdentityCreationResponseData =
                     serde_json::from_slice(body).map_err(|e| {
-                        IAMClientError::Decoder(format!("Failed to decode JSON: {e}"))
+                        IAMClientError::Decoder(format!(
+                            "Failed to decode JSON response for system identity creation: {e}"
+                        ))
                     })?;
                 Ok(system_identity_response)
             }
