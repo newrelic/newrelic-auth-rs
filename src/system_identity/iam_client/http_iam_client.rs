@@ -11,7 +11,7 @@ use crate::{
 };
 
 use super::{
-    error::IAMClientError, l2_creator::L2IdentityCreator,
+    error::IAMClientError, l1_creator::L1IdentityCreator, l2_creator::L2IdentityCreator,
     response_data::SystemIdentityCreationResponseData,
 };
 
@@ -46,16 +46,26 @@ where
     fn build_request(
         name: &str,
         organization_id: &str,
-        pub_key_b64: &str,
+        maybe_pub_key_b64: Option<String>,
         token: &Token,
         system_identity_creation_endpoint: &Uri,
     ) -> Result<Request<Vec<u8>>, IAMClientError> {
-        let json_body_string = json!({
-            "query": format!(
-                "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\", publicKey: \"{}\") {{ clientId, name }} }}",
-                name, organization_id, pub_key_b64
-            ),
-        });
+        let json_body_string = if let Some(pub_key_b64) = maybe_pub_key_b64 {
+            json!({
+                "query": format!(
+                    "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\", publicKey: \"{}\") {{ clientId, name }} }}",
+                    name, organization_id, pub_key_b64
+                ),
+            })
+        } else {
+            json!({
+                "query": format!(
+                    "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\") {{ clientId, name }} }}",
+                    name, organization_id
+                ),
+            })
+        };
+
         let json_body = serde_json::to_vec(&json_body_string)
             .map_err(|e| IAMClientError::Encoder(format!("Failed to encode JSON: {e}")))?;
 
@@ -79,13 +89,13 @@ where
     fn create_system_identity(
         &self,
         token: &Token,
-        pub_key: &[u8],
+        maybe_pub_key: Option<&[u8]>,
     ) -> Result<SystemIdentityCreationResponseData, IAMClientError> {
-        let pub_key_b64 = general_purpose::STANDARD.encode(pub_key);
+        let pub_key_b64 = maybe_pub_key.map(|k| general_purpose::STANDARD.encode(k));
         let request = Self::build_request(
             &self.metadata.name,
             &self.metadata.organization_id,
-            &pub_key_b64,
+            pub_key_b64,
             token,
             &self.metadata.environment.identity_creation_endpoint(),
         )?;
@@ -128,7 +138,22 @@ where
             .token_retriever
             .retrieve()
             .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
-        self.create_system_identity(&token, pub_key)
+        self.create_system_identity(&token, pub_key.into())
+    }
+}
+
+impl<C, T> L1IdentityCreator for HttpIAMClient<C, T>
+where
+    C: HttpClient,
+    T: TokenRetriever,
+{
+    type Error = IAMClientError;
+    fn create_l1_system_identity(&self) -> Result<SystemIdentityCreationResponseData, Self::Error> {
+        let token = self
+            .token_retriever
+            .retrieve()
+            .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
+        self.create_system_identity(&token, None)
     }
 }
 
@@ -137,6 +162,7 @@ mod tests {
 
     use chrono::Utc;
     use http::Method;
+    use rstest::rstest;
 
     use crate::{
         http_client::tests::MockHttpClient,
@@ -146,8 +172,10 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn build_request() {
+    #[rstest]
+    #[case(None)]
+    #[case(Some("cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==".to_owned()))]
+    fn build_request(#[case] maybe_pub_key_b64: Option<String>) {
         let uri: Uri = "https://example.com/graphql".parse().unwrap();
         let token = Token::new(
             AccessToken::from("test_token"),
@@ -156,12 +184,11 @@ mod tests {
         );
         let name = "test_identity";
         let org_id = "org_123";
-        let pub_key_b64 = "cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==";
 
         let request = HttpIAMClient::<MockHttpClient, MockTokenRetriever>::build_request(
             name,
             org_id,
-            pub_key_b64,
+            maybe_pub_key_b64.clone(),
             &token,
             &uri,
         )
@@ -181,12 +208,21 @@ mod tests {
         let body: serde_json::Value = serde_json::from_slice(request.body()).unwrap();
         assert_eq!(
             body,
-            json!({
-                "query": format!(
-                    "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\", publicKey: \"{}\") {{ clientId, name }} }}",
-                    name, org_id, pub_key_b64
-                ),
-            })
+            if let Some(pub_key_b64) = maybe_pub_key_b64 {
+                json!({
+                    "query": format!(
+                        "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\", publicKey: \"{}\") {{ clientId, name }} }}",
+                        name, org_id, pub_key_b64
+                    ),
+                })
+            } else {
+                json!({
+                    "query": format!(
+                        "mutation {{ systemIdentityCreate(name: \"{}\", organizationId: \"{}\") {{ clientId, name }} }}",
+                        name, org_id
+                    ),
+                })
+            }
         );
     }
 }

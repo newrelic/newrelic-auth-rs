@@ -6,7 +6,8 @@ use crate::key::creator::Creator as KeyCreator;
 
 use super::{
     iam_client::{
-        l2_creator::L2IdentityCreator, response_data::SystemIdentityCreationResponseData,
+        l1_creator::L1IdentityCreator, l2_creator::L2IdentityCreator,
+        response_data::SystemIdentityCreationResponseData,
     },
     SystemIdentity,
 };
@@ -41,6 +42,16 @@ where
             client_id,
             pub_key,
         })
+    }
+}
+
+pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
+    pub iam_client: I,
+}
+
+impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
+    pub fn generate(&self) -> Result<SystemIdentityCreationResponseData, I::Error> {
+        self.iam_client.create_l1_system_identity()
     }
 }
 
