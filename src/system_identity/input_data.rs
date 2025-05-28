@@ -7,7 +7,7 @@ pub mod output_platform;
 
 use auth_method::AuthMethod;
 use environment::SystemIdentityCreationEnvironment;
-use output_platform::AuthOutputPlatform;
+use output_platform::OutputPlatform;
 
 /// Represents the input data required to create a System Identity.
 ///
@@ -21,5 +21,5 @@ pub struct SystemIdentityCreationMetadata {
     pub client_id: String,
     pub auth_method: AuthMethod,
     pub environment: SystemIdentityCreationEnvironment,
-    pub output_platform: AuthOutputPlatform,
+    pub output_platform: OutputPlatform,
 }
