@@ -16,7 +16,6 @@ pub enum JwtSignerImpl {
     Local(LocalPrivateKeySigner),
 }
 
-#[cfg_attr(test, mockall::automock)]
 impl JwtSigner for JwtSignerImpl {
     fn sign(&self, claims: Claims) -> Result<SignedJwt, JwtEncoderError> {
         match self {
