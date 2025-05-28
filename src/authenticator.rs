@@ -2,9 +2,9 @@ use core::fmt;
 
 use http::header::CONTENT_TYPE;
 use http::method::Method;
+use http::Uri;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use url::Url;
 
 use crate::http_client::HttpClient;
 use crate::{token::AccessToken, ClientID};
@@ -30,7 +30,7 @@ pub struct HttpAuthenticator<C: HttpClient> {
     /// HTTP client
     http_client: C,
     /// System Identity Service URL
-    url: Url,
+    uri: Uri,
 }
 
 impl<C: HttpClient> HttpAuthenticator<C> {
@@ -56,8 +56,8 @@ impl<C: HttpClient> Authenticator for HttpAuthenticator<C> {
         })?;
 
         let req = http::Request::builder()
-            .method(Method::POST.as_str())
-            .uri(self.url.as_str())
+            .method(Method::POST)
+            .uri(&self.uri)
             .header(CONTENT_TYPE, "application/json")
             .body(serialized_req.into_bytes())
             .map_err(|e| AuthenticateError::SerializeError(format!("building request: {e}")))?;
@@ -117,9 +117,8 @@ pub struct TokenRetrievalResponse {
 #[cfg(test)]
 pub mod test {
     use assert_matches::assert_matches;
-    use http::Method;
+    use http::{Method, Uri};
     use mockall::mock;
-    use url::Url;
 
     use super::{
         ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator, Request,
@@ -166,7 +165,8 @@ pub mod test {
             })
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let response = authenticator.authenticate(request).unwrap();
 
@@ -183,7 +183,8 @@ pub mod test {
             .once()
             .returning(move |_| Err(HttpClientError::TransportError("foo".to_string())));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -206,7 +207,8 @@ pub mod test {
             .once()
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -225,7 +227,8 @@ pub mod test {
             .once()
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -248,8 +251,8 @@ pub mod test {
 
     const TEST_URL: &str = "https://newrelic.com/v1/authorize";
 
-    fn fake_url() -> Url {
-        Url::parse(TEST_URL).unwrap()
+    fn fake_uri() -> Uri {
+        Uri::try_from(TEST_URL).unwrap()
     }
 
     fn fake_request_response() -> (Request, TokenRetrievalResponse) {
