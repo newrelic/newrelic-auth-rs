@@ -21,7 +21,7 @@ pub struct KeyPair {
 
 /// A trait for creating cryptographic keys.
 pub trait Creator {
-    type Error;
+    type Error: std::error::Error;
     /// Creates and persists a cryptographic key based on the provided options. The created private
     /// key will not be accessible/exposed. Depending on the implementation it could be accessible
     /// (i.e. Local key pair) but others like Vault, KMS... will not. In any case, the private key
@@ -29,4 +29,23 @@ pub trait Creator {
     ///
     /// Return created public key in PEM format, or an error if key creation fails.
     fn create(&self) -> Result<PublicKeyPem, Self::Error>;
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use mockall::mock;
+    use thiserror::Error;
+
+    #[derive(Debug, Error)]
+    #[error("mock creator error")]
+    pub struct MockCreatorError;
+
+    mock! {
+        pub Creator {}
+        impl Creator for Creator {
+            type Error = MockCreatorError;
+            fn create(&self) -> Result<PublicKeyPem, MockCreatorError>;
+        }
+    }
 }
