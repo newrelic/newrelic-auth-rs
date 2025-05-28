@@ -86,11 +86,12 @@ fn try_build_response(res: BlockingResponse) -> Result<HttpResponse<Vec<u8>>, Ht
         .map_err(|err| HttpResponseError::ReadingResponse(err.to_string()))?
         .into();
 
-    let mut response_builder = http::Response::builder().status(status).version(version);
-
-    if let Some(tls_info) = tls_info {
-        response_builder = response_builder.extension(tls_info);
-    }
+    let response_builder = http::Response::builder().status(status).version(version);
+    let response_builder = if let Some(tls_info) = tls_info {
+        response_builder.extension(tls_info)
+    } else {
+        response_builder
+    };
 
     let response = response_builder
         .body(body)
