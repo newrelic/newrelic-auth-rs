@@ -1,5 +1,5 @@
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
-use std::{io, path::Path};
+use std::{fmt::Debug, io, path::Path};
 use thiserror::Error;
 
 use crate::jwt::{claims::Claims, error::JwtEncoderError, signed::SignedJwt};
@@ -19,6 +19,15 @@ pub enum LocalPrivateKeySignerError {
 pub struct LocalPrivateKeySigner {
     encoding_key: EncodingKey,
     algorithm: Algorithm,
+}
+
+impl Debug for LocalPrivateKeySigner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LocalPrivateKeySigner")
+            .field("algorithm", &self.algorithm)
+            .field("encoding_key", &"REDACTED") // Avoid printing the key
+            .finish()
+    }
 }
 
 /// Attempt to create a LocalPrivateKeySigner from a PemFileContents.

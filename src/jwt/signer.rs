@@ -12,6 +12,7 @@ pub trait JwtSigner {
 }
 
 /// Enumerates all implementations for `JwtSigner` for static dispatching reasons.
+#[derive(Debug)]
 pub enum JwtSignerImpl {
     Local(LocalPrivateKeySigner),
 }
