@@ -37,10 +37,16 @@ impl<C: HttpClient> HttpAuthenticator<C> {
     }
 }
 
-impl<C> Authenticator for HttpAuthenticator<C>
-where
-    C: HttpClient,
-{
+impl<C: HttpClient> fmt::Debug for HttpAuthenticator<C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HttpAuthenticator")
+            .field("http_client", &"impl HttpClient")
+            .field("uri", &self.uri)
+            .finish()
+    }
+}
+
+impl<C: HttpClient> Authenticator for HttpAuthenticator<C> {
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
     fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError> {
         let serialized_req = serde_json::to_string(&req).map_err(|e| {
