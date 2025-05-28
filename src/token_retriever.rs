@@ -8,6 +8,9 @@ use http::Uri;
 use std::sync::Mutex;
 use tracing::debug;
 
+pub mod http_impl;
+pub mod l1_retriever;
+
 /// A signed JWT should live enough for the System Identity Service to consume it.
 const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
