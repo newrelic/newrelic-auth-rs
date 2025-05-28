@@ -182,15 +182,14 @@ mod tests {
 
     #[test]
     fn test_local_creator_create() {
-        let key_path = TempDir::new()
-            .expect("Failed to create temp directory")
-            .into_path();
+        let tmp_dir = TempDir::new().expect("Failed to create temp directory");
+        let key_path = tmp_dir.path();
 
         let key_name = String::from("key");
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
             name: key_name.clone(),
-            path: key_path.clone(),
+            path: key_path.to_path_buf(),
         };
 
         let creator = LocalCreator::new(config);
