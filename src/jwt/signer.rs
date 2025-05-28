@@ -30,3 +30,18 @@ pub enum JwtSignerImplError {
     #[error("building local private key JWT signer: `{0}`")]
     LocalPrivateKeySignerError(#[from] LocalPrivateKeySignerError),
 }
+
+#[cfg(test)]
+pub mod tests {
+    use mockall::mock;
+
+    use super::*;
+
+    mock! {
+        pub JwtSigner {}
+
+        impl JwtSigner for JwtSigner {
+            fn sign(&self, claims: Claims) -> Result<SignedJwt, JwtEncoderError>;
+        }
+    }
+}
