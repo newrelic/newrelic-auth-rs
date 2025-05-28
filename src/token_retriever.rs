@@ -1,14 +1,11 @@
 use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, Request};
 use crate::jwt::claims::Claims;
 use crate::jwt::signer::JwtSigner;
-#[cfg_attr(test, mockall_double::double)]
-use crate::jwt::signer::JwtSignerImpl;
-use crate::token::{Token, TokenType};
+use crate::token::Token;
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 use chrono::{TimeDelta, Utc};
 use std::str::FromStr;
 use std::sync::Mutex;
-use std::time::Duration;
 use tracing::debug;
 use url::Url;
 
@@ -17,21 +14,24 @@ const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 pub const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
-pub struct TokenRetrieverWithCache<A>
+#[derive(Debug)]
+pub struct TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     client_id: ClientID,
     aud: Url,
     tokens: Mutex<Option<Token>>,
-    jwt_signer: JwtSignerImpl,
+    jwt_signer: J,
     authenticator: A,
     retries: u8,
 }
 
-impl<A> TokenRetriever for TokenRetrieverWithCache<A>
+impl<A, J> TokenRetriever for TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let mut cached_token = self
@@ -75,15 +75,16 @@ where
     }
 }
 
-impl<A> TokenRetrieverWithCache<A>
+impl<A, J> TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     pub fn new(
         client_id: ClientID,
-        jwt_signer: JwtSignerImpl,
+        jwt_signer: J,
         authenticator: A,
-    ) -> TokenRetrieverWithCache<A> {
+    ) -> TokenRetrieverWithCache<A, J> {
         TokenRetrieverWithCache {
             client_id,
             aud: Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value"),
@@ -123,18 +124,14 @@ where
         };
 
         let response = self.authenticator.authenticate(request)?;
-        let time_delta = TimeDelta::from_std(Duration::from_secs(response.expires_in))
-            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
-        Ok(Token::new(
-            response.access_token,
-            TokenType::Bearer,
-            Utc::now() + time_delta,
-        ))
+
+        Token::try_from(response)
+            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))
     }
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use std::{thread, time};
 
     use chrono::{TimeDelta, Utc};
