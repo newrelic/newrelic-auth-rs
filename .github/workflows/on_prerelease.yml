@@ -7,6 +7,22 @@ name: on_prerelease
 permissions:
   contents: write
 jobs:
+  build-image:
+    name: Build and Push container image
+    uses: ./.github/workflows/component_image.yml
+    with:
+      image-tag: ${{ github.event.release.tag_name }}-rc
+      push: true
+    secrets: inherit
+
+  security-scan:
+    name: Security scan
+    needs: [ build-image ]
+    uses: ./.github/workflows/component_image_security.yml
+    with:
+      image-tag: ${{ github.event.release.tag_name }}-rc
+    secrets: inherit
+
   build-binaries:
     runs-on: ubuntu-latest
     name: Build/Push binaries
@@ -34,8 +50,8 @@ jobs:
           cross build --target "aarch64-unknown-linux-musl" --profile release 
           cross build --target "x86_64-unknown-linux-musl" --profile release 
           
-          cp ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli ./newrelic-auth-cli-arm64
-          cp ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli ./newrelic-auth-cli-amd64
+          cp ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli ./target/newrelic-auth-cli-arm64
+          cp ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli ./target/newrelic-auth-cli-amd64
           
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-arm64
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-amd64
