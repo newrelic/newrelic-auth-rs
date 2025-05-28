@@ -7,19 +7,6 @@ pub trait L1IdentityCreator {
     fn create_l1_system_identity(&self) -> Result<SystemIdentityCreationResponseData, Self::Error>;
 }
 
-// Accept closures as L1IdentityCreator implementations
-impl<F, E> L1IdentityCreator for F
-where
-    F: Fn() -> Result<SystemIdentityCreationResponseData, E>,
-    E: std::error::Error,
-{
-    type Error = E;
-
-    fn create_l1_system_identity(&self) -> Result<SystemIdentityCreationResponseData, Self::Error> {
-        self()
-    }
-}
-
 #[cfg(test)]
 pub mod tests {
     use mockall::mock;

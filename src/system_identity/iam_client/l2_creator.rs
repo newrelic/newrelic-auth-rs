@@ -10,22 +10,6 @@ pub trait L2IdentityCreator {
     ) -> Result<SystemIdentityCreationResponseData, Self::Error>;
 }
 
-// Accept closures as L2IdentityCreator implementations
-impl<F, E> L2IdentityCreator for F
-where
-    F: Fn(&[u8]) -> Result<SystemIdentityCreationResponseData, E>,
-    E: std::error::Error,
-{
-    type Error = E;
-
-    fn create_l2_system_identity(
-        &self,
-        pub_key: &[u8],
-    ) -> Result<SystemIdentityCreationResponseData, Self::Error> {
-        self(pub_key)
-    }
-}
-
 #[cfg(test)]
 pub mod tests {
     use mockall::mock;

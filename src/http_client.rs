@@ -28,16 +28,6 @@ pub trait HttpClient {
     fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError>;
 }
 
-// Accept closures as HttpClient implementations
-impl<F> HttpClient for F
-where
-    F: Fn(Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError>,
-{
-    fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError> {
-        self(req)
-    }
-}
-
 #[cfg(test)]
 pub(super) mod tests {
 
