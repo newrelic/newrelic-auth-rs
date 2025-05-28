@@ -1,3 +1,5 @@
+use core::fmt;
+
 use http::header::CONTENT_TYPE;
 use http::method::Method;
 use serde::{Deserialize, Serialize};
@@ -20,7 +22,7 @@ pub enum AuthenticateError {
 }
 
 pub trait Authenticator {
-    fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError>;
+    fn authenticate(&self, req: Request) -> Result<TokenRetrievalResponse, AuthenticateError>;
 }
 
 /// The Authenticator is responsible for obtaining a valid JWT token from System Identity Service.
@@ -48,7 +50,7 @@ impl<C: HttpClient> fmt::Debug for HttpAuthenticator<C> {
 
 impl<C: HttpClient> Authenticator for HttpAuthenticator<C> {
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
-    fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError> {
+    fn authenticate(&self, req: Request) -> Result<TokenRetrievalResponse, AuthenticateError> {
         let serialized_req = serde_json::to_string(&req).map_err(|e| {
             AuthenticateError::SerializeError(format!("serializing request body: {e}"))
         })?;
@@ -104,10 +106,11 @@ pub struct Request {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct Response {
+/// Basic response coming from the NR token retrieval endpoint
+pub struct TokenRetrievalResponse {
     pub access_token: AccessToken,
-    /// The lifetime in seconds of the access token.
-    pub expires_in: u32,
+    /// The lifetime in seconds of the access token
+    pub expires_in: u64,
     pub token_type: String,
 }
 
@@ -120,7 +123,7 @@ pub mod test {
 
     use super::{
         ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator, Request,
-        Response,
+        TokenRetrievalResponse,
     };
     use crate::{
         authenticator::{AuthenticateError, Authenticator},
@@ -132,7 +135,7 @@ pub mod test {
 
         impl Authenticator for AuthenticatorMock
         {
-            fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError>;
+            fn authenticate(&self, req: Request) -> Result<TokenRetrievalResponse, AuthenticateError>;
         }
     }
 
@@ -249,7 +252,7 @@ pub mod test {
         Url::parse(TEST_URL).unwrap()
     }
 
-    fn fake_request_response() -> (Request, Response) {
+    fn fake_request_response() -> (Request, TokenRetrievalResponse) {
         (
             Request {
                 client_id: ClientID::from("fake_id"),
@@ -257,7 +260,7 @@ pub mod test {
                 client_assertion_type: ClientAssertionType::JwtBearer,
                 client_assertion: ClientAssertion::from("fake_assertion"),
             },
-            Response {
+            TokenRetrievalResponse {
                 access_token: "fake_token".to_string(),
                 token_type: "fake_token_type".to_string(),
                 expires_in: 10,
