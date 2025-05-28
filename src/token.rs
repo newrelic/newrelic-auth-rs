@@ -1,4 +1,8 @@
-use chrono::{DateTime, Utc};
+use std::time::Duration;
+
+use chrono::{DateTime, TimeDelta, Utc};
+
+use crate::{authenticator::TokenRetrievalResponse, TokenRetrieverError};
 
 pub type AccessToken = String;
 
@@ -48,6 +52,28 @@ impl Token {
 
     pub fn token_type(&self) -> &TokenType {
         &self.token_type
+    }
+}
+
+impl TryFrom<TokenRetrievalResponse> for Token {
+    type Error = TokenRetrieverError;
+
+    fn try_from(response: TokenRetrievalResponse) -> Result<Self, Self::Error> {
+        let access_token = response.access_token;
+        let token_type = TokenType::try_from(response.token_type.as_str())
+            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
+
+        // Assuming we get seconds from the `expires_in` field of the JSON response
+        let time_delta = TimeDelta::from_std(Duration::from_secs(response.expires_in))
+            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
+
+        let expires_at = Utc::now().checked_add_signed(time_delta).ok_or_else(|| {
+            TokenRetrieverError::TokenRetrieverError(
+                "Failed to calculate expiration time".to_string(),
+            )
+        })?;
+
+        Ok(Token::new(access_token, token_type, expires_at))
     }
 }
 
