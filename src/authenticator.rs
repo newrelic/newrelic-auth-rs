@@ -24,16 +24,16 @@ pub trait Authenticator {
 }
 
 /// The Authenticator is responsible for obtaining a valid JWT token from System Identity Service.
-pub struct HttpAuthenticator<C> {
+pub struct HttpAuthenticator<C: HttpClient> {
     /// HTTP client
     http_client: C,
     /// System Identity Service URL
     url: Url,
 }
 
-impl<C> HttpAuthenticator<C> {
-    pub fn new(http_client: C, url: Url) -> Self {
-        Self { http_client, url }
+impl<C: HttpClient> HttpAuthenticator<C> {
+    pub fn new(http_client: C, uri: Uri) -> Self {
+        Self { http_client, uri }
     }
 }
 
