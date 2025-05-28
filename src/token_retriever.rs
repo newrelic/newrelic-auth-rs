@@ -4,10 +4,9 @@ use crate::jwt::signer::JwtSigner;
 use crate::token::Token;
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 use chrono::{TimeDelta, Utc};
-use std::str::FromStr;
+use http::Uri;
 use std::sync::Mutex;
 use tracing::debug;
-use url::Url;
 
 /// A signed JWT should live enough for the System Identity Service to consume it.
 const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
@@ -21,7 +20,7 @@ where
     J: JwtSigner,
 {
     client_id: ClientID,
-    aud: Url,
+    aud: Uri,
     tokens: Mutex<Option<Token>>,
     jwt_signer: J,
     authenticator: A,
@@ -87,7 +86,7 @@ where
     ) -> TokenRetrieverWithCache<A, J> {
         TokenRetrieverWithCache {
             client_id,
-            aud: Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value"),
+            aud: Uri::try_from(DEFAULT_AUDIENCE).expect("constant valid url value"),
             tokens: Mutex::new(None),
             jwt_signer,
             authenticator,

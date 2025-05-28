@@ -69,8 +69,8 @@ impl JwtSigner for LocalPrivateKeySigner {
 #[cfg(test)]
 pub mod test {
     use super::*;
+    use http::Uri;
     use jsonwebtoken::{get_current_timestamp, DecodingKey, Validation};
-    use url::Url;
 
     pub const RS256_PRIVATE_KEY: &str = r#"-----BEGIN PRIVATE KEY-----
 MIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQC2PaghXmD7Sctw
@@ -116,7 +116,7 @@ BrPkB8yrZjJU/fpF2D6HzGfinKRboBTcmo7mUF2wuYARj/IsuEklh0gz7rseIf7G
     #[test]
     fn local_private_key_signer_rsa() {
         // Set expected claims content
-        let audience = Url::parse("http://127.0.0.1/").unwrap();
+        let audience = Uri::try_from("http://127.0.0.1/").unwrap();
         let client_id = "test"; // For both issuer and subject
 
         // Claims
