@@ -14,6 +14,17 @@ pub struct Token {
     token_type: TokenType,
 }
 
+impl TryFrom<&str> for TokenType {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "Bearer" | "bearer" => Ok(TokenType::Bearer),
+            _ => Err(format!("Invalid token type: {value}")),
+        }
+    }
+}
+
 impl Token {
     pub fn new(
         access_token: AccessToken,
