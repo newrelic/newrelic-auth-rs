@@ -6,7 +6,7 @@ pub mod environment;
 pub mod output_platform;
 
 use auth_method::AuthMethod;
-use environment::SystemIdentityCreationEnvironment;
+use environment::NewRelicEnvironment;
 use output_platform::OutputPlatform;
 
 /// Represents the input data required to create a System Identity.
@@ -20,6 +20,6 @@ pub struct SystemIdentityCreationMetadata {
     pub organization_id: String,
     pub client_id: String,
     pub auth_method: AuthMethod,
-    pub environment: SystemIdentityCreationEnvironment,
+    pub environment: NewRelicEnvironment,
     pub output_platform: OutputPlatform,
 }

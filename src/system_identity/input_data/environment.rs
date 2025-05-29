@@ -19,7 +19,7 @@ const US_IDENTITY_CREATION_ENDPOINT_STR: &str = "https://api.newrelic.com/graphq
 
 /// Represents the environment in which a System Identity is created (US, EU, Staging).
 #[derive(Debug, Clone, PartialEq)]
-pub enum SystemIdentityCreationEnvironment {
+pub enum NewRelicEnvironment {
     US,
     EU,
     Staging,
@@ -29,24 +29,18 @@ pub enum SystemIdentityCreationEnvironment {
     },
 }
 
-impl SystemIdentityCreationEnvironment {
+impl NewRelicEnvironment {
     /// Get a reference to the URI for the System Identity creation endpoint
     /// for the current environment.
     pub fn identity_creation_endpoint(&self) -> Uri {
         match self {
-            SystemIdentityCreationEnvironment::US => {
-                Uri::try_from(US_IDENTITY_CREATION_ENDPOINT_STR)
-                    .expect("Failed to parse known URL: US_IDENTITY_CREATION_ENDPOINT")
-            }
-            SystemIdentityCreationEnvironment::EU => {
-                Uri::try_from(EU_IDENTITY_CREATION_ENDPOINT_STR)
-                    .expect("Failed to parse known URL: EU_IDENTITY_CREATION_ENDPOINT")
-            }
-            SystemIdentityCreationEnvironment::Staging => {
-                Uri::try_from(STAGING_IDENTITY_CREATION_ENDPOINT_STR)
-                    .expect("Failed to parse known URL: STAGING_IDENTITY_CREATION_ENDPOINT")
-            }
-            SystemIdentityCreationEnvironment::Custom {
+            Self::US => Uri::try_from(US_IDENTITY_CREATION_ENDPOINT_STR)
+                .expect("Failed to parse known URL: US_IDENTITY_CREATION_ENDPOINT"),
+            Self::EU => Uri::try_from(EU_IDENTITY_CREATION_ENDPOINT_STR)
+                .expect("Failed to parse known URL: EU_IDENTITY_CREATION_ENDPOINT"),
+            Self::Staging => Uri::try_from(STAGING_IDENTITY_CREATION_ENDPOINT_STR)
+                .expect("Failed to parse known URL: STAGING_IDENTITY_CREATION_ENDPOINT"),
+            Self::Custom {
                 system_identity_creation_uri,
                 ..
             } => system_identity_creation_uri.to_owned(),
@@ -56,15 +50,13 @@ impl SystemIdentityCreationEnvironment {
     /// Get a reference to the URI for the token renewal endpoint for the current environment.
     pub fn token_renewal_endpoint(&self) -> Uri {
         match self {
-            SystemIdentityCreationEnvironment::US => Uri::try_from(US_TOKEN_RENEWAL_ENDPOINT_STR)
+            Self::US => Uri::try_from(US_TOKEN_RENEWAL_ENDPOINT_STR)
                 .expect("Failed to parse known URL: US_TOKEN_RENEWAL_ENDPOINT"),
-            SystemIdentityCreationEnvironment::EU => Uri::try_from(EU_TOKEN_RENEWAL_ENDPOINT_STR)
+            Self::EU => Uri::try_from(EU_TOKEN_RENEWAL_ENDPOINT_STR)
                 .expect("Failed to parse known URL: EU_TOKEN_RENEWAL_ENDPOINT"),
-            SystemIdentityCreationEnvironment::Staging => {
-                Uri::try_from(STAGING_TOKEN_RENEWAL_ENDPOINT_STR)
-                    .expect("Failed to parse known URL: STAGING_TOKEN_RENEWAL_ENDPOINT")
-            }
-            SystemIdentityCreationEnvironment::Custom {
+            Self::Staging => Uri::try_from(STAGING_TOKEN_RENEWAL_ENDPOINT_STR)
+                .expect("Failed to parse known URL: STAGING_TOKEN_RENEWAL_ENDPOINT"),
+            Self::Custom {
                 token_renewal_endpoint,
                 ..
             } => token_renewal_endpoint.to_owned(),
