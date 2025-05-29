@@ -5,7 +5,6 @@ use thiserror::Error;
 use crate::key::creator::Creator as KeyCreator;
 
 use super::{
-    creation_response::SystemIdentityCreationResponseData,
     identity_creator::{L1IdentityCreator, L2IdentityCreator},
     SystemIdentity,
 };
@@ -30,16 +29,14 @@ where
             .key_creator
             .create()
             .map_err(SystemIdentityGenerationError::KeyPairCreator)?;
-        let SystemIdentityCreationResponseData { client_id, name } = self
-            .iam_client
-            .create_l2_system_identity(pub_key.as_slice())
-            .map_err(SystemIdentityGenerationError::IAMClient)?;
-
-        Ok(SystemIdentity {
-            name,
-            client_id,
+        let system_identity = SystemIdentity::from((
+            self.iam_client
+                .create_l2_system_identity(pub_key.as_slice())
+                .map_err(SystemIdentityGenerationError::IAMClient)?,
             pub_key,
-        })
+        ));
+
+        Ok(system_identity)
     }
 }
 
@@ -49,13 +46,8 @@ pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
 
 impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
     pub fn generate(&self) -> Result<SystemIdentity, I::Error> {
-        let SystemIdentityCreationResponseData { client_id, name } =
-            self.iam_client.create_l1_system_identity()?;
-        Ok(SystemIdentity {
-            client_id,
-            name,
-            pub_key: Vec::default(),
-        })
+        let system_identity = self.iam_client.create_l1_system_identity()?.into();
+        Ok(system_identity)
     }
 }
 

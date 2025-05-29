@@ -1,10 +1,14 @@
-use super::creation_response::SystemIdentityCreationResponseData;
+use super::creation_response::{
+    l1::L1SystemIdentityCreationResponseData, l2::L2SystemIdentityCreationResponseData,
+};
 
 /// Interface describing being able to create L2 System Identities.
 pub trait L1IdentityCreator {
     // TODO type Output;
     type Error: std::error::Error;
-    fn create_l1_system_identity(&self) -> Result<SystemIdentityCreationResponseData, Self::Error>;
+    fn create_l1_system_identity(
+        &self,
+    ) -> Result<L1SystemIdentityCreationResponseData, Self::Error>;
 }
 
 /// Interface describing being able to create L2 System Identities.
@@ -14,7 +18,7 @@ pub trait L2IdentityCreator {
     fn create_l2_system_identity(
         &self,
         pub_key: &[u8],
-    ) -> Result<SystemIdentityCreationResponseData, Self::Error>;
+    ) -> Result<L2SystemIdentityCreationResponseData, Self::Error>;
 }
 
 #[cfg(test)]
@@ -33,7 +37,7 @@ pub mod tests {
         impl L1IdentityCreator for L1IAMClient {
             type Error = MockIAMClientError;
             fn create_l1_system_identity(&self)
-              -> Result<SystemIdentityCreationResponseData, MockIAMClientError>;
+              -> Result<L1SystemIdentityCreationResponseData, MockIAMClientError>;
         }
     }
 
@@ -44,7 +48,7 @@ pub mod tests {
             fn create_l2_system_identity(
                 &self,
                 pub_key: &[u8]
-            ) -> Result<SystemIdentityCreationResponseData, MockIAMClientError>;
+            ) -> Result<L2SystemIdentityCreationResponseData, MockIAMClientError>;
         }
     }
 }
