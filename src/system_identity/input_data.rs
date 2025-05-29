@@ -16,10 +16,16 @@ use output_platform::OutputPlatform;
 /// for example from CLI arguments or by library usage, before reaching for any actual creation service.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SystemIdentityCreationMetadata {
+    pub system_identity_input: SystemIdentityInput,
     pub name: String,
+    pub environment: NewRelicEnvironment,
+    pub output_platform: OutputPlatform,
+}
+
+/// The existing System Identity data that is required as input to create a new System Identity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SystemIdentityInput {
     pub organization_id: String,
     pub client_id: String,
     pub auth_method: AuthMethod,
-    pub environment: NewRelicEnvironment,
-    pub output_platform: OutputPlatform,
 }
