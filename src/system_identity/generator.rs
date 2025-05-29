@@ -29,14 +29,10 @@ where
             .key_creator
             .create()
             .map_err(SystemIdentityGenerationError::KeyPairCreator)?;
-        let system_identity = SystemIdentity::from((
-            self.iam_client
-                .create_l2_system_identity(pub_key.as_slice())
-                .map_err(SystemIdentityGenerationError::IAMClient)?,
-            pub_key,
-        ));
 
-        Ok(system_identity)
+        self.iam_client
+            .create_l2_system_identity(pub_key.as_slice())
+            .map_err(SystemIdentityGenerationError::IAMClient)
     }
 }
 
@@ -46,8 +42,7 @@ pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
 
 impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
     pub fn generate(&self) -> Result<SystemIdentity, I::Error> {
-        let system_identity = self.iam_client.create_l1_system_identity()?.into();
-        Ok(system_identity)
+        self.iam_client.create_l1_system_identity()
     }
 }
 
