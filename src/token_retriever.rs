@@ -1,4 +1,4 @@
-use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, Request};
+use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, TokenRetrievalRequest};
 use crate::jwt::claims::Claims;
 use crate::jwt::signer::JwtSigner;
 use crate::token::Token;
@@ -115,7 +115,7 @@ where
 
         let signed_jwt = self.jwt_signer.sign(claims)?;
 
-        let request = Request {
+        let request = TokenRetrievalRequest {
             client_id: self.client_id.to_owned(),
             grant_type: GrantType::ClientCredentials,
             client_assertion_type: ClientAssertionType::JwtBearer,
@@ -142,7 +142,8 @@ pub mod test {
     use crate::jwt::signer::tests::MockJwtSigner;
     use crate::{
         authenticator::{
-            AuthenticateError, ClientAssertionType, GrantType, Request, TokenRetrievalResponse,
+            AuthenticateError, ClientAssertionType, GrantType, TokenRetrievalRequest,
+            TokenRetrievalResponse,
         },
         jwt::signed::SignedJwt,
         token::{Token, TokenType},
@@ -185,7 +186,7 @@ pub mod test {
                 })
             });
 
-        let expected_request = Request {
+        let expected_request = TokenRetrievalRequest {
             client_id: client_id.to_owned(),
             grant_type: GrantType::ClientCredentials,
             client_assertion_type: ClientAssertionType::JwtBearer,
