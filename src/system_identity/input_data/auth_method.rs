@@ -14,8 +14,8 @@ pub enum AuthMethod {
 impl fmt::Debug for AuthMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AuthMethod::ClientSecret(_) => write!(f, "ClientSecret"),
-            AuthMethod::PrivateKey(_) => write!(f, "FromLocalPrivateKey"),
+            AuthMethod::ClientSecret(_) => write!(f, "ClientSecret: redacted"),
+            AuthMethod::PrivateKey(_) => write!(f, "FromLocal: redacted"),
         }
     }
 }
