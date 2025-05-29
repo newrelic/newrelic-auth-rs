@@ -1,16 +1,15 @@
 //! Example to sign a JWT token using Vault
 use std::env;
 use std::path::Path;
-use std::str::FromStr;
 
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use chrono::{TimeDelta, Utc};
 use dotenvy::dotenv;
+use http::Uri;
 use jsonwebtoken::{Algorithm, Header};
 use sha2::{Digest, Sha512};
 use tracing::debug;
-use url::Url;
 use vaultrs::api::transit::requests::SignDataRequestBuilder;
 use vaultrs::api::transit::MarshalingAlgorithm;
 use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
@@ -65,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .map_err(|e| format!("cannot build vault client {}", e))?;
 
     // Build claims
-    let url = Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value");
+    let url = Uri::try_from(DEFAULT_AUDIENCE).expect("constant valid url value");
     let expires_at = Utc::now() + DEFAULT_JWT_CLAIM_EXP;
     let timestamp = expires_at
         .timestamp()

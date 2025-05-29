@@ -1,5 +1,5 @@
+use http::Uri;
 use serde::{Deserialize, Serialize};
-use url::Url;
 use uuid::Uuid;
 
 /// JWT Claims supported by the service.
@@ -32,7 +32,7 @@ impl Clone for Claims {
 
 impl Claims {
     /// Create a new Claims instance
-    pub fn new(client_id: String, aud: Url, exp: u64) -> Self {
+    pub fn new(client_id: String, aud: Uri, exp: u64) -> Self {
         Self {
             iss: client_id.clone(),
             sub: client_id,

@@ -10,7 +10,7 @@ either by [opening an issue](https://github.com/newrelic/newrelic-auth-rs/issues
 or by e-mailing [open-source@newrelic.com](mailto:open-source@newrelic.com).
 
 For any licenses that require the disclosure of source code, the source code
-can be found at https://github.com/newrelic/newrelic-auth-rs.
+can be found at <https://github.com/newrelic/newrelic-auth-rs>.
 
 ## aho-corasick <https://crates.io/crates/aho-corasick>
 
@@ -143,13 +143,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## displaydoc <https://crates.io/crates/displaydoc>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## dunce <https://crates.io/crates/dunce>
 
 Distributed under the following license(s):
@@ -178,13 +171,6 @@ Distributed under the following license(s):
 
 * Apache-2.0
 * MIT
-
-## form_urlencoded <https://crates.io/crates/form_urlencoded>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
 
 ## fs_extra <https://crates.io/crates/fs_extra>
 
@@ -233,62 +219,6 @@ Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
-
-## icu_collections <https://crates.io/crates/icu_collections>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## icu_locale_core <https://crates.io/crates/icu_locale_core>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## icu_normalizer <https://crates.io/crates/icu_normalizer>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## icu_normalizer_data <https://crates.io/crates/icu_normalizer_data>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## icu_properties <https://crates.io/crates/icu_properties>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## icu_properties_data <https://crates.io/crates/icu_properties_data>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## icu_provider <https://crates.io/crates/icu_provider>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## idna <https://crates.io/crates/idna>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## idna_adapter <https://crates.io/crates/idna_adapter>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
 
 ## itertools <https://crates.io/crates/itertools>
 
@@ -359,12 +289,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## litemap <https://crates.io/crates/litemap>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
 ## log <https://crates.io/crates/log>
 
 Distributed under the following license(s):
@@ -433,25 +357,12 @@ Distributed under the following license(s):
 
 * MIT
 
-## percent-encoding <https://crates.io/crates/percent-encoding>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## pin-project-lite <https://crates.io/crates/pin-project-lite>
 
 Distributed under the following license(s):
 
 * Apache-2.0
 * MIT
-
-## potential_utf <https://crates.io/crates/potential_utf>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
 
 ## powerfmt <https://crates.io/crates/powerfmt>
 
@@ -594,32 +505,12 @@ Distributed under the following license(s):
 
 * ISC
 
-## smallvec <https://crates.io/crates/smallvec>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## stable_deref_trait <https://crates.io/crates/stable_deref_trait>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## syn <https://crates.io/crates/syn>
 
 Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
-
-## synstructure <https://crates.io/crates/synstructure>
-
-Distributed under the following license(s):
-
-* MIT
 
 ## thiserror <https://crates.io/crates/thiserror>
 
@@ -656,12 +547,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## tinystr <https://crates.io/crates/tinystr>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
 ## tracing <https://crates.io/crates/tracing>
 
 Distributed under the following license(s):
@@ -693,20 +578,6 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * ISC
-
-## url <https://crates.io/crates/url>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## utf8_iter <https://crates.io/crates/utf8_iter>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
 
 ## uuid <https://crates.io/crates/uuid>
 
@@ -884,12 +755,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## writeable <https://crates.io/crates/writeable>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
 ## yasna <https://crates.io/crates/yasna>
 
 Distributed under the following license(s):
@@ -897,51 +762,9 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## yoke <https://crates.io/crates/yoke>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## yoke-derive <https://crates.io/crates/yoke-derive>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## zerofrom <https://crates.io/crates/zerofrom>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## zerofrom-derive <https://crates.io/crates/zerofrom-derive>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
 ## zeroize <https://crates.io/crates/zeroize>
 
 Distributed under the following license(s):
 
 * Apache-2.0
 * MIT
-
-## zerotrie <https://crates.io/crates/zerotrie>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## zerovec <https://crates.io/crates/zerovec>
-
-Distributed under the following license(s):
-
-* Unicode-3.0
-
-## zerovec-derive <https://crates.io/crates/zerovec-derive>
-
-Distributed under the following license(s):
-
-* Unicode-3.0

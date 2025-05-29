@@ -1,12 +1,11 @@
 //! Example to sign a JWT token using a local private key
 use std::env;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
-use url::Url;
 
 use chrono::{TimeDelta, Utc};
 use dotenvy::dotenv;
 
+use http::Uri;
 use nr_auth::jwt::claims::Claims;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::jwt::signer::{JwtSigner, JwtSignerImpl};
@@ -39,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let private_key_path = env::var("PRIVATE_KEY_PATH")?;
     let client_id = env::var("CLIENT_ID")?;
-    let url = Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value");
+    let url = Uri::try_from(DEFAULT_AUDIENCE).expect("constant valid url value");
 
     let signer = LocalPrivateKeySigner::try_from(PathBuf::from(private_key_path).as_path())?;
     let jwt_signer = JwtSignerImpl::Local(signer);

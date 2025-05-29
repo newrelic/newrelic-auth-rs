@@ -1,36 +1,36 @@
-use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, Request};
+use crate::authenticator::{Authenticator, ClientAssertionType, GrantType, TokenRetrievalRequest};
 use crate::jwt::claims::Claims;
 use crate::jwt::signer::JwtSigner;
-#[cfg_attr(test, mockall_double::double)]
-use crate::jwt::signer::JwtSignerImpl;
-use crate::token::{Token, TokenType};
+use crate::token::Token;
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 use chrono::{TimeDelta, Utc};
-use std::str::FromStr;
+use http::Uri;
 use std::sync::Mutex;
 use tracing::debug;
-use url::Url;
 
 /// A signed JWT should live enough for the System Identity Service to consume it.
 const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 pub const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
-pub struct TokenRetrieverWithCache<A>
+#[derive(Debug)]
+pub struct TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     client_id: ClientID,
-    aud: Url,
+    aud: Uri,
     tokens: Mutex<Option<Token>>,
-    jwt_signer: JwtSignerImpl,
+    jwt_signer: J,
     authenticator: A,
     retries: u8,
 }
 
-impl<A> TokenRetriever for TokenRetrieverWithCache<A>
+impl<A, J> TokenRetriever for TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let mut cached_token = self
@@ -74,18 +74,19 @@ where
     }
 }
 
-impl<A> TokenRetrieverWithCache<A>
+impl<A, J> TokenRetrieverWithCache<A, J>
 where
     A: Authenticator,
+    J: JwtSigner,
 {
     pub fn new(
         client_id: ClientID,
-        jwt_signer: JwtSignerImpl,
+        jwt_signer: J,
         authenticator: A,
-    ) -> TokenRetrieverWithCache<A> {
+    ) -> TokenRetrieverWithCache<A, J> {
         TokenRetrieverWithCache {
             client_id,
-            aud: Url::from_str(DEFAULT_AUDIENCE).expect("constant valid url value"),
+            aud: Uri::try_from(DEFAULT_AUDIENCE).expect("constant valid url value"),
             tokens: Mutex::new(None),
             jwt_signer,
             authenticator,
@@ -114,7 +115,7 @@ where
 
         let signed_jwt = self.jwt_signer.sign(claims)?;
 
-        let request = Request {
+        let request = TokenRetrievalRequest {
             client_id: self.client_id.to_owned(),
             grant_type: GrantType::ClientCredentials,
             client_assertion_type: ClientAssertionType::JwtBearer,
@@ -123,33 +124,41 @@ where
 
         let response = self.authenticator.authenticate(request)?;
 
-        Ok(Token::new(
-            response.access_token,
-            TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(response.expires_in.into()),
-        ))
+        Token::try_from(response)
+            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))
     }
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use std::{thread, time};
 
     use chrono::{TimeDelta, Utc};
+    use mockall::mock;
     use mockall::{predicate::eq, Sequence};
 
     use crate::authenticator::test::MockAuthenticatorMock;
-    #[cfg_attr(test, mockall_double::double)]
-    use crate::jwt::signer::JwtSignerImpl;
+
+    use crate::jwt::signer::tests::MockJwtSigner;
     use crate::{
-        authenticator::{AuthenticateError, ClientAssertionType, GrantType, Request, Response},
+        authenticator::{
+            AuthenticateError, ClientAssertionType, GrantType, TokenRetrievalRequest,
+            TokenRetrievalResponse,
+        },
         jwt::signed::SignedJwt,
         token::{Token, TokenType},
         token_retriever::DEFAULT_JWT_CLAIM_EXP,
-        TokenRetriever,
+        TokenRetriever, TokenRetrieverError,
     };
 
     use super::{TokenRetrieverWithCache, DEFAULT_AUDIENCE};
+
+    mock! {
+        pub TokenRetriever {}
+        impl TokenRetriever for TokenRetriever {
+            fn retrieve(&self) -> Result<Token, TokenRetrieverError>;
+        }
+    }
 
     #[test]
     // Test that a new token is retrieved when there is no cache and a cached token is
@@ -161,7 +170,7 @@ mod test {
         let fake_client_assertion = "client_assertion";
         let fake_token = "fakeToken";
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         jwt_signer
             .expect_sign()
             .once()
@@ -177,7 +186,7 @@ mod test {
                 })
             });
 
-        let expected_request = Request {
+        let expected_request = TokenRetrievalRequest {
             client_id: client_id.to_owned(),
             grant_type: GrantType::ClientCredentials,
             client_assertion_type: ClientAssertionType::JwtBearer,
@@ -190,10 +199,10 @@ mod test {
             .once()
             .with(eq(expected_request))
             .returning(move |_| {
-                Ok(Response {
+                Ok(TokenRetrievalResponse {
                     access_token: fake_token.into(),
                     expires_in: token_expires_in,
-                    token_type: "".into(),
+                    token_type: "Bearer".into(),
                 })
             });
 
@@ -203,7 +212,7 @@ mod test {
         let expected_token = Token::new(
             fake_token.into(),
             TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(token_expires_in.into()),
+            Utc::now() + TimeDelta::seconds(token_expires_in as i64),
         );
 
         let cache_miss_token = token_retriever.retrieve().unwrap();
@@ -225,7 +234,7 @@ mod test {
         let client_id = "client_id";
         let token_expires_in = 2;
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         jwt_signer.expect_sign().times(2).returning(move |_| {
             Ok(SignedJwt {
                 value: "client_assertion".into(),
@@ -237,11 +246,11 @@ mod test {
             .expect_authenticate()
             .times(2)
             .returning(move |_| {
-                Ok(Response {
+                Ok(TokenRetrievalResponse {
                     // generates a different token each time.
                     access_token: Utc::now().to_string(),
                     expires_in: token_expires_in,
-                    token_type: "bearer".into(),
+                    token_type: "Bearer".into(),
                 })
             });
 
@@ -251,9 +260,7 @@ mod test {
         let cache_miss_token = token_retriever.retrieve().unwrap();
 
         // waits until the cached token expired + buffer to avoid flaky failures.
-        thread::sleep(
-            time::Duration::from_secs(token_expires_in.into()) + time::Duration::from_secs(1),
-        );
+        thread::sleep(time::Duration::from_secs(token_expires_in) + time::Duration::from_secs(1));
 
         let cache_expired_token = token_retriever.retrieve().unwrap();
 
@@ -267,7 +274,7 @@ mod test {
     fn no_retries_and_fail_calls_retrieve_once() {
         let client_id = "client_id";
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         // This actually tests TokenRetrieverWithCache's `refresh_token`.
         // Calling `retrieve` makes calls to both first `sign` and then to `authenticate`.
         // We instruct the `authenticate` call to fail every time and check that `sign` is called only the number of times we expect.
@@ -303,7 +310,7 @@ mod test {
         let fake_token = "fake";
         let token_expires_in = 5;
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         // This actually tests TokenRetrieverWithCache's `refresh_token`.
         // Calling `retrieve` makes calls to both first `sign` and then to `authenticate`.
         // We instruct the `authenticate` call to fail every time and check that `sign` is called only the number of times we expect.
@@ -329,7 +336,7 @@ mod test {
             .expect_authenticate()
             .once()
             .returning(move |_| {
-                Ok(Response {
+                Ok(TokenRetrievalResponse {
                     // generates a different token each time.
                     access_token: fake_token.into(),
                     expires_in: token_expires_in,
@@ -344,7 +351,7 @@ mod test {
         let expected_token = Token::new(
             fake_token.into(),
             TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(token_expires_in.into()),
+            Utc::now() + TimeDelta::seconds(token_expires_in as i64),
         );
 
         // Retries expired, error returned
@@ -360,7 +367,7 @@ mod test {
     fn retries_fail() {
         let client_id = "client_id";
 
-        let mut jwt_signer = JwtSignerImpl::new();
+        let mut jwt_signer = MockJwtSigner::new();
         // This actually tests TokenRetrieverWithCache's `refresh_token`. Calling `retrieve` makes calls to both first `sign` and then to `authenticate`. We instruct the `authenticate` call to fail every time and check that `sign` is called only the number of times we expect.
         jwt_signer.expect_sign().times(3).returning(move |_| {
             Ok(SignedJwt {

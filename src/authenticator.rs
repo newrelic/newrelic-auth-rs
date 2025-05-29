@@ -1,8 +1,10 @@
+use core::fmt;
+
 use http::header::CONTENT_TYPE;
 use http::method::Method;
+use http::Uri;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use url::Url;
 
 use crate::http_client::HttpClient;
 use crate::{token::AccessToken, ClientID};
@@ -20,36 +22,48 @@ pub enum AuthenticateError {
 }
 
 pub trait Authenticator {
-    fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError>;
+    fn authenticate(
+        &self,
+        req: TokenRetrievalRequest,
+    ) -> Result<TokenRetrievalResponse, AuthenticateError>;
 }
 
 /// The Authenticator is responsible for obtaining a valid JWT token from System Identity Service.
-pub struct HttpAuthenticator<C> {
+pub struct HttpAuthenticator<C: HttpClient> {
     /// HTTP client
     http_client: C,
     /// System Identity Service URL
-    url: Url,
+    uri: Uri,
 }
 
-impl<C> HttpAuthenticator<C> {
-    pub fn new(http_client: C, url: Url) -> Self {
-        Self { http_client, url }
+impl<C: HttpClient> HttpAuthenticator<C> {
+    pub fn new(http_client: C, uri: Uri) -> Self {
+        Self { http_client, uri }
     }
 }
 
-impl<C> Authenticator for HttpAuthenticator<C>
-where
-    C: HttpClient,
-{
+impl<C: HttpClient> fmt::Debug for HttpAuthenticator<C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HttpAuthenticator")
+            .field("http_client", &"impl HttpClient")
+            .field("uri", &self.uri)
+            .finish()
+    }
+}
+
+impl<C: HttpClient> Authenticator for HttpAuthenticator<C> {
     /// Executes a POST request to Authentication Server with the `Request` as a body and returns a `Response`.
-    fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError> {
+    fn authenticate(
+        &self,
+        req: TokenRetrievalRequest,
+    ) -> Result<TokenRetrievalResponse, AuthenticateError> {
         let serialized_req = serde_json::to_string(&req).map_err(|e| {
             AuthenticateError::SerializeError(format!("serializing request body: {e}"))
         })?;
 
         let req = http::Request::builder()
-            .method(Method::POST.as_str())
-            .uri(self.url.as_str())
+            .method(Method::POST)
+            .uri(&self.uri)
             .header(CONTENT_TYPE, "application/json")
             .body(serialized_req.into_bytes())
             .map_err(|e| AuthenticateError::SerializeError(format!("building request: {e}")))?;
@@ -90,7 +104,7 @@ pub enum ClientAssertionType {
 type ClientAssertion = String;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Request {
+pub struct TokenRetrievalRequest {
     pub client_id: ClientID,
     pub grant_type: GrantType,
     pub client_assertion_type: ClientAssertionType,
@@ -98,23 +112,23 @@ pub struct Request {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct Response {
+/// Basic response coming from the NR token retrieval endpoint
+pub struct TokenRetrievalResponse {
     pub access_token: AccessToken,
-    /// The lifetime in seconds of the access token.
-    pub expires_in: u32,
+    /// The lifetime in seconds of the access token
+    pub expires_in: u64,
     pub token_type: String,
 }
 
 #[cfg(test)]
 pub mod test {
     use assert_matches::assert_matches;
-    use http::Method;
+    use http::{Method, Uri};
     use mockall::mock;
-    use url::Url;
 
     use super::{
-        ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator, Request,
-        Response,
+        ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator,
+        TokenRetrievalRequest, TokenRetrievalResponse,
     };
     use crate::{
         authenticator::{AuthenticateError, Authenticator},
@@ -126,7 +140,7 @@ pub mod test {
 
         impl Authenticator for AuthenticatorMock
         {
-            fn authenticate(&self, req: Request) -> Result<Response, AuthenticateError>;
+            fn authenticate(&self, req: TokenRetrievalRequest) -> Result<TokenRetrievalResponse, AuthenticateError>;
         }
     }
 
@@ -157,7 +171,8 @@ pub mod test {
             })
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let response = authenticator.authenticate(request).unwrap();
 
@@ -174,7 +189,8 @@ pub mod test {
             .once()
             .returning(move |_| Err(HttpClientError::TransportError("foo".to_string())));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -197,7 +213,8 @@ pub mod test {
             .once()
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -216,7 +233,8 @@ pub mod test {
             .once()
             .returning(move |_| Ok(http_response.clone()));
 
-        let authenticator = HttpAuthenticator::new(http_client, fake_url());
+        let uri = fake_uri();
+        let authenticator = HttpAuthenticator::new(http_client, uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -225,7 +243,7 @@ pub mod test {
 
     #[test]
     fn test_request_serialization_and_deserialization() {
-        let request = Request {
+        let request = TokenRetrievalRequest {
             client_assertion: ClientAssertion::from("fake_assertion"),
             client_assertion_type: ClientAssertionType::JwtBearer,
             client_id: ClientID::from("fake_id"),
@@ -239,19 +257,19 @@ pub mod test {
 
     const TEST_URL: &str = "https://newrelic.com/v1/authorize";
 
-    fn fake_url() -> Url {
-        Url::parse(TEST_URL).unwrap()
+    fn fake_uri() -> Uri {
+        Uri::try_from(TEST_URL).unwrap()
     }
 
-    fn fake_request_response() -> (Request, Response) {
+    fn fake_request_response() -> (TokenRetrievalRequest, TokenRetrievalResponse) {
         (
-            Request {
+            TokenRetrievalRequest {
                 client_id: ClientID::from("fake_id"),
                 grant_type: GrantType::ClientCredentials,
                 client_assertion_type: ClientAssertionType::JwtBearer,
                 client_assertion: ClientAssertion::from("fake_assertion"),
             },
-            Response {
+            TokenRetrievalResponse {
                 access_token: "fake_token".to_string(),
                 token_type: "fake_token_type".to_string(),
                 expires_in: 10,

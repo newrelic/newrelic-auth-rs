@@ -12,11 +12,11 @@ pub trait JwtSigner {
 }
 
 /// Enumerates all implementations for `JwtSigner` for static dispatching reasons.
+#[derive(Debug)]
 pub enum JwtSignerImpl {
     Local(LocalPrivateKeySigner),
 }
 
-#[cfg_attr(test, mockall::automock)]
 impl JwtSigner for JwtSignerImpl {
     fn sign(&self, claims: Claims) -> Result<SignedJwt, JwtEncoderError> {
         match self {
@@ -29,4 +29,19 @@ impl JwtSigner for JwtSignerImpl {
 pub enum JwtSignerImplError {
     #[error("building local private key JWT signer: `{0}`")]
     LocalPrivateKeySignerError(#[from] LocalPrivateKeySignerError),
+}
+
+#[cfg(test)]
+pub mod tests {
+    use mockall::mock;
+
+    use super::*;
+
+    mock! {
+        pub JwtSigner {}
+
+        impl JwtSigner for JwtSigner {
+            fn sign(&self, claims: Claims) -> Result<SignedJwt, JwtEncoderError>;
+        }
+    }
 }
