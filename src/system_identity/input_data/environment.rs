@@ -66,44 +66,42 @@ impl NewRelicEnvironment {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
     use super::*;
 
-    #[test]
-    fn us_endpoints() {
-        let env = SystemIdentityCreationEnvironment::US;
+    #[rstest]
+    #[case(
+        NewRelicEnvironment::US,
+        US_IDENTITY_CREATION_ENDPOINT_STR,
+        US_TOKEN_RENEWAL_ENDPOINT_STR
+    )]
+    #[case(
+        NewRelicEnvironment::EU,
+        EU_IDENTITY_CREATION_ENDPOINT_STR,
+        EU_TOKEN_RENEWAL_ENDPOINT_STR
+    )]
+    #[case(
+        NewRelicEnvironment::Staging,
+        STAGING_IDENTITY_CREATION_ENDPOINT_STR,
+        STAGING_TOKEN_RENEWAL_ENDPOINT_STR
+    )]
+    #[case(NewRelicEnvironment::Custom {
+        token_renewal_endpoint: Uri::try_from("https://custom-token-renewal.com").unwrap(),
+        system_identity_creation_uri: Uri::try_from("https://custom-creation.com").unwrap(),
+    }, "https://custom-creation.com/", "https://custom-token-renewal.com/")]
+    fn endpoints(
+        #[case] env: NewRelicEnvironment,
+        #[case] expected_identity_creation_url: &str,
+        #[case] expected_token_renewal_url: &str,
+    ) {
         assert_eq!(
             env.identity_creation_endpoint().to_string(),
-            US_IDENTITY_CREATION_ENDPOINT_STR
+            expected_identity_creation_url
         );
         assert_eq!(
             env.token_renewal_endpoint().to_string(),
-            US_TOKEN_RENEWAL_ENDPOINT_STR
-        );
-    }
-
-    #[test]
-    fn eu_endpoints() {
-        let env = SystemIdentityCreationEnvironment::EU;
-        assert_eq!(
-            env.identity_creation_endpoint().to_string(),
-            EU_IDENTITY_CREATION_ENDPOINT_STR
-        );
-        assert_eq!(
-            env.token_renewal_endpoint().to_string(),
-            EU_TOKEN_RENEWAL_ENDPOINT_STR
-        );
-    }
-
-    #[test]
-    fn staging_endpoints() {
-        let env = SystemIdentityCreationEnvironment::Staging;
-        assert_eq!(
-            env.identity_creation_endpoint().to_string(),
-            STAGING_IDENTITY_CREATION_ENDPOINT_STR
-        );
-        assert_eq!(
-            env.token_renewal_endpoint().to_string(),
-            STAGING_TOKEN_RENEWAL_ENDPOINT_STR
+            expected_token_renewal_url
         );
     }
 }
