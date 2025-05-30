@@ -120,70 +120,95 @@ impl TryFrom<SystemIdentityData> for SystemIdentity {
 
 #[cfg(test)]
 mod tests {
-    use rstest::{rstest, Context};
-
     use super::*;
-
-    fn is_l1_identity(result: &Result<SystemIdentity, MalformedSystemIdentityData>) -> bool {
-        result
-            .as_ref()
-            .is_ok_and(|i| matches!(i.identity_type, SystemIdentityType::L1 { .. }))
-    }
-
-    fn is_l2_identity(result: &Result<SystemIdentity, MalformedSystemIdentityData>) -> bool {
-        result
-            .as_ref()
-            .is_ok_and(|i| matches!(i.identity_type, SystemIdentityType::L2 { .. }))
-    }
-
-    fn is_malformed_identity(result: &Result<SystemIdentity, MalformedSystemIdentityData>) -> bool {
-        result.is_err()
-    }
+    use rstest::rstest;
 
     #[rstest]
-    #[case(Some("public-key"), None, None, is_l2_identity)]
     #[case(
-        None,
-        Some("some-secret"),
-        Some("some-date-not-caring-format"),
-        is_l1_identity
-    )]
-    #[case(None, None, None, is_malformed_identity)]
+        SystemIdentityData {
+            client_id: "client-id".to_string(),
+            public_key: Some("public-key".to_string()),
+            id: "id".to_string(),
+            name: Some("public key only (L2)".to_string()),
+            organization_id: "org-id".to_string(),
+            client_secret: None,
+            credential_expiration: None,
+        },
+        |r: &Result<SystemIdentity, _>| r.as_ref().is_ok_and(|i| matches!(i.identity_type, SystemIdentityType::L2 { .. })))]
     #[case(
-        Some("public-key"),
-        Some("some-secret"),
-        Some("some-date-not-caring-format"),
-        is_malformed_identity
+        SystemIdentityData {
+            client_id: "client-id".to_string(),
+            public_key: None,
+            id: "id".to_string(),
+            name: Some("client secret and date (L1)".to_string()),
+            organization_id: "org-id".to_string(),
+            client_secret: Some("some-secret".to_string()),
+            credential_expiration: Some("some-date-not-caring-format".to_string()),
+        },
+       |r: &Result<SystemIdentity, _>| r
+            .as_ref()
+            .is_ok_and(|i| matches!(i.identity_type, SystemIdentityType::L1 { .. }))
     )]
     #[case(
-        Some("public-key"),
-        None,
-        Some("some-date-not-caring-format"),
-        is_malformed_identity
+        SystemIdentityData {
+            client_id: "client-id".to_string(),
+            public_key: None,
+            id: "id".to_string(),
+            name: Some("no public key, no client secret, no date should fail".to_string()),
+            organization_id: "org-id".to_string(),
+            client_secret: None,
+            credential_expiration: None,
+        },
+        |r: &Result<SystemIdentity, _>| r.is_err())]
+    #[case(
+        SystemIdentityData {
+            client_id: "client-id".to_string(),
+            public_key: Some("public-key".to_string()),
+            id: "id".to_string(),
+            name: Some("public key, client secret and date should fail".to_string()),
+            organization_id: "org-id".to_string(),
+            client_secret: Some("some-secret".to_string()),
+            credential_expiration: Some("some-date-not-caring-format".to_string()),
+        },
+        |r: &Result<SystemIdentity, _>| r.is_err()
     )]
-    #[case(None, None, Some("some-date-not-caring-format"), is_malformed_identity)]
+    #[case(
+        SystemIdentityData {
+            client_id: "client-id".to_string(),
+            public_key: Some("public-key".to_string()),
+            id: "id".to_string(),
+            name: Some("public key and date and no client secret should fail".to_string()),
+            organization_id: "org-id".to_string(),
+            client_secret: None,
+            credential_expiration: Some("some-date-not-caring-format".to_string()),
+        },
+        |r: &Result<SystemIdentity, _>| r.is_err()
+    )]
+    #[case(
+        SystemIdentityData {
+            client_id: "client-id".to_string(),
+            public_key: None,
+            id: "id".to_string(),
+            name: Some("no public key, no client secret and a date should fail".to_string()),
+            organization_id: "org-id".to_string(),
+            client_secret: None,
+            credential_expiration: Some("some-date-not-caring-format".to_string()),
+        },
+        |r: &Result<SystemIdentity, _>| r.is_err())]
     fn test_system_identity_data_conversion(
-        #[context] ctx: Context,
-        #[case] maybe_pub_key: Option<&str>,
-        #[case] maybe_client_secret: Option<&str>,
-        #[case] maybe_credential_expiration: Option<&str>,
+        #[case] system_identity_data: SystemIdentityData,
         #[case] check: impl FnOnce(&Result<SystemIdentity, MalformedSystemIdentityData>) -> bool,
     ) {
-        let data = SystemIdentityData {
-            client_id: "client-id".to_string(),
-            public_key: maybe_pub_key.map(|s| s.to_string()),
-            id: "id".to_string(),
-            name: ctx.name.to_string().into(),
-            organization_id: "org-id".to_string(),
-            client_secret: maybe_client_secret.map(|s| s.to_string()),
-            credential_expiration: maybe_credential_expiration.map(|s| s.to_string()),
-        };
+        let case_name = system_identity_data
+            .name
+            .to_owned()
+            .unwrap_or_else(|| "Unnamed Case".to_string());
 
-        let result = data.try_into();
+        let result = system_identity_data.try_into();
         assert!(
             check(&result),
             "Case {} failed. Result {:?}",
-            ctx.name,
+            case_name,
             result
         );
     }
