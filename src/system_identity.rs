@@ -24,8 +24,8 @@ pub enum SystemIdentityType {
     },
 }
 
-type ClientSecret = String; // For L1 System Identity. Type better? What are we doing with these?
-type Base64PublicKey = String; // For L2 System Identity. Type better? What are we doing with these?
+type ClientSecret = String; // For L1 System Identity.
+type Base64PublicKey = String; // For L2 System Identity.
 
 #[cfg(test)]
 mod tests {
