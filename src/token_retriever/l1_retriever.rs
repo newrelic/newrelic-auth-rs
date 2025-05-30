@@ -112,6 +112,8 @@ fn evaluate_response(res: Response<Vec<u8>>) -> Result<Token, TokenRetrieverErro
 mod tests {
     use serde_json::Value;
 
+    use crate::token::TokenType;
+
     use super::*;
 
     #[test]
@@ -137,5 +139,24 @@ mod tests {
         });
         let body_value: Value = serde_json::from_slice(body).unwrap();
         assert_eq!(body_value, expected_body);
+    }
+
+    #[test]
+    fn evaluate_response_ok() {
+        let response = Response::builder()
+            .status(StatusCode::OK)
+            .body(
+                serde_json::to_vec(&TokenRetrievalResponse {
+                    access_token: "test_access_token".to_string(),
+                    token_type: "Bearer".to_string(),
+                    expires_in: 3600,
+                })
+                .unwrap(),
+            )
+            .unwrap();
+
+        let token = evaluate_response(response).unwrap();
+        assert_eq!(token.access_token(), "test_access_token");
+        assert_eq!(token.token_type(), &TokenType::Bearer);
     }
 }

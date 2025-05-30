@@ -79,7 +79,12 @@ impl TryFrom<TokenRetrievalResponse> for Token {
 
 #[cfg(test)]
 mod test {
-    use crate::token::{AccessToken, Token, TokenType};
+
+    use crate::{
+        authenticator::TokenRetrievalResponse,
+        token::{AccessToken, Token, TokenType},
+        TokenRetrieverError,
+    };
     use chrono::{Duration, Utc};
 
     #[test]
@@ -94,5 +99,29 @@ mod test {
         let future = Utc::now() + Duration::milliseconds(10);
         let token = Token::new(AccessToken::from("some-token"), TokenType::Bearer, future);
         assert!(!token.is_expired())
+    }
+
+    #[test]
+    fn token_retrieval_response_incorrect_time() {
+        let response = TokenRetrievalResponse {
+            access_token: "some-token".to_string(),
+            token_type: "Bearer".to_string(),
+            expires_in: u64::MAX,
+        };
+        let result = Token::try_from(response);
+        assert!(
+            result.is_err(),
+            "Expected error due to invalid expiration time"
+        );
+
+        let err_msg = result.unwrap_err();
+        assert!(
+            matches!(
+                &err_msg,
+                TokenRetrieverError::TokenRetrieverError(e) if e == "Source duration value is out of range for the target type"
+            ),
+            "Expected TokenRetrieverError with specific message: '{}'",
+            err_msg
+        );
     }
 }
