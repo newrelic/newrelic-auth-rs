@@ -4,7 +4,7 @@
 This is the complete definition for the involved query and its full response.
 
 ```graphql
-mutation UpdateProducePrice($name: String, $organizationId: String!, publicKey: String) {
+mutation SystemIdentityCreateQuery($name: String, $organizationId: String!, publicKey: String) {
     systemIdentityCreate(
         name: $name
         organizationId: $organizationId
