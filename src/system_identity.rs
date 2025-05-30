@@ -14,6 +14,14 @@ pub struct SystemIdentity {
     pub identity_type: SystemIdentityType,
 }
 
+/// Represents the type of system identity being created.
+///
+/// If the request was to create an L1, the `SystemIdentityType` will contain the client secret and
+/// its expiration.
+///
+/// If the request was to create an L2, the `SystemIdentityType` will contain the public key
+/// in Base64 format. This is the same public key that was used in the request to create the
+/// system identity.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SystemIdentityType {
     L1 {
