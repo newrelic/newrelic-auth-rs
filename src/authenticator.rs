@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::http_client::HttpClient;
+use crate::system_identity::input_data::auth_method::ClientSecret;
 use crate::{token::AccessToken, ClientID};
 
 #[derive(Error, Debug)]
@@ -107,8 +108,20 @@ type ClientAssertion = String;
 pub struct TokenRetrievalRequest {
     pub client_id: ClientID,
     pub grant_type: GrantType,
-    pub client_assertion_type: ClientAssertionType,
-    pub client_assertion: ClientAssertion,
+    #[serde(flatten)]
+    pub credential: AuthCredential,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AuthCredential {
+    ClientSecret {
+        client_secret: ClientSecret,
+    },
+    ClientAssertion {
+        client_assertion_type: ClientAssertionType,
+        client_assertion: ClientAssertion,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -127,8 +140,8 @@ pub mod test {
     use mockall::mock;
 
     use super::{
-        ClientAssertion, ClientAssertionType, ClientID, GrantType, HttpAuthenticator,
-        TokenRetrievalRequest, TokenRetrievalResponse,
+        AuthCredential, ClientAssertion, ClientAssertionType, ClientID, GrantType,
+        HttpAuthenticator, TokenRetrievalRequest, TokenRetrievalResponse,
     };
     use crate::{
         authenticator::{AuthenticateError, Authenticator},
@@ -244,8 +257,10 @@ pub mod test {
     #[test]
     fn test_request_serialization_and_deserialization() {
         let request = TokenRetrievalRequest {
-            client_assertion: ClientAssertion::from("fake_assertion"),
-            client_assertion_type: ClientAssertionType::JwtBearer,
+            credential: AuthCredential::ClientAssertion {
+                client_assertion: ClientAssertion::from("fake_assertion"),
+                client_assertion_type: ClientAssertionType::JwtBearer,
+            },
             client_id: ClientID::from("fake_id"),
             grant_type: GrantType::ClientCredentials,
         };
@@ -266,8 +281,10 @@ pub mod test {
             TokenRetrievalRequest {
                 client_id: ClientID::from("fake_id"),
                 grant_type: GrantType::ClientCredentials,
-                client_assertion_type: ClientAssertionType::JwtBearer,
-                client_assertion: ClientAssertion::from("fake_assertion"),
+                credential: AuthCredential::ClientAssertion {
+                    client_assertion_type: ClientAssertionType::JwtBearer,
+                    client_assertion: ClientAssertion::from("fake_assertion"),
+                },
             },
             TokenRetrievalResponse {
                 access_token: "fake_token".to_string(),

@@ -28,3 +28,9 @@ impl<S: AsRef<str>> From<S> for ClientSecret {
         ClientSecret(secret.as_ref().to_string())
     }
 }
+
+impl fmt::Debug for ClientSecret {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ClientSecret: redacted")
+    }
+}
