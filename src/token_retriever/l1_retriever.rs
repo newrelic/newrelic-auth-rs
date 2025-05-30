@@ -1,6 +1,6 @@
 use std::fmt;
 
-use http::{header::CONTENT_TYPE, StatusCode, Uri};
+use http::{header::CONTENT_TYPE, Response, StatusCode, Uri};
 use serde_json::json;
 
 use crate::{
@@ -44,35 +44,11 @@ impl<C: HttpClient> L1TokenRetriever<C> {
             token_retrieval_uri,
         }
     }
-
-    fn build_request(
-        client_id: &str,
-        client_secret: &ClientSecret,
-        uri: &Uri,
-    ) -> Result<http::Request<Vec<u8>>, TokenRetrieverError> {
-        let json_body_string = json!({
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "grant_type": "client_credentials",
-        });
-        let json_body = serde_json::to_vec(&json_body_string).map_err(|e| {
-            TokenRetrieverError::TokenRetrieverError(format!("Failed to encode JSON: {e}"))
-        })?;
-
-        http::Request::builder()
-            .uri(uri)
-            .method("POST")
-            .header(CONTENT_TYPE, "application/json")
-            .body(json_body)
-            .map_err(|e| {
-                TokenRetrieverError::TokenRetrieverError(format!("Failed to build request: {e}"))
-            })
-    }
 }
 
 impl<C: HttpClient> TokenRetriever for L1TokenRetriever<C> {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
-        let request = Self::build_request(
+        let request = build_request(
             &self.client_id,
             &self.client_secret,
             &self.token_retrieval_uri,
@@ -81,47 +57,70 @@ impl<C: HttpClient> TokenRetriever for L1TokenRetriever<C> {
         let response = self.http_client.send(request).map_err(|e| {
             TokenRetrieverError::TokenRetrieverError(format!("Failed to send HTTP request: {e}"))
         })?;
-        let body = response.body();
 
-        match response.status() {
-            StatusCode::OK => {
-                let decoded_body: TokenRetrievalResponse =
-                    serde_json::from_slice(body).map_err(|e| {
-                        TokenRetrieverError::TokenRetrieverError(format!(
-                            "Failed to decode JSON response: {e}"
-                        ))
-                    })?;
-                Token::try_from(decoded_body)
-                    .map_err(|e| HttpClientError::InvalidResponse(e.to_string()))
-            }
-            status => Err(HttpClientError::UnsuccessfulResponse(
-                status.as_u16(),
-                String::from_utf8_lossy(body).to_string(),
-            )),
-        }
-        .map_err(|e| {
-            TokenRetrieverError::TokenRetrieverError(format!("Failed to retrieve token: {e}"))
-        })
+        evaluate_response(response)
     }
+}
+
+fn build_request(
+    client_id: &str,
+    client_secret: &ClientSecret,
+    uri: &Uri,
+) -> Result<http::Request<Vec<u8>>, TokenRetrieverError> {
+    let json_body_string = json!({
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials",
+    });
+    let json_body = serde_json::to_vec(&json_body_string).map_err(|e| {
+        TokenRetrieverError::TokenRetrieverError(format!("Failed to encode JSON: {e}"))
+    })?;
+
+    http::Request::builder()
+        .uri(uri)
+        .method("POST")
+        .header(CONTENT_TYPE, "application/json")
+        .body(json_body)
+        .map_err(|e| {
+            TokenRetrieverError::TokenRetrieverError(format!("Failed to build request: {e}"))
+        })
+}
+
+fn evaluate_response(res: Response<Vec<u8>>) -> Result<Token, TokenRetrieverError> {
+    let body = res.body();
+
+    match res.status() {
+        StatusCode::OK => {
+            let decoded_body: TokenRetrievalResponse =
+                serde_json::from_slice(body).map_err(|e| {
+                    TokenRetrieverError::TokenRetrieverError(format!(
+                        "Failed to decode JSON response: {e}"
+                    ))
+                })?;
+            Token::try_from(decoded_body)
+                .map_err(|e| HttpClientError::InvalidResponse(e.to_string()))
+        }
+        status => Err(HttpClientError::UnsuccessfulResponse(
+            status.as_u16(),
+            String::from_utf8_lossy(body).to_string(),
+        )),
+    }
+    .map_err(|e| TokenRetrieverError::TokenRetrieverError(format!("Failed to retrieve token: {e}")))
 }
 
 #[cfg(test)]
 mod tests {
     use serde_json::Value;
 
-    use crate::http_client::tests::MockHttpClient;
-
     use super::*;
 
     #[test]
-    fn build_request() {
+    fn build_correct_requests() {
         let uri: Uri = "https://example.com/token".parse().unwrap();
         let client_id = "test_client_id".to_string();
         let client_secret = ClientSecret::from("test_client");
 
-        let request =
-            L1TokenRetriever::<MockHttpClient>::build_request(&client_id, &client_secret, &uri)
-                .unwrap();
+        let request = build_request(&client_id, &client_secret, &uri).unwrap();
 
         assert!(request.method() == http::Method::POST);
         assert!(request.uri() == &uri);
