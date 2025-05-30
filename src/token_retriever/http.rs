@@ -52,7 +52,7 @@ where
     C: HttpClient,
 {
     /// Creates a new [`HttpTokenRetriever`] based on the provided authentication method.
-    pub fn new(
+    pub fn try_new(
         http_client: C,
         metadata: &SystemIdentityCreationMetadata,
     ) -> Result<Self, TokenRetrieverError> {

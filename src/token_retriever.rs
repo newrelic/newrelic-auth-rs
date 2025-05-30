@@ -3,12 +3,12 @@ use crate::jwt::claims::Claims;
 use crate::jwt::signer::JwtSigner;
 use crate::token::Token;
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
+use ::http::Uri;
 use chrono::{TimeDelta, Utc};
-use http::Uri;
 use std::sync::Mutex;
 use tracing::debug;
 
-pub mod http_impl;
+pub mod http;
 pub mod l1_retriever;
 
 /// A signed JWT should live enough for the System Identity Service to consume it.
