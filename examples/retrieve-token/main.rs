@@ -49,7 +49,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = HttpClient::new()?;
     let authenticator = HttpAuthenticator::new(client, Uri::try_from(&token_url)?);
 
-    let token_retriever = TokenRetrieverWithCache::new(client_id, jwt_signer, authenticator);
+    let token_retriever =
+        TokenRetrieverWithCache::new_with_jwt_signer(client_id, authenticator, jwt_signer);
     let token = token_retriever.retrieve()?;
 
     println!("{}", token.access_token());
