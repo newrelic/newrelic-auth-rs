@@ -35,9 +35,14 @@ pub mod key;
 pub mod system_identity;
 pub mod token;
 pub mod token_retriever;
+pub mod commands;
+pub mod parameters;
+pub mod http;
 
+use std::error::Error;
 use crate::token::Token;
 use thiserror::Error;
+use crate::jwt::error::JwtEncoderError;
 
 pub type ClientID = String;
 

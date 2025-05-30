@@ -20,6 +20,8 @@ tracing = "0.1"
 http = "1"
 rcgen = { version = "0.13", features = ["aws_lc_rs"] }
 base64 = "0.22"
+clap = { version = "4.5.38", features = ["derive"] }
+reqwest = "0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
@@ -47,4 +49,4 @@ rstest = "0.25.0"
 
 [[bin]]
 name = "newrelic-auth-cli"
-path = "src/bin/main_cli.rs"
+path = "src/bin/main.rs"
