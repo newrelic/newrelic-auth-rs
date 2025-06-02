@@ -16,6 +16,7 @@ use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
 use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
+use nr_auth::TokenRetriever;
 
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
@@ -99,15 +100,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         output_platform,
     };
 
-    let iam_client = HttpIAMClient::new(
-        http_client,
-        http_token_retriever,
-        system_identity_creation_metadata.to_owned(),
-    );
+    let iam_client = HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
 
     let system_identity_generator = L1SystemIdentityGenerator { iam_client };
 
-    let result = system_identity_generator.generate()?;
+    let token = http_token_retriever.retrieve()?;
+    let result = system_identity_generator.generate(&token)?;
 
     println!("System Identity created successfully: {result:?}");
 

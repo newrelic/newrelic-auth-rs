@@ -38,6 +38,7 @@ type Base64PublicKey = String; // For L2 System Identity.
 
 #[cfg(test)]
 mod tests {
+    use chrono::Utc;
     use mockall::Sequence;
     use rstest::{rstest, Context};
     use std::path::PathBuf;
@@ -57,6 +58,7 @@ mod tests {
             },
             SystemIdentity,
         },
+        token::{Token, TokenType},
         token_retriever::TokenRetrieverWithCache,
     };
 
@@ -72,7 +74,7 @@ mod tests {
         #[context] ctx: Context,
         #[case] auth_method: AuthMethod,
     ) {
-        use crate::{authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl};
+        use crate::{authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl, TokenRetriever};
 
         let cli_input = SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {
@@ -186,7 +188,6 @@ mod tests {
         // IAMClient from HttpClient
         let iam_client = HttpIAMClient::new(
             iam_client_http_client,
-            token_retriever,
             cli_input, // I compare with this value later on, so we keep it here
         );
 
@@ -200,7 +201,8 @@ mod tests {
             iam_client,
         };
 
-        let result = system_identity_generator.generate();
+        let token = token_retriever.retrieve().unwrap();
+        let result = system_identity_generator.generate(&token);
         assert!(
             result.is_ok(),
             "Failed to generate system identity: {:?}",
@@ -231,7 +233,7 @@ mod tests {
             .expect_create_l2_system_identity()
             .once()
             .in_sequence(&mut sequence)
-            .returning(|_| {
+            .returning(|_, _| {
                 Ok(SystemIdentity {
                     client_id: "client-id".to_string(),
                     name: "test".to_string().into(),
@@ -247,7 +249,9 @@ mod tests {
             key_creator,
             iam_client,
         };
-        let result = system_identity_generator.generate();
+
+        let token = Token::new("test-token".to_string(), TokenType::Bearer, Utc::now());
+        let result = system_identity_generator.generate(&token);
         assert!(result.is_ok());
         let result = result.unwrap();
         assert_eq!(result.name, Some("test".to_string()));

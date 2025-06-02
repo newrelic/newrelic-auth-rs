@@ -2,7 +2,7 @@ use std::fmt;
 
 use thiserror::Error;
 
-use crate::key::creator::Creator as KeyCreator;
+use crate::{key::creator::Creator as KeyCreator, token::Token};
 
 use super::{
     identity_creator::{L1IdentityCreator, L2IdentityCreator},
@@ -24,14 +24,17 @@ where
     K: KeyCreator,
     I: L2IdentityCreator,
 {
-    pub fn generate(&self) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
+    pub fn generate(
+        &self,
+        token: &Token,
+    ) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
         let pub_key = self
             .key_creator
             .create()
             .map_err(SystemIdentityGenerationError::KeyPairCreator)?;
 
         self.iam_client
-            .create_l2_system_identity(pub_key.as_slice())
+            .create_l2_system_identity(token, pub_key.as_slice())
             .map_err(SystemIdentityGenerationError::IAMClient)
     }
 }
@@ -41,8 +44,8 @@ pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
 }
 
 impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
-    pub fn generate(&self) -> Result<SystemIdentity, I::Error> {
-        self.iam_client.create_l1_system_identity()
+    pub fn generate(&self, token: &Token) -> Result<SystemIdentity, I::Error> {
+        self.iam_client.create_l1_system_identity(token)
     }
 }
 

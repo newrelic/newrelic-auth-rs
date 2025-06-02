@@ -14,35 +14,26 @@ use crate::{
         SystemIdentity,
     },
     token::Token,
-    TokenRetriever,
 };
 
 use super::error::IAMClientError;
 
 /// Implementation of the IAMClient trait for a generic HTTP client.
-pub struct HttpIAMClient<C, T>
+pub struct HttpIAMClient<C>
 where
     C: HttpClient,
-    T: TokenRetriever,
 {
     http_client: C,
-    token_retriever: T,
     metadata: SystemIdentityCreationMetadata,
 }
 
-impl<C, T> HttpIAMClient<C, T>
+impl<C> HttpIAMClient<C>
 where
     C: HttpClient,
-    T: TokenRetriever,
 {
-    pub fn new(
-        http_client: C,
-        token_retriever: T,
-        metadata: SystemIdentityCreationMetadata,
-    ) -> Self {
+    pub fn new(http_client: C, metadata: SystemIdentityCreationMetadata) -> Self {
         Self {
             http_client,
-            token_retriever,
             metadata,
         }
     }
@@ -144,33 +135,27 @@ fn assemble_json_value(
     })
 }
 
-impl<C, T> L2IdentityCreator for HttpIAMClient<C, T>
+impl<C> L2IdentityCreator for HttpIAMClient<C>
 where
     C: HttpClient,
-    T: TokenRetriever,
 {
     type Error = IAMClientError;
-    fn create_l2_system_identity(&self, pub_key: &[u8]) -> Result<SystemIdentity, Self::Error> {
-        let token = self
-            .token_retriever
-            .retrieve()
-            .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
-        self.create_system_identity(&token, pub_key.into())
+    fn create_l2_system_identity(
+        &self,
+        token: &Token,
+        pub_key: &[u8],
+    ) -> Result<SystemIdentity, Self::Error> {
+        self.create_system_identity(token, pub_key.into())
     }
 }
 
-impl<C, T> L1IdentityCreator for HttpIAMClient<C, T>
+impl<C> L1IdentityCreator for HttpIAMClient<C>
 where
     C: HttpClient,
-    T: TokenRetriever,
 {
     type Error = IAMClientError;
-    fn create_l1_system_identity(&self) -> Result<SystemIdentity, Self::Error> {
-        let token = self
-            .token_retriever
-            .retrieve()
-            .map_err(|e| IAMClientError::IAMClient(e.to_string()))?;
-        self.create_system_identity(&token, None)
+    fn create_l1_system_identity(&self, token: &Token) -> Result<SystemIdentity, Self::Error> {
+        self.create_system_identity(token, None)
     }
 }
 
@@ -184,7 +169,6 @@ mod tests {
     use crate::{
         http_client::tests::MockHttpClient,
         token::{AccessToken, TokenType},
-        token_retriever::test::MockTokenRetriever,
     };
 
     use super::*;
@@ -202,7 +186,7 @@ mod tests {
         let name = "test_identity";
         let org_id = "org_123";
 
-        let request = HttpIAMClient::<MockHttpClient, MockTokenRetriever>::build_request(
+        let request = HttpIAMClient::<MockHttpClient>::build_request(
             Some(&name.to_string()),
             org_id,
             maybe_pub_key_b64.clone(),
