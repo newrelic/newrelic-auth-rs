@@ -76,13 +76,13 @@ where
     A: Authenticator,
     J: JwtSigner,
 {
-    pub fn new_with_jwt_signer(
-        client_id: ClientID,
-        authenticator: A,
-        jwt_signer: J,
-    ) -> TokenRetrieverWithCache<A, J> {
+    /// Creates a new `TokenRetrieverWithCache` that signs JWTs to operate.
+    ///
+    /// This is intended to be used when the parent System Identity is L2, as it requires signing
+    /// a JWT with the private key to retrieve the token.
+    pub fn new_with_jwt_signer(client_id: ClientID, authenticator: A, jwt_signer: J) -> Self {
         let aud = Uri::try_from(DEFAULT_AUDIENCE).expect("constant valid url value");
-        TokenRetrieverWithCache {
+        Self {
             client_id,
             tokens: Mutex::new(None),
             credential: TokenCredential::JwtSigner { aud, jwt_signer },
@@ -91,12 +91,12 @@ where
         }
     }
 
-    pub fn new_with_secret(
-        client_id: ClientID,
-        authenticator: A,
-        secret: ClientSecret,
-    ) -> TokenRetrieverWithCache<A, J> {
-        TokenRetrieverWithCache {
+    /// Creates a new `TokenRetrieverWithCache` that uses a client secret to operate.
+    ///
+    /// This is intended to be used when the parent System Identity is L1, as it will
+    /// authenticate with a client secret to retrieve the token.
+    pub fn new_with_secret(client_id: ClientID, authenticator: A, secret: ClientSecret) -> Self {
+        Self {
             client_id,
             tokens: Mutex::new(None),
             credential: TokenCredential::ClientSecret { secret },
