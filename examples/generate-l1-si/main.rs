@@ -10,7 +10,7 @@ use nr_auth::jwt::signer::JwtSignerImpl;
 
 use nr_auth::key::PrivateKeyPem;
 use nr_auth::system_identity::generator::L1SystemIdentityGenerator;
-use nr_auth::system_identity::iam_client::http_impl::HttpIAMClient;
+use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
 use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
