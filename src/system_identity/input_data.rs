@@ -17,6 +17,7 @@ use output_platform::OutputPlatform;
 #[derive(Debug, Clone, PartialEq)]
 pub struct SystemIdentityCreationMetadata {
     pub system_identity_input: SystemIdentityInput,
+    // TODO why is name optional?
     pub name: Option<String>,
     pub environment: NewRelicEnvironment,
     pub output_platform: OutputPlatform,

@@ -1,12 +1,8 @@
 use crate::http_client::HttpClient;
 use crate::key::creator::KeyType;
 use crate::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
-use crate::system_identity::client_input::{AuthMethod, SystemIdentityCreationMetadata};
 use crate::system_identity::generator::{L1SystemIdentityGenerator, L2SystemIdentityGenerator};
-use crate::system_identity::iam_client::http_iam_client::HttpIAMClient;
-use crate::system_identity::iam_client::http_token_retriever::HttpTokenRetriever;
 use crate::system_identity::input_data::SystemIdentityCreationMetadata;
-use crate::system_identity::output_platform::AuthOutputPlatform;
 use crate::system_identity::SystemIdentity;
 use std::path::PathBuf;
 use thiserror::Error;
@@ -35,7 +31,7 @@ where
         &self,
         metadata: &SystemIdentityCreationMetadata,
     ) -> Result<SystemIdentity, CreateError> {
-        let http_token_retriever = HttpTokenRetriever::new(self.http_client, &metadata)
+        let http_token_retriever = HttpTokenRetriever::new(self.http_client.clone(), &metadata)
             .map_err(|e| CreateError::CreateError(e.to_string()))?;
 
         let iam_client =
