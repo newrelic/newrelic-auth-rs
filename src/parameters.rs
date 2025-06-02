@@ -1,8 +1,7 @@
-use crate::system_identity::client_input::{
-    AuthMethod, ClientSecret, PrivateKeyPem, SystemIdentityCreationMetadata,
-};
-use crate::system_identity::environment::SystemIdentityCreationEnvironment;
-use crate::system_identity::output_platform::AuthOutputPlatform;
+use crate::key::PrivateKeyPem;
+use crate::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
+use crate::system_identity::input_data::output_platform::OutputPlatform;
+use crate::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use clap::error::ErrorKind;
 use clap::{Error, Subcommand};
 use std::fs;
@@ -15,7 +14,7 @@ pub enum Commands {
     ///
     ///
     ///  nr-auth create
-    ///     --name=required         # name of the identity to create
+    ///     --name=required         # name of the identity to c
     ///     --org_id=required       # org_id of the identity to create
     ///     --client_id=required    # for token retriever
     ///     --env=required          # env
@@ -27,6 +26,9 @@ pub enum Commands {
     ///     --local_key_path=/
     ///
     ///     --output=local_file, vault, in_memory
+    ///
+    ///     --output_local_file_path=....
+    ///     --output_vault_name=...
     ///
     Create {
         /// Name for the new resource
@@ -117,10 +119,12 @@ pub fn create_metadata_for_identity_creation(
     let env = select_environment(environment.to_lowercase())?;
 
     Ok(SystemIdentityCreationMetadata {
-        name,
-        organization_id,
-        client_id,
-        auth_method: auth,
+        name: Some(name),
+        system_identity_input: SystemIdentityInput {
+            auth_method,
+            client_id,
+            organization_id,
+        },
         environment: env,
         output_platform: AuthOutputPlatform::LocalPrivateKeyPath(output_platform),
     })
