@@ -57,6 +57,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(io::Error::other)
         .map(PathBuf::from)
         .and_then(|path| fs::read(&path))
+        .or_else(|_| {
+            env::var("PRIVATE_KEY_PEM")
+                .map(|s| s.as_bytes().to_vec())
+                .map_err(io::Error::other)
+        })
         .map(PrivateKeyPem::from)
         .map(AuthMethod::PrivateKey);
 
