@@ -12,7 +12,6 @@ use nr_auth::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
 
 use nr_auth::key::PrivateKeyPem;
 use nr_auth::system_identity::generator::L2SystemIdentityGenerator;
-use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
 use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
@@ -22,6 +21,7 @@ use nr_auth::TokenRetriever;
 
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
+use nr_auth::system_identity::iam_client::http_impl::HttpIAMClient;
 
 /// Main function to retrieve and print an access token.
 /// It requires the following environment variables to be set:

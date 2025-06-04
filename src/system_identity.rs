@@ -49,7 +49,7 @@ mod tests {
         key::creator::tests::MockCreator,
         system_identity::{
             generator::L2SystemIdentityGenerator,
-            iam_client::http::HttpIAMClient,
+            iam_client::http_impl::HttpIAMClient,
             identity_creator::tests::MockL2IAMClient,
             input_data::{
                 auth_method::ClientSecret, environment::NewRelicEnvironment,
