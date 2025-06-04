@@ -43,9 +43,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .join(env!("CARGO_BIN_NAME"));
     env::set_current_dir(&example_dir).expect("Failed to change directory");
 
-    dotenv().map_err(|e| {
-        format!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}")
-    })?;
+    let _ = dotenv().inspect_err(|e| {
+        println!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}");
+    });
 
     let client_id = env::var("CLIENT_ID")?;
     let organization_id = env::var("ORGANIZATION_ID")?;
