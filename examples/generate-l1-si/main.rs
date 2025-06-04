@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let auth_method = private_key_auth_method.or(client_secret_auth_method)?;
     let auth_method = client_secret_auth_method.or(private_key_auth_method)?;
 
-    let environment = NewRelicEnvironment::Staging;
+    let environment = NewRelicEnvironment::try_from(env::var("NR_ENVIRONMENT")?.as_ref())?;
 
     let key_path = env::current_dir()?;
     let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
