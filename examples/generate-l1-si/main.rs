@@ -18,6 +18,7 @@ use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, Syste
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 use nr_auth::TokenRetriever;
 
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
@@ -49,28 +50,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let organization_id = env::var("ORGANIZATION_ID")?;
     // Has a client secret been set?
     let client_secret_auth_method = env::var("CLIENT_SECRET")
+        .map_err(|e| format!("Attempt to retrieve env var CLIENT_SECRET had error {e}"))
         .map(ClientSecret::from)
         .map(AuthMethod::ClientSecret);
 
     // Has a private key been passed as a valid path or PEM file content?
-    let private_key_auth_method = env::var("PRIVATE_KEY_PATH")
-        .map_err(io::Error::other)
+    let private_key_path_auth_method = env::var("PRIVATE_KEY_PATH")
+        .map_err(|e| {
+            io::Error::new(
+                ErrorKind::Other,
+                format!("Attempt to retrieve env var PRIVATE_KEY_PATH had error {e}"),
+            )
+        })
         .map(PathBuf::from)
         .and_then(|path| fs::read(&path))
-        .or_else(|_| {
-            env::var("PRIVATE_KEY_PEM")
-                .map(|s| s.as_bytes().to_vec())
-                .map_err(io::Error::other)
-        })
         .map(PrivateKeyPem::from)
         .map(AuthMethod::PrivateKey);
 
-    // Select one of the two and unwrap. Switch to change priority like this:
+    let private_key_pem_auth_method = env::var("PRIVATE_KEY_PEM")
+        .map_err(|e| {
+            io::Error::new(
+                ErrorKind::Other,
+                format!("Attempt to retrieve env var PRIVATE_KEY_PEM had error {e}"),
+            )
+        })
+        .map(|s| s.as_bytes().to_vec())
+        .map(PrivateKeyPem::from)
+        .map(AuthMethod::PrivateKey);
+
+    // Select one and unwrap. Switch to change priority like this:
     // let auth_method = private_key_auth_method.or(client_secret_auth_method)?;
-    let auth_method = client_secret_auth_method.or(private_key_auth_method)?;
+    let auth_method = client_secret_auth_method
+        .or(private_key_path_auth_method)
+        .or(private_key_pem_auth_method)?;
+
     println!("Using auth method: {auth_method:?}");
 
-    let environment = NewRelicEnvironment::try_from(env::var("NR_ENVIRONMENT")?.as_ref())?;
+    let environment = NewRelicEnvironment::try_from(
+        env::var("NR_ENVIRONMENT")
+            .map_err(|e| {
+                io::Error::new(
+                    ErrorKind::Other,
+                    format!("Attempt to retrieve env var NR_ENVIRONMENT had error {e}"),
+                )
+            })?
+            .as_ref(),
+    )?;
 
     let key_path = env::current_dir()?;
     let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
