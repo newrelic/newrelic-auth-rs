@@ -38,7 +38,7 @@ pub(super) mod tests {
     // Create a mock for the HttpClient trait using the mock! macro
     mock! {
         pub HttpClient {}
-
+        
         impl HttpClient for HttpClient {
             fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError>;
         }

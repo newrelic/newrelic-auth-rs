@@ -1,5 +1,3 @@
-use std::fmt::{self, Debug};
-
 pub mod creation_response;
 pub mod generator;
 pub mod iam_client;
@@ -69,7 +67,7 @@ mod tests {
         system_identity::{
             SystemIdentity,
             generator::L2SystemIdentityGenerator,
-            iam_client::http::HttpIAMClient,
+            iam_client::http_impl::HttpIAMClient,
             identity_creator::tests::MockL2IAMClient,
             input_data::{
                 SystemIdentityCreationMetadata, SystemIdentityInput, auth_method::ClientSecret,
@@ -79,7 +77,7 @@ mod tests {
         token::{Token, TokenType},
         token_retriever::TokenRetrieverWithCache,
     };
-
+    use crate::system_identity::input_data::SystemTokenCreationMetadata;
     use super::input_data::auth_method::AuthMethod;
     // The idea here is emulate what would be the flow of a CLI call to create a system identity.
     // The CLI would parse the command line arguments into a type with the actual concretions
@@ -92,13 +90,20 @@ mod tests {
         #[context] ctx: Context,
         #[case] auth_method: AuthMethod,
     ) {
+        use crate::{authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl, TokenRetriever};
+
+        let cli_token_input = SystemTokenCreationMetadata {
+            client_id: format!("{}-client-id", ctx.name),
+            environment: NewRelicEnvironment::Staging,
+            auth_method,
+            output_platform: OutputPlatform::LocalPrivateKeyPath(PathBuf::default()),
+        };
         use crate::{TokenRetriever, authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl};
 
         let cli_input = SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {
                 organization_id: "org-id".to_string(),
                 client_id: format!("{}-client-id", ctx.name),
-                auth_method,
             },
             name: ctx.name.to_string().into(),
             environment: NewRelicEnvironment::Staging,
@@ -192,7 +197,7 @@ mod tests {
             cli_input.environment.token_renewal_endpoint(),
         );
         let client_id = cli_input.system_identity_input.client_id.to_owned();
-        let token_retriever = match cli_input.system_identity_input.auth_method.to_owned() {
+        let token_retriever = match cli_token_input.auth_method.to_owned() {
             AuthMethod::ClientSecret(client_secret) => {
                 TokenRetrieverWithCache::new_with_secret(client_id, authenticator, client_secret)
             }
