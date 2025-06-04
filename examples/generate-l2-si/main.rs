@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(ClientSecret::from)
         .map(AuthMethod::ClientSecret);
 
-    // Has a private key been set to a valid path?
+    // Has a private key been passed as a valid path or PEM file content?
     let private_key_auth_method = env::var("PRIVATE_KEY_PATH")
         .map_err(io::Error::other)
         .map(PathBuf::from)
@@ -70,6 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Select one of the two and unwrap. Switch to change priority like this:
     // let auth_method = private_key_auth_method.or(client_secret_auth_method)?;
     let auth_method = client_secret_auth_method.or(private_key_auth_method)?;
+    println!("Using auth method: {auth_method:?}");
 
     let environment = NewRelicEnvironment::try_from(env::var("NR_ENVIRONMENT")?.as_ref())?;
 
