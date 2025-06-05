@@ -65,3 +65,19 @@ jobs:
           
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-arm64
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-amd64
+
+  notify-failure:
+    if: ${{ failure() }}
+    needs: [ build-image, check-system-identity-endpoints-us, build-binaries ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify failure via Slack
+      uses: slackapi/slack-github-action@v1.22.0
+      with:
+        payload: |
+          {
+            "text": ":warning: [Pre-release failed for `newrelic-auth-rs`] @hero check <${{ env.GITHUB_JOB_URL }}>"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.AC_SLACK_WEBHOOK }}
+        GITHUB_JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

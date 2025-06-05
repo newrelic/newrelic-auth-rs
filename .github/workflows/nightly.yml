@@ -32,3 +32,19 @@ jobs:
       client_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_CLIENT_ID_US }}
       organization_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_ORGANIZATION_ID_US }}
       private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
+
+  notify-failure:
+    if: ${{ failure() }}
+    needs: [ security-image, build-image, check-system-identity-endpoints-us ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify failure via Slack
+      uses: slackapi/slack-github-action@v1.22.0
+      with:
+        payload: |
+          {
+            "text": ":warning: [Nightly workflow failed for `newrelic-auth-rs`] @hero check <${{ env.GITHUB_JOB_URL }}>"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.AC_SLACK_WEBHOOK }}
+        GITHUB_JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
