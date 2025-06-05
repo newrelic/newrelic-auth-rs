@@ -23,7 +23,7 @@ jobs:
       image-tag: nightly
     secrets: inherit
 
-  check-system-identity-endpoints-prd:
+  check-system-identity-endpoints-us:
     name: Check system identity endpoints (US)
     uses: ./.github/workflows/component_check_system_identity_endpoints.yml
     with:

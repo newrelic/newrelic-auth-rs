@@ -23,6 +23,16 @@ jobs:
       image-tag: ${{ github.event.release.tag_name }}-rc
     secrets: inherit
 
+  check-system-identity-endpoints-us:
+    name: Check system identity endpoints (US)
+    uses: ./.github/workflows/component_check_system_identity_endpoints.yml
+    with:
+      environment: "us"
+    secrets:
+      client_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_CLIENT_ID_US }}
+      organization_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_ORGANIZATION_ID_US }}
+      private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
+
   build-binaries:
     runs-on: ubuntu-latest
     name: Build/Push binaries
