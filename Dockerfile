@@ -4,10 +4,9 @@ ARG TARGETARCH
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get clean && \
-    apt-get install -y curl
+    apt-get clean
 
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${TARGETARCH}/kubectl"
+RUN apt-get install -y curl kubectl jq
 
 COPY --chmod=755 target/newrelic-auth-cli-${TARGETARCH} /bin/newrelic-auth-cli
 
