@@ -42,4 +42,4 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Test System Identity Creation (${{ env.NR_ENVIRONMENT }})
-        run: cargo run --example generate-l1-si
+        run: cargo run --example generate-l1-si > /dev/null
