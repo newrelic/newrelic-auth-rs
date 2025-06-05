@@ -46,13 +46,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}");
     });
 
-    let client_id = env::var("CLIENT_ID")?;
-    let organization_id = env::var("ORGANIZATION_ID")?;
+    let client_id = env::var("CLIENT_ID").map_err(|e| {
+        io::Error::new(
+            ErrorKind::Other,
+            format!("Attempt to retrieve env var CLIENT_ID had error {e}"),
+        )
+    })?;
+    let organization_id = env::var("ORGANIZATION_ID").map_err(|e| {
+        io::Error::new(
+            ErrorKind::Other,
+            format!("Attempt to retrieve env var ORGANIZATION_ID had error {e}"),
+        )
+    })?;
     // Has a client secret been set?
     let client_secret_auth_method = env::var("CLIENT_SECRET")
         .map_err(|e| format!("Attempt to retrieve env var CLIENT_SECRET had error {e}"))
         .map(ClientSecret::from)
-        .map(AuthMethod::ClientSecret);
+        .map(AuthMethod::ClientSecret)
+        .inspect_err(|e| {
+            println!("No client secret provided, falling back to other auth methods: {e}");
+        });
 
     // Has a private key been passed as a valid path or PEM file content?
     let private_key_path_auth_method = env::var("PRIVATE_KEY_PATH")
@@ -65,7 +78,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(PathBuf::from)
         .and_then(|path| fs::read(&path))
         .map(PrivateKeyPem::from)
-        .map(AuthMethod::PrivateKey);
+        .map(AuthMethod::PrivateKey)
+        .inspect_err(|e| {
+            println!("No private key path provided, falling back to other auth methods: {e}");
+        });
 
     let private_key_pem_auth_method = env::var("PRIVATE_KEY_PEM")
         .map_err(|e| {
@@ -126,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             client_id,
             auth_method,
         },
-        name: format!("example-{}", env!("CARGO_BIN_NAME")).into(),
+        name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,
         output_platform,
     };
