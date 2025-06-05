@@ -1,4 +1,4 @@
-name: 📞 Security image scan
+name: 📞 Check System Identity Generation
 permissions:
   contents: read
 on:
