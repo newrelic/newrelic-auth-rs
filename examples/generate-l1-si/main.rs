@@ -154,6 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = http_token_retriever.retrieve()?;
     let result = system_identity_generator.generate(&token)?;
 
+    // Use `reveal` on the client secret to get the string value
     println!("System Identity created successfully: {result:?}");
 
     Ok(())

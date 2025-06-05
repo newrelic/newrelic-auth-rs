@@ -1,3 +1,5 @@
+use std::fmt::{self, Debug};
+
 pub mod creation_response;
 pub mod generator;
 pub mod iam_client;
@@ -33,8 +35,25 @@ pub enum SystemIdentityType {
     },
 }
 
-type ClientSecret = String; // For L1 System Identity.
 type Base64PublicKey = String; // For L2 System Identity.
+
+#[derive(Clone, PartialEq)]
+pub struct ClientSecret(String); // For L1 System Identity.
+impl Debug for ClientSecret {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ClientSecret: redacted")
+    }
+}
+impl From<String> for ClientSecret {
+    fn from(secret: String) -> Self {
+        Self(secret)
+    }
+}
+impl ClientSecret {
+    pub fn reveal(self) -> String {
+        self.0
+    }
+}
 
 #[cfg(test)]
 mod tests {
