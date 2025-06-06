@@ -7,8 +7,25 @@ name: on_prerelease
 permissions:
   contents: write
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    name: Check version in Cargo.toml
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check if Cargo.toml version matches pre-release tag 
+        run: |
+          NEWRELIC_AUTH_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml)
+          if [ "${NEWRELIC_AUTH_VERSION}" != "${{ github.event.release.tag_name }}" ]; then
+            echo "Package version specified in Cargo.toml (${NEWRELIC_AUTH_VERSION}) differs from tag (${{ github.event.release.tag_name }}), exiting"
+            exit 1
+          fi
+
   build-image:
     name: Build and Push container image
+    needs: [ check-version ]
     uses: ./.github/workflows/component_image.yml
     with:
       image-tag: ${{ github.event.release.tag_name }}-rc
@@ -26,18 +43,11 @@ jobs:
   build-binaries:
     runs-on: ubuntu-latest
     name: Build/Push binaries
+    needs: [ check-version ]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
-      - name: Check if Cargo.toml version matches pre-release tag 
-        run: |
-          NEWRELIC_AUTH_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' newrelic-auth-rs/Cargo.toml)
-          if [ "${NEWRELIC_AUTH_VERSION}" != "${{ github.event.release.tag_name }}" ]; then
-            echo "Package version specified in Cargo.toml (${NEWRELIC_AUTH_VERSION}) differs from tag (${{ github.event.release.tag_name }}), exiting"
-            exit 1
-          fi
 
       - name: Obtain Rust version from project
         run: |
