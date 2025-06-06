@@ -20,23 +20,9 @@ use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, Syste
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 use nr_auth::TokenRetriever;
 
-use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-/// Main function to retrieve and print an access token.
-/// It requires the following environment variables to be set:
-///
-/// PRIVATE_KEY_PATH: Absolute path to the private key associated with the identity
-/// TOKEN_URL: Token verification URL
-/// CLIENT_ID: Identity client_id
-///
-/// # Errors
-/// This function returns an error if:
-/// - The `.env` file is missing or cannot be loaded.
-/// - Required environment variables are not set.
-/// - Any of the components (e.g., signer, client, authenticator) fail to initialize.
-/// - The token retrieval process fails.
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
     let example_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -48,18 +34,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}");
     });
 
-    let client_id = env::var("CLIENT_ID").map_err(|e| {
-        io::Error::new(
-            ErrorKind::Other,
-            format!("Attempt to retrieve env var CLIENT_ID had error {e}"),
-        )
-    })?;
-    let organization_id = env::var("ORGANIZATION_ID").map_err(|e| {
-        io::Error::new(
-            ErrorKind::Other,
-            format!("Attempt to retrieve env var ORGANIZATION_ID had error {e}"),
-        )
-    })?;
+    let Ok(client_id) = env::var("CLIENT_ID") else {
+        panic!("Environment variable CLIENT_ID is not set.")
+    };
+    let Ok(organization_id) = env::var("ORGANIZATION_ID") else {
+        panic!("Environment variable ORGANIZATION_ID is not set.")
+    };
     // Has a client secret been set?
     let client_secret_auth_method = env::var("CLIENT_SECRET")
         .map(ClientSecret::from)
@@ -71,10 +51,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Has a private key been passed as a valid path or PEM file content?
     let private_key_path_auth_method = env::var("PRIVATE_KEY_PATH")
         .map_err(|e| {
-            io::Error::new(
-                ErrorKind::Other,
-                format!("Attempt to retrieve env var PRIVATE_KEY_PATH had error {e}"),
-            )
+            io::Error::other(format!(
+                "Attempt to retrieve env var PRIVATE_KEY_PATH had error {e}"
+            ))
         })
         .map(PathBuf::from)
         .and_then(|path| fs::read(&path))
@@ -86,10 +65,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let private_key_pem_auth_method = env::var("PRIVATE_KEY_PEM")
         .map_err(|e| {
-            io::Error::new(
-                ErrorKind::Other,
-                format!("Attempt to retrieve env var PRIVATE_KEY_PEM had error {e}"),
-            )
+            io::Error::other(format!(
+                "Attempt to retrieve env var PRIVATE_KEY_PEM had error {e}"
+            ))
         })
         .map(|s| s.as_bytes().to_vec())
         .map(PrivateKeyPem::from)
@@ -103,7 +81,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Using auth method: {auth_method:?}");
 
-    let environment = NewRelicEnvironment::try_from(env::var("NR_ENVIRONMENT")?.as_ref())?;
+    let Ok(environment) = env::var("NR_ENVIRONMENT") else {
+        panic!("Environment variable NR_ENVIRONMENT is not set.")
+    };
+    let Ok(environment) = NewRelicEnvironment::try_from(environment.as_str()) else {
+        panic!("Invalid environment value: NR_ENVIRONMENT={environment}")
+    };
 
     let key_path = env::current_dir()?;
     let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
