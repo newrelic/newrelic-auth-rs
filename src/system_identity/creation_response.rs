@@ -109,7 +109,7 @@ impl TryFrom<SystemIdentityData> for SystemIdentity {
                 client_id,
                 organization_id,
                 identity_type: SystemIdentityType::L1 {
-                    client_secret,
+                    client_secret: client_secret.into(),
                     credential_expiration,
                 },
             }),

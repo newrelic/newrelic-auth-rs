@@ -23,19 +23,6 @@ use nr_auth::TokenRetriever;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-/// Main function to retrieve and print an access token.
-/// It requires the following environment variables to be set:
-///
-/// PRIVATE_KEY_PATH: Absolute path to the private key associated with the identity
-/// TOKEN_URL: Token verification URL
-/// CLIENT_ID: Identity client_id
-///
-/// # Errors
-/// This function returns an error if:
-/// - The `.env` file is missing or cannot be loaded.
-/// - Required environment variables are not set.
-/// - Any of the components (e.g., signer, client, authenticator) fail to initialize.
-/// - The token retrieval process fails.
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
     let example_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -43,30 +30,63 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .join(env!("CARGO_BIN_NAME"));
     env::set_current_dir(&example_dir).expect("Failed to change directory");
 
-    dotenv().map_err(|e| {
-        format!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}")
-    })?;
+    let _ = dotenv().inspect_err(|e| {
+        println!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}");
+    });
 
-    let client_id = env::var("CLIENT_ID")?;
-    let organization_id = env::var("ORGANIZATION_ID")?;
+    let Ok(client_id) = env::var("CLIENT_ID") else {
+        panic!("Environment variable CLIENT_ID is not set.")
+    };
+    let Ok(organization_id) = env::var("ORGANIZATION_ID") else {
+        panic!("Environment variable ORGANIZATION_ID is not set.")
+    };
     // Has a client secret been set?
     let client_secret_auth_method = env::var("CLIENT_SECRET")
         .map(ClientSecret::from)
-        .map(AuthMethod::ClientSecret);
+        .map(AuthMethod::ClientSecret)
+        .inspect_err(|e| {
+            println!("No client secret provided, falling back to other auth methods: {e}");
+        });
 
-    // Has a private key been set to a valid path?
-    let private_key_auth_method = env::var("PRIVATE_KEY_PATH")
-        .map_err(io::Error::other)
+    // Has a private key been passed as a valid path or PEM file content?
+    let private_key_path_auth_method = env::var("PRIVATE_KEY_PATH")
+        .map_err(|e| {
+            io::Error::other(format!(
+                "Attempt to retrieve env var PRIVATE_KEY_PATH had error {e}"
+            ))
+        })
         .map(PathBuf::from)
         .and_then(|path| fs::read(&path))
         .map(PrivateKeyPem::from)
+        .map(AuthMethod::PrivateKey)
+        .inspect_err(|e| {
+            println!("No private key path provided, falling back to other auth methods: {e}");
+        });
+
+    let private_key_pem_auth_method = env::var("PRIVATE_KEY_PEM")
+        .map_err(|e| {
+            io::Error::other(format!(
+                "Attempt to retrieve env var PRIVATE_KEY_PEM had error {e}"
+            ))
+        })
+        .map(|s| s.as_bytes().to_vec())
+        .map(PrivateKeyPem::from)
         .map(AuthMethod::PrivateKey);
 
-    // Select one of the two and unwrap. Switch to change priority like this:
+    // Select one and unwrap. Switch to change priority like this:
     // let auth_method = private_key_auth_method.or(client_secret_auth_method)?;
-    let auth_method = client_secret_auth_method.or(private_key_auth_method)?;
+    let auth_method = client_secret_auth_method
+        .or(private_key_path_auth_method)
+        .or(private_key_pem_auth_method)?;
 
-    let environment = NewRelicEnvironment::Staging;
+    println!("Using auth method: {auth_method:?}");
+
+    let Ok(environment) = env::var("NR_ENVIRONMENT") else {
+        panic!("Environment variable NR_ENVIRONMENT is not set.")
+    };
+    let Ok(environment) = NewRelicEnvironment::try_from(environment.as_str()) else {
+        panic!("Invalid environment value: NR_ENVIRONMENT={environment}")
+    };
 
     let key_path = env::current_dir()?;
     let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
@@ -97,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             client_id,
             auth_method,
         },
-        name: format!("example-{}", env!("CARGO_BIN_NAME")).into(),
+        name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,
         output_platform,
     };
@@ -106,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,
-        name: "example-created-key".to_string(),
+        name: "test-created-key".to_string(),
         path: key_path, // Note how this is related to AuthOutputPlatform above!
     });
 

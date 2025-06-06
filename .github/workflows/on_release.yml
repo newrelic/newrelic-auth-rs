@@ -30,3 +30,20 @@ jobs:
             -t $DOCKER_IMAGE_NAME_AUTH:${{ github.event.release.tag_name }} \
             -t $DOCKER_IMAGE_NAME_AUTH:latest \
             $DOCKER_IMAGE_NAME_AUTH:${{ github.event.release.tag_name }}-rc
+
+
+  notify-failure:
+    if: ${{ failure() }}
+    needs: [ push-container-tags ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify failure via Slack
+      uses: slackapi/slack-github-action@v1.22.0
+      with:
+        payload: |
+          {
+            "text": ":warning: [Release failed for `newrelic-auth-rs`] @hero check <${{ env.GITHUB_JOB_URL }}>"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.AC_SLACK_WEBHOOK }}
+        GITHUB_JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

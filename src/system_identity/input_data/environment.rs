@@ -29,6 +29,19 @@ pub enum NewRelicEnvironment {
     },
 }
 
+impl TryFrom<&str> for NewRelicEnvironment {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "us" => Ok(Self::US),
+            "eu" => Ok(Self::EU),
+            "staging" => Ok(Self::Staging),
+            _ => Err(format!("Invalid environment: {}", value)),
+        }
+    }
+}
+
 impl NewRelicEnvironment {
     /// Get a reference to the URI for the System Identity creation endpoint
     /// for the current environment.
