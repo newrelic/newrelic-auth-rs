@@ -89,6 +89,7 @@ where
             ))
         })?;
         let body = response.body();
+        println!("{}",String::from_utf8_lossy(&body));
         match response.status() {
             StatusCode::OK => {
                 let system_identity_response: SystemIdentityCreationResponse =

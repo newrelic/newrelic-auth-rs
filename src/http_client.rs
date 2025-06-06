@@ -39,6 +39,10 @@ pub(super) mod tests {
     mock! {
         pub HttpClient {}
 
+         impl Clone for HttpClient {
+            fn clone(&self) -> Self;
+        }
+
         impl HttpClient for HttpClient {
             fn send(&self, req: Request<Vec<u8>>) -> Result<Response<Vec<u8>>, HttpClientError>;
         }
