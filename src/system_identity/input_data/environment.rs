@@ -33,10 +33,10 @@ impl TryFrom<&str> for NewRelicEnvironment {
     type Error = String;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "US" | "us" | "Us" => Ok(Self::US),
-            "EU" | "eu" | "Eu" => Ok(Self::EU),
-            "Staging" | "staging" => Ok(Self::Staging),
+        match value.to_lowercase().as_str() {
+            "us" => Ok(Self::US),
+            "eu" => Ok(Self::EU),
+            "staging" => Ok(Self::Staging),
             _ => Err(format!("Invalid environment: {}", value)),
         }
     }
