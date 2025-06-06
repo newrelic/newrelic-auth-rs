@@ -1,14 +1,15 @@
-FROM debian:trixie-slim
+FROM alpine:3.22
 
 ARG TARGETARCH
 
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get clean
+RUN apk update && \
+    apk upgrade --no-cache
 
-RUN apt-get install -y curl kubectl jq
+RUN apk add --no-cache kubectl curl jq openssl
 
 COPY --chmod=755 target/newrelic-auth-cli-${TARGETARCH} /bin/newrelic-auth-cli
+
+RUN mkdir /gen-folder && chown nobody:nogroup /gen-folder
 
 USER nobody
 
