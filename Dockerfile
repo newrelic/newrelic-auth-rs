@@ -11,8 +11,4 @@ RUN ln -s /bin/busybox /bin/ash
 
 COPY --chmod=755 target/newrelic-auth-cli-${TARGETARCH} /bin/newrelic-auth-cli
 
-RUN mkdir /gen-folder && chown nobody:nogroup /gen-folder
-
-USER nobody
-
 ENTRYPOINT ["/bin/newrelic-auth-cli"]
