@@ -6,10 +6,9 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get clean
 
-RUN apt-get install -y curl kubectl jq
+RUN apt-get install -y busybox curl kubectl jq
+RUN ln -s /bin/busybox /bin/ash
 
 COPY --chmod=755 target/newrelic-auth-cli-${TARGETARCH} /bin/newrelic-auth-cli
-
-USER nobody
 
 ENTRYPOINT ["/bin/newrelic-auth-cli"]
