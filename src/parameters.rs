@@ -5,12 +5,19 @@ use crate::system_identity::input_data::output_platform::OutputPlatform;
 use crate::system_identity::input_data::{
     SystemIdentityCreationMetadata, SystemIdentityInput, SystemTokenCreationMetadata,
 };
-use crate::token::{Token, TokenType};
+use crate::token::{AccessToken, Token, TokenType};
+use alloc::boxed::Box;
+use alloc::string::String;
 use chrono::DateTime;
-use clap::error::ErrorKind;
 use clap::{Args, Error, Subcommand, ValueEnum};
+use std::clone::Clone;
+use std::convert::{From, Into};
+use std::default::Default;
 use std::fs;
+use std::option::Option;
 use std::path::PathBuf;
+use std::result::Result;
+use std::result::Result::Ok;
 use std::time::Duration;
 
 pub const DEFAULT_AUTHENTICATOR_TIMEOUT: Duration = Duration::from_secs(5);
@@ -37,10 +44,20 @@ pub enum Commands {
         #[command(flatten)]
         input_auth_args: AuthInputArgs,
 
-        /// Options for configuring the output destination.
-        #[command(flatten)]
-        output_options: OutputDestinationArgs,
+        /// Select format how the Token should be obtained
+        #[arg(long, required = true)]
+        output_token_format: OutPutTokenFormat,
     },
+}
+
+#[derive(ValueEnum, Clone, Debug, PartialEq)]
+pub enum OutPutTokenFormat {
+    /// Returns only the access token without type or expiration day
+    #[value(name = "Clean")]
+    Text,
+    /// Returns full token information in json format
+    #[value(name = "Json")]
+    Json,
 }
 
 #[derive(Args, Debug)]
@@ -57,7 +74,7 @@ pub struct AuthInputArgs {
 #[derive(Args, Debug)]
 pub struct BasicAuthArgs {
     /// Name for the new resource
-    #[arg(long, required = true)]
+    #[arg(long, required = false)]
     name: Option<String>,
 
     /// Organization ID for the resource
@@ -102,46 +119,59 @@ pub struct ExternalEndpoints {
 
 #[derive(Subcommand, Debug)]
 pub enum IdentityType {
-    /// Creates an identity, returning a secret
-    Secret(IdentityArgs),
-    /// Creates an identity, returning a key
-    Key(IdentityArgs),
-}
-
-#[derive(ValueEnum, Clone, Debug, PartialEq)]
-pub enum TokenTypeList {
-    #[value(name = "Bearer")]
-    Bearer,
+    /// Creates an identity whose type is 'secret'
+    /// This type o identity expires
+    ///
+    /// EXAMPLE:
+    /// SystemIdentity {
+    /// id: "2e483fe9",
+    /// name: Some("test1"),
+    /// client_id: "8dbf3d32",
+    /// organization_id: "b961cf81",
+    /// identity_type: L1 {
+    /// client_secret: "AfYFAUjf9",
+    /// credential_expiration: "2025-06-04T19:25:00Z"
+    /// }
+    /// }
+    Secret(SecretArgs),
+    /// Creates an identity whose type is 'private key' or known as a parent identity.
+    /// This type of identity does not expire.
+    ///
+    /// EXAMPLE:
+    /// SystemIdentity(
+    /// id: e5af42f2,
+    /// name: test,
+    /// client_id: 8150a0ee,
+    /// organization_id: b961cf81,
+    /// identity_type: L2(pub_key: LS0tLS1)
+    /// )
+    Key(KeyArgs),
 }
 
 #[derive(Args, Debug)]
-pub struct InputToken {
-    /// The access token string.
-    #[arg(long)]
-    access_token: Option<String>,
-
-    /// The token type (e.g., Bearer).
-    #[arg(long)]
-    token_type: TokenTypeList,
-
-    /// Expiration date or timestamp for the token.
-    #[arg(long)]
-    expires_at: Option<String>,
-}
-
-#[derive(Args, Debug)]
-pub struct IdentityArgs {
+pub struct KeyArgs {
     /// Basic information need for auth name, client_id, etc.
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    /// Token needed to create identities
-    #[command(flatten)]
-    token: InputToken,
+    /// Add the access token for identity creation, only bearer token type is accepted
+    #[arg(long, short)]
+    bearer_access_token: String,
 
-    /// Options for configuring the output destination only works with a key identities.
+    /// Options for configuring the output destination (required for Key identity)
     #[command(flatten)]
     output_options: OutputDestinationArgs,
+}
+
+#[derive(Args, Debug)]
+pub struct SecretArgs {
+    /// Basic information need for auth name, client_id, etc.
+    #[command(flatten)]
+    basic_auth_args: BasicAuthArgs,
+
+    /// Add the access token for identity creation, only bearer token type is accepted
+    #[arg(long, short)]
+    bearer_access_token: String,
 }
 
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
@@ -156,7 +186,7 @@ pub struct OutputDestinationArgs {
     #[arg(long = "output-platform", value_enum)]
     output_platform: OutputPlatformChoice,
 
-    /// File path where the output will be saved (required if --output-platform=local-file).
+    /// File path where the private key output will be saved (required if --output-platform=local-file).
     #[arg(long = "output-local-path")]
     output_local_path: Option<PathBuf>,
 }
@@ -165,44 +195,50 @@ pub fn create_metadata_for_token_retrieve(
     client_id: String,
     environment: Environments,
     auth_args: &AuthInputArgs,
-    output_options: &OutputDestinationArgs,
 ) -> Result<SystemTokenCreationMetadata, Box<dyn std::error::Error>> {
     let auth_method = select_auth_method(
         auth_args.input_client_secret.clone(),
         auth_args.input_private_key_path.clone(),
     )?;
     let environment = select_environment(environment)?;
-    let output_platform_type = select_output_platform(
-        output_options.output_platform.clone(),
-        output_options.output_local_path.clone(),
-    )?;
 
     Ok(SystemTokenCreationMetadata {
         client_id,
         environment,
         auth_method,
-        output_platform: output_platform_type,
     })
 }
 pub fn create_metadata_for_identity_creation(
-    args: &IdentityArgs,
+    identity_type: IdentityType,
 ) -> Result<SystemIdentityCreationMetadata, Box<dyn std::error::Error>> {
-    let auth_method = AuthMethod::ClientSecret(ClientSecret::from("")); // TO DELETE
-    let mut output_platform_type = OutputPlatform::LocalPrivateKeyPath("./".into());
-    let env = select_environment(args.basic_auth_args.environment.clone())?;
+    let (basic_auth_args, _json_token, output_platform, _output_local_path) = match identity_type {
+        IdentityType::Secret(secret_args) => (
+            secret_args.basic_auth_args,
+            secret_args.bearer_access_token.clone(),
+            OutputPlatform::LocalPrivateKeyPath("./".into()),
+            None,
+        ),
+        IdentityType::Key(key_args) => (
+            key_args.basic_auth_args,
+            key_args.bearer_access_token.clone(),
+            select_output_platform(
+                &key_args.output_options.output_platform,
+                key_args.output_options.output_local_path.clone(),
+            )?,
+            key_args.output_options.output_local_path.clone(),
+        ),
+    };
+
+    let env = select_environment(basic_auth_args.environment.clone())?;
 
     Ok(SystemIdentityCreationMetadata {
         system_identity_input: SystemIdentityInput {
-            client_id: args.basic_auth_args.client_id.clone().unwrap_or_default(),
-            organization_id: args
-                .basic_auth_args
-                .organization_id
-                .clone()
-                .unwrap_or_default(),
+            client_id: basic_auth_args.client_id.unwrap_or_default(),
+            organization_id: basic_auth_args.organization_id.unwrap_or_default(),
         },
-        name: args.basic_auth_args.name.clone(),
+        name: basic_auth_args.name.clone(),
         environment: env,
-        output_platform: output_platform_type,
+        output_platform,
     })
 }
 
@@ -215,36 +251,29 @@ pub fn select_environment(environment: Environments) -> Result<NewRelicEnvironme
             token_renewal_endpoint: Default::default(),
             system_identity_creation_uri: Default::default(),
         }),
-        _ => Err(Error::new(ErrorKind::InvalidValue)),
     }
 }
 
-pub fn select_token_type(token: TokenTypeList) -> Result<TokenType, Error> {
-    match token {
-        TokenTypeList::Bearer => Ok(TokenType::Bearer),
-        _ => Err(Error::new(ErrorKind::InvalidValue)),
-    }
-}
-
-pub fn build_token_for_identity_creation(args: IdentityArgs) -> Result<Token, Error> {
-    let token_type = select_token_type(args.token.token_type)?;
-    let expiration = DateTime::parse_from_rfc3339(args.token.expires_at.unwrap().as_str());
-    Ok(Token::new(
-        args.token.access_token.unwrap(),
-        token_type,
-        expiration.unwrap().to_utc(),
-    ))
+pub fn build_token_for_identity_creation(identity_type: &IdentityType) -> Token {
+    let token = match identity_type {
+        IdentityType::Secret(secret_args) => &secret_args.bearer_access_token,
+        IdentityType::Key(key_args) => &key_args.bearer_access_token,
+    };
+    Token::new(
+        AccessToken::from(token),
+        TokenType::Bearer,
+        DateTime::default(),
+    )
 }
 
 pub fn select_output_platform(
-    output_platform: OutputPlatformChoice,
+    output_platform: &OutputPlatformChoice,
     output_path: Option<PathBuf>,
 ) -> Result<OutputPlatform, Error> {
     match output_platform {
         OutputPlatformChoice::LocalFile => Ok(OutputPlatform::LocalPrivateKeyPath(
             output_path.unwrap_or_default(),
         )),
-        _ => Err(Error::new(ErrorKind::InvalidValue)),
     }
 }
 
@@ -252,7 +281,7 @@ pub fn select_auth_method(
     input_client_secret: Option<String>,
     input_private_key_path: Option<PathBuf>,
 ) -> Result<AuthMethod, Error> {
-    if !input_client_secret.is_none() {
+    if input_client_secret.is_some() {
         Ok(AuthMethod::ClientSecret(ClientSecret::from(
             input_client_secret.unwrap_or_default(),
         )))

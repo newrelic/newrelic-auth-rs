@@ -1,17 +1,18 @@
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use http::{
-    header::{AUTHORIZATION, CONTENT_TYPE},
     HeaderValue, Request, StatusCode, Uri,
+    header::{AUTHORIZATION, CONTENT_TYPE},
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
+use std::sync::Arc;
 
 use crate::{
     http_client::HttpClient,
     system_identity::{
+        SystemIdentity,
         creation_response::SystemIdentityCreationResponse,
         identity_creator::{L1IdentityCreator, L2IdentityCreator},
         input_data::SystemIdentityCreationMetadata,
-        SystemIdentity,
     },
     token::Token,
 };
@@ -23,7 +24,7 @@ pub struct HttpIAMClient<C>
 where
     C: HttpClient,
 {
-    http_client: C,
+    http_client: Arc<C>,
     metadata: SystemIdentityCreationMetadata,
 }
 
@@ -31,7 +32,7 @@ impl<C> HttpIAMClient<C>
 where
     C: HttpClient,
 {
-    pub fn new(http_client: C, metadata: SystemIdentityCreationMetadata) -> Self {
+    pub fn new(http_client: Arc<C>, metadata: SystemIdentityCreationMetadata) -> Self {
         Self {
             http_client,
             metadata,
@@ -82,14 +83,12 @@ where
             token,
             &self.metadata.environment.identity_creation_endpoint(),
         )?;
-
         let response = self.http_client.send(request).map_err(|e| {
             IAMClientError::Transport(format!(
                 "Failed to send HTTP request for system identity creation: {e}"
             ))
         })?;
         let body = response.body();
-        println!("{}",String::from_utf8_lossy(&body));
         match response.status() {
             StatusCode::OK => {
                 let system_identity_response: SystemIdentityCreationResponse =

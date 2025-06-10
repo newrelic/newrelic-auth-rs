@@ -19,9 +19,10 @@ use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 
-use std::path::{Path, PathBuf};
-use std::{env, fs, io};
 use nr_auth::system_identity::iam_client::http_impl::HttpIAMClient;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::{env, fs, io};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
@@ -92,8 +93,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
 
     let http_client = HttpClient::new()?;
-    let http_authenticator =
-        HttpAuthenticator::new(http_client.clone(), environment.token_renewal_endpoint());
+    let http_authenticator = HttpAuthenticator::new(
+        Arc::new(http_client.clone()),
+        environment.token_renewal_endpoint(),
+    );
     let http_token_retriever = match &auth_method {
         AuthMethod::ClientSecret(client_secret) => TokenRetrieverWithCache::new_with_secret(
             client_id.to_owned(),
@@ -115,14 +118,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         system_identity_input: SystemIdentityInput {
             organization_id,
             client_id,
-            auth_method,
         },
         name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,
         output_platform,
     };
 
-    let iam_client = HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
+    let iam_client = HttpIAMClient::new(
+        Arc::new(http_client),
+        system_identity_creation_metadata.to_owned(),
+    );
 
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,

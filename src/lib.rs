@@ -28,6 +28,8 @@
 //! }
 //! ```
 
+extern crate alloc;
+
 pub mod authenticator;
 pub mod commands;
 pub mod http;

@@ -35,5 +35,4 @@ pub struct SystemTokenCreationMetadata {
     pub client_id: String,
     pub environment: NewRelicEnvironment,
     pub auth_method: AuthMethod,
-    pub output_platform: OutputPlatform,
 }
