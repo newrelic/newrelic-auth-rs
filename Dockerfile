@@ -1,11 +1,13 @@
-FROM alpine:3.22
+FROM debian:trixie-slim
 
 ARG TARGETARCH
 
-RUN apk update && \
-    apk upgrade --no-cache
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get clean
 
-RUN apk add --no-cache kubectl curl jq openssl
+RUN apt-get install -y busybox curl kubectl jq
+RUN ln -s /bin/busybox /bin/ash
 
 COPY --chmod=755 target/newrelic-auth-cli-${TARGETARCH} /bin/newrelic-auth-cli
 
