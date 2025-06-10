@@ -1,2 +1,2 @@
 mod error;
-pub mod http_impl;
+pub mod http;

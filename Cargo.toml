@@ -9,36 +9,32 @@ license-file = "./LICENSE.md"
 rust-version = "1.86.0"
 
 [dependencies]
-chrono = "0.4"
+chrono = { version = "0.4.41", features = ["serde"] }
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 jsonwebtoken = "9"
+clap = { version = "4.5.40", features = ["derive"] }
+reqwest = { version = "0.12.20", default-features = false, features = [
+    "blocking",
+    "rustls-tls",
+    "rustls-tls-native-roots",
+    "socks",
+    "json",
+] }
 uuid = { version = "1", features = ["serde", "v7"] }
 tracing = "0.1"
 http = "1"
 rcgen = { version = "0.13", features = ["aws_lc_rs"] }
 base64 = "0.22"
-clap = { version = "4.5.38", features = ["derive"] }
-reqwest = { version = "0", default-features = false, features = [
-  "blocking",
-  "rustls-tls",
-  "rustls-tls-native-roots",
-  "socks",
-  "json",
-] }
+
 [dev-dependencies]
 assert_matches = "1.5.0"
 mockall = "0.13.1"
 url = "2"
 http = "1"
 thiserror = "2"
-reqwest = { version = "0", default-features = false, features = [
-  "blocking",
-  "rustls-tls",
-  "rustls-tls-native-roots",
-  "socks",
-] }
+
 dotenvy = "0"
 vaultrs = { version = "0", default-features = false, features = ["native-tls"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

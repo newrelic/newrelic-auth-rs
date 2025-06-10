@@ -1,10 +1,9 @@
+use crate::http_client::{HttpClient as OauthHttpClient, HttpClientError as OauthHttpClientError};
+use crate::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use http::Response as HttpResponse;
 use http::{Request, Response};
-use crate::http_client::HttpClient as OauthHttpClient;
-use crate::http_client::HttpClientError as OauthHttpClientError;
 use reqwest::blocking::{Client, Response as BlockingResponse};
 use reqwest::tls::TlsInfo;
-use crate::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 
 #[derive(Debug, Clone)]
 pub struct HttpClient {
@@ -22,7 +21,7 @@ impl HttpClient {
             .build()
             .map_err(|err| HttpBuildError::ClientBuilder(err.to_string()))?;
 
-        Ok(Self{client})
+        Ok(Self { client })
     }
 
     fn send(&self, request: Request<Vec<u8>>) -> Result<HttpResponse<Vec<u8>>, HttpResponseError> {
@@ -40,9 +39,7 @@ impl HttpClient {
     }
 }
 
-fn try_build_response(
-    res: BlockingResponse,
-) -> Result<HttpResponse<Vec<u8>>, HttpResponseError> {
+fn try_build_response(res: BlockingResponse) -> Result<HttpResponse<Vec<u8>>, HttpResponseError> {
     let status = res.status();
     let version = res.version();
 
@@ -99,6 +96,6 @@ enum HttpResponseError {
     ReadingResponse(String),
     #[error("could build response: {0}")]
     BuildingResponse(String),
-    #[error("{0}")]
+    #[error("http transport error: `{0}`")]
     TransportError(String),
 }

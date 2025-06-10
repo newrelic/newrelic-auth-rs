@@ -5,6 +5,9 @@
 //! - Configure and use a token retriever with caching.
 //! - Retrieve and print an access token.
 //!
+
+extern crate alloc;
+
 mod client;
 
 use client::HttpClient;
@@ -15,8 +18,12 @@ use nr_auth::authenticator::HttpAuthenticator;
 use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::token_retriever::TokenRetrieverWithCache;
+use std::boxed::Box;
+use std::convert::{From, TryFrom};
 use std::env;
 use std::path::{Path, PathBuf};
+use std::result::Result;
+use std::result::Result::Ok;
 
 /// Main function to retrieve and print an access token.
 /// It requires the following environment variables to be set:

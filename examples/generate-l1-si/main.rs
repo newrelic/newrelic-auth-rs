@@ -17,9 +17,9 @@ use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 
+use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
-use nr_auth::system_identity::iam_client::http_impl::HttpIAMClient;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the current directory to the example's path
@@ -114,7 +114,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         system_identity_input: SystemIdentityInput {
             organization_id,
             client_id,
-            auth_method,
         },
         name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,

@@ -1,5 +1,4 @@
 use core::fmt;
-
 use http::Uri;
 use http::header::CONTENT_TYPE;
 use http::method::Method;
