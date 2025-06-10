@@ -1,0 +1,45 @@
+name: 📞 Check System Identity Generation
+permissions:
+  contents: read
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'NR Environment for System Identity endpoint checks'
+        type: string
+        required: true
+    secrets:
+      client_id:
+        required: true
+      organization_id:
+        required: true
+      private_key_pem:
+        required: true
+
+env:
+  NR_ENVIRONMENT: ${{ inputs.environment }}
+  CLIENT_ID: ${{ secrets.client_id }}
+  ORGANIZATION_ID: ${{ secrets.organization_id }}
+  PRIVATE_KEY_PEM: ${{ secrets.private_key_pem }}
+
+jobs:
+  scan:
+    name: Test System Identity creation endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Obtain Rust version from project
+        run: |
+          RUST_VERSION=$(grep "rust-version" Cargo.toml | cut -d "=" -f2 | tr -d "[:space:]")
+          echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
+
+      - name: Install Rust ${{ env.RUST_VERSION }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Test System Identity Creation (${{ env.NR_ENVIRONMENT }})
+        run: cargo run --example generate-l1-si > /dev/null

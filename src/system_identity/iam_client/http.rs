@@ -94,7 +94,8 @@ where
                 let system_identity_response: SystemIdentityCreationResponse =
                     serde_json::from_slice(body).map_err(|e| {
                         IAMClientError::Decoder(format!(
-                            "Failed to decode JSON response for system identity creation: {e}"
+                            "Failed to decode JSON response for system identity creation: {e}. Response body: {}",
+                            String::from_utf8_lossy(body)
                         ))
                     })?;
                 let system_identity = system_identity_response
