@@ -1,3 +1,5 @@
+<a href="https://opensource.newrelic.com/oss-category/#community-project"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Project.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Project.png"><img alt="New Relic Open Source community project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Project.png"></picture></a>
+
 | ⚠️ | `nr-auth` is in preview and licensed under the New Relic Pre-Release Software Notice. |
 |----|:----------------------------------------------------------------------------------------------------|
 
@@ -21,7 +23,8 @@ See the [documentation](https://newrelic.github.io/newrelic-auth-rs/) documentat
 
 ## Support
 
-If you find any problems while using the library or have a doubt, please feel free to open an [Issue](https://github.com/newrelic/newrelic-auth-rs/issues), where the New Relic maintainers of this project will be able to help.
+* [New Relic Community](https://forum.newrelic.com/): The best place to engage in troubleshooting questions.
+* [Issues](https://github.com/newrelic/newrelic-auth-rs/issues): If you find any problems while using the library, feel free to open an issue where the New Relic maintainers of this project will be able to help.
 
 ## Contribute
 
