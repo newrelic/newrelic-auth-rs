@@ -1,14 +1,14 @@
 use core::fmt;
 
+use http::Uri;
 use http::header::CONTENT_TYPE;
 use http::method::Method;
-use http::Uri;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::http_client::HttpClient;
 use crate::system_identity::input_data::auth_method::ClientSecret;
-use crate::{token::AccessToken, ClientID};
+use crate::{ClientID, token::AccessToken};
 
 #[derive(Error, Debug)]
 pub enum AuthenticateError {
@@ -145,7 +145,7 @@ pub mod test {
     };
     use crate::{
         authenticator::{AuthenticateError, Authenticator},
-        http_client::{tests::MockHttpClient, HttpClientError},
+        http_client::{HttpClientError, tests::MockHttpClient},
     };
 
     mock! {

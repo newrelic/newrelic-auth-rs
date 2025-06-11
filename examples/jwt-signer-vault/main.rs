@@ -2,16 +2,16 @@
 use std::env;
 use std::path::Path;
 
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use chrono::{TimeDelta, Utc};
 use dotenvy::dotenv;
 use http::Uri;
 use jsonwebtoken::{Algorithm, Header};
 use sha2::{Digest, Sha512};
 use tracing::debug;
-use vaultrs::api::transit::requests::SignDataRequestBuilder;
 use vaultrs::api::transit::MarshalingAlgorithm;
+use vaultrs::api::transit::requests::SignDataRequestBuilder;
 use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
 use vaultrs::transit::data::sign;
 

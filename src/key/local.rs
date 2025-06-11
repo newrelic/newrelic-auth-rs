@@ -1,6 +1,6 @@
 use crate::key::creator::{Creator, KeyPair, KeyType, PublicKeyPem};
 use rcgen::KeyPair as RcKeyPair;
-use rcgen::{RsaKeySize, PKCS_RSA_SHA512};
+use rcgen::{PKCS_RSA_SHA512, RsaKeySize};
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};

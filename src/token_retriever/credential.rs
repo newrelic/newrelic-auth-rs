@@ -2,10 +2,10 @@ use chrono::{TimeDelta, Utc};
 use http::Uri;
 
 use crate::{
+    TokenRetrieverError,
     authenticator::{AuthCredential, ClientAssertionType},
     jwt::{claims::Claims, signer::JwtSigner},
     system_identity::input_data::auth_method::ClientSecret,
-    TokenRetrieverError,
 };
 
 /// A signed JWT should live enough for the System Identity Service to consume it.

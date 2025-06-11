@@ -2,7 +2,7 @@
 name = "nr-auth"
 description = "Crate to manage NR System Identity Service authentication"
 version = "0.0.7"
-edition = "2021"
+edition = "2024"
 authors = ["The New Relic Agent Control Team"]
 publish = false
 license-file = "./LICENSE.md"
