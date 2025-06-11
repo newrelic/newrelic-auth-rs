@@ -5,11 +5,12 @@ use client::HttpClient;
 use dotenvy::dotenv;
 
 use nr_auth::authenticator::HttpAuthenticator;
-use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::jwt::signer::JwtSignerImpl;
+use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::key::creator::KeyType;
 use nr_auth::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
 
+use nr_auth::TokenRetriever;
 use nr_auth::key::PrivateKeyPem;
 use nr_auth::system_identity::generator::L2SystemIdentityGenerator;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
@@ -18,7 +19,6 @@ use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
 use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
-use nr_auth::TokenRetriever;
 
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};

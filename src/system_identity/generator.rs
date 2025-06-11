@@ -5,8 +5,8 @@ use thiserror::Error;
 use crate::{key::creator::Creator as KeyCreator, token::Token};
 
 use super::{
-    identity_creator::{L1IdentityCreator, L2IdentityCreator},
     SystemIdentity,
+    identity_creator::{L1IdentityCreator, L2IdentityCreator},
 };
 
 /// This type is responsible for generating a System Identity and its associated key pair.

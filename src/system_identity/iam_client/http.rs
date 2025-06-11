@@ -1,17 +1,17 @@
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use http::{
-    header::{AUTHORIZATION, CONTENT_TYPE},
     HeaderValue, Request, StatusCode, Uri,
+    header::{AUTHORIZATION, CONTENT_TYPE},
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::{
     http_client::HttpClient,
     system_identity::{
+        SystemIdentity,
         creation_response::SystemIdentityCreationResponse,
         identity_creator::{L1IdentityCreator, L2IdentityCreator},
         input_data::SystemIdentityCreationMetadata,
-        SystemIdentity,
     },
     token::Token,
 };

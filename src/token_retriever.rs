@@ -5,7 +5,7 @@ use crate::token::Token;
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 
 use ::http::Uri;
-use credential::{TokenCredential, DEFAULT_AUDIENCE};
+use credential::{DEFAULT_AUDIENCE, TokenCredential};
 use std::sync::Mutex;
 use tracing::debug;
 
@@ -139,7 +139,7 @@ pub mod test {
 
     use chrono::{TimeDelta, Utc};
     use mockall::mock;
-    use mockall::{predicate::eq, Sequence};
+    use mockall::{Sequence, predicate::eq};
 
     use crate::authenticator::test::MockAuthenticatorMock;
 
@@ -147,16 +147,16 @@ pub mod test {
     use crate::jwt::signer::tests::MockJwtSigner;
     use crate::token_retriever::credential::DEFAULT_JWT_CLAIM_EXP;
     use crate::{
+        TokenRetriever, TokenRetrieverError,
         authenticator::{
             AuthenticateError, ClientAssertionType, GrantType, TokenRetrievalRequest,
             TokenRetrievalResponse,
         },
         jwt::signed::SignedJwt,
         token::{Token, TokenType},
-        TokenRetriever, TokenRetrieverError,
     };
 
-    use super::{TokenRetrieverWithCache, DEFAULT_AUDIENCE};
+    use super::{DEFAULT_AUDIENCE, TokenRetrieverWithCache};
 
     mock! {
         pub TokenRetriever {}

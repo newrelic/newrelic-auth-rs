@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, TimeDelta, Utc};
 
-use crate::{authenticator::TokenRetrievalResponse, TokenRetrieverError};
+use crate::{TokenRetrieverError, authenticator::TokenRetrievalResponse};
 
 pub type AccessToken = String;
 
@@ -81,9 +81,9 @@ impl TryFrom<TokenRetrievalResponse> for Token {
 mod test {
 
     use crate::{
+        TokenRetrieverError,
         authenticator::TokenRetrievalResponse,
         token::{AccessToken, Token, TokenType},
-        TokenRetrieverError,
     };
     use chrono::{Duration, Utc};
 

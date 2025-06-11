@@ -59,23 +59,22 @@ impl ClientSecret {
 mod tests {
     use chrono::Utc;
     use mockall::Sequence;
-    use rstest::{rstest, Context};
+    use rstest::{Context, rstest};
     use std::path::PathBuf;
 
     use crate::{
         http_client::tests::MockHttpClient,
-        jwt::signer::local::{test::RS256_PRIVATE_KEY, LocalPrivateKeySigner},
+        jwt::signer::local::{LocalPrivateKeySigner, test::RS256_PRIVATE_KEY},
         key::creator::tests::MockCreator,
         system_identity::{
+            SystemIdentity,
             generator::L2SystemIdentityGenerator,
             iam_client::http::HttpIAMClient,
             identity_creator::tests::MockL2IAMClient,
             input_data::{
-                auth_method::ClientSecret, environment::NewRelicEnvironment,
-                output_platform::OutputPlatform, SystemIdentityCreationMetadata,
-                SystemIdentityInput,
+                SystemIdentityCreationMetadata, SystemIdentityInput, auth_method::ClientSecret,
+                environment::NewRelicEnvironment, output_platform::OutputPlatform,
             },
-            SystemIdentity,
         },
         token::{Token, TokenType},
         token_retriever::TokenRetrieverWithCache,
@@ -93,7 +92,7 @@ mod tests {
         #[context] ctx: Context,
         #[case] auth_method: AuthMethod,
     ) {
-        use crate::{authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl, TokenRetriever};
+        use crate::{TokenRetriever, authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl};
 
         let cli_input = SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {

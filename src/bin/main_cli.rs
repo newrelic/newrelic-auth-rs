@@ -1,4 +1,4 @@
-use std::process::{exit, ExitCode};
+use std::process::{ExitCode, exit};
 
 fn main() -> ExitCode {
     println!("I am the auth CLI");

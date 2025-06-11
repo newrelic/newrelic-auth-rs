@@ -70,7 +70,7 @@ impl JwtSigner for LocalPrivateKeySigner {
 pub mod test {
     use super::*;
     use http::Uri;
-    use jsonwebtoken::{get_current_timestamp, DecodingKey, Validation};
+    use jsonwebtoken::{DecodingKey, Validation, get_current_timestamp};
 
     pub const RS256_PRIVATE_KEY: &str = r#"-----BEGIN PRIVATE KEY-----
 MIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQC2PaghXmD7Sctw
