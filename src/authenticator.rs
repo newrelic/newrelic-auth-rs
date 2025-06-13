@@ -1,9 +1,9 @@
 use core::fmt;
-
 use http::Uri;
 use http::header::CONTENT_TYPE;
 use http::method::Method;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use thiserror::Error;
 
 use crate::http_client::HttpClient;
@@ -32,13 +32,13 @@ pub trait Authenticator {
 /// The Authenticator is responsible for obtaining a valid JWT token from System Identity Service.
 pub struct HttpAuthenticator<C: HttpClient> {
     /// HTTP client
-    http_client: C,
+    http_client: Arc<C>,
     /// System Identity Service URL
     uri: Uri,
 }
 
 impl<C: HttpClient> HttpAuthenticator<C> {
-    pub fn new(http_client: C, uri: Uri) -> Self {
+    pub fn new(http_client: Arc<C>, uri: Uri) -> Self {
         Self { http_client, uri }
     }
 }
@@ -138,6 +138,7 @@ pub mod test {
     use assert_matches::assert_matches;
     use http::{Method, Uri};
     use mockall::mock;
+    use std::sync::Arc;
 
     use super::{
         AuthCredential, ClientAssertion, ClientAssertionType, ClientID, GrantType,
@@ -185,7 +186,7 @@ pub mod test {
             .returning(move |_| Ok(http_response.clone()));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(http_client, uri);
+        let authenticator = HttpAuthenticator::new(Arc::new(http_client), uri);
 
         let response = authenticator.authenticate(request).unwrap();
 
@@ -203,7 +204,7 @@ pub mod test {
             .returning(move |_| Err(HttpClientError::TransportError("foo".to_string())));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(http_client, uri);
+        let authenticator = HttpAuthenticator::new(Arc::new(http_client), uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -227,7 +228,7 @@ pub mod test {
             .returning(move |_| Ok(http_response.clone()));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(http_client, uri);
+        let authenticator = HttpAuthenticator::new(Arc::new(http_client), uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 
@@ -247,7 +248,7 @@ pub mod test {
             .returning(move |_| Ok(http_response.clone()));
 
         let uri = fake_uri();
-        let authenticator = HttpAuthenticator::new(http_client, uri);
+        let authenticator = HttpAuthenticator::new(Arc::new(http_client), uri);
 
         let error = authenticator.authenticate(request).unwrap_err();
 

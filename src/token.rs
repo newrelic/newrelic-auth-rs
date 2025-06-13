@@ -1,17 +1,23 @@
+use std::cmp::PartialOrd;
+use std::convert::TryFrom;
+use std::fmt;
+use std::result::Result;
+use std::result::Result::{Err, Ok};
+use std::string::{String, ToString};
 use std::time::Duration;
 
-use chrono::{DateTime, TimeDelta, Utc};
-
 use crate::{TokenRetrieverError, authenticator::TokenRetrievalResponse};
+use chrono::{DateTime, TimeDelta, Utc};
+use serde::{Deserialize, Serialize};
 
 pub type AccessToken = String;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum TokenType {
     Bearer,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Token {
     expires_at: DateTime<Utc>,
     access_token: AccessToken,
@@ -26,6 +32,12 @@ impl TryFrom<&str> for TokenType {
             "Bearer" | "bearer" => Ok(TokenType::Bearer),
             _ => Err(format!("Invalid token type: {value}")),
         }
+    }
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.access_token)
     }
 }
 
@@ -79,13 +91,14 @@ impl TryFrom<TokenRetrievalResponse> for Token {
 
 #[cfg(test)]
 mod test {
-
     use crate::{
         TokenRetrieverError,
         authenticator::TokenRetrievalResponse,
         token::{AccessToken, Token, TokenType},
     };
     use chrono::{Duration, Utc};
+    use std::convert::{From, TryFrom};
+    use std::string::ToString;
 
     #[test]
     fn token_is_expired() {
@@ -123,5 +136,13 @@ mod test {
             "Expected TokenRetrieverError with specific message: '{}'",
             err_msg
         );
+    }
+
+    #[test]
+    fn test_token_display() {
+        let future = Utc::now() + Duration::milliseconds(10);
+        let token = Token::new(AccessToken::from("some-token"), TokenType::Bearer, future);
+        let display_str = format!("{}", token);
+        assert!(display_str.contains("some-token"));
     }
 }

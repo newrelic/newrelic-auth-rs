@@ -28,10 +28,15 @@
 //! }
 //! ```
 
+extern crate alloc;
+
 pub mod authenticator;
+pub mod commands;
+pub mod http;
 pub mod http_client;
 pub mod jwt;
 pub mod key;
+pub mod parameters;
 pub mod system_identity;
 pub mod token;
 pub mod token_retriever;

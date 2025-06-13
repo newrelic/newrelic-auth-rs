@@ -27,5 +27,12 @@ pub struct SystemIdentityCreationMetadata {
 pub struct SystemIdentityInput {
     pub organization_id: String,
     pub client_id: String,
+}
+
+/// Represents the input data required to create an Identity Token.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SystemTokenCreationMetadata {
+    pub client_id: String,
+    pub environment: NewRelicEnvironment,
     pub auth_method: AuthMethod,
 }
