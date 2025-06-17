@@ -29,7 +29,14 @@ pub const DEFAULT_AUTHENTICATOR_TIMEOUT: Duration = Duration::from_secs(5);
 pub enum Commands {
     /// Creates a new identity with a secret or with a private key, with specified credentials.
     CreateIdentity {
-        /// Select what type of identity should be created, identity in a secret or a key
+        /// Choose the type of identity to create; there are two distinct identity types.
+        ///
+        /// 1. Private Key Identity:
+        ///    - Known as a parent identity.
+        ///    - This identity type does not expire.
+        ///
+        /// 2. Secret Identity:
+        ///    - This identity type expires.
         #[command(subcommand)]
         identity_type: IdentityType,
     },
@@ -43,7 +50,7 @@ pub enum Commands {
         #[arg(short, long, required = true)]
         environment: Environments,
 
-        /// Options for configuring the inputs to authenticate
+        /// Options for configuring the inputs to authenticate one of them at least should be added.
         #[command(flatten)]
         input_auth_args: AuthInputArgs,
 
@@ -73,7 +80,7 @@ pub struct AuthInputArgs {
     #[arg(long, group = "input-auth-methods")]
     client_secret: Option<String>,
 
-    /// Path to the private key file
+    /// Path to the private key file used for authentication
     #[arg(long, group = "input-auth-methods")]
     private_key_path: Option<PathBuf>,
 }
@@ -86,11 +93,11 @@ pub struct BasicAuthArgs {
 
     /// Organization ID for the resource
     #[arg(long, short, required = true)]
-    organization_id: Option<String>,
+    organization_id: String,
 
     /// ID of the client
     #[arg(long, short, required = true)]
-    client_id: Option<String>,
+    client_id: String,
 
     /// Environment to target
     #[arg(long, short, required = true)]
@@ -255,8 +262,8 @@ pub fn create_metadata_for_identity_creation(
 
     Ok(SystemIdentityCreationMetadata {
         system_identity_input: SystemIdentityInput {
-            client_id: basic_auth_args.client_id.unwrap_or_default(),
-            organization_id: basic_auth_args.organization_id.unwrap_or_default(),
+            client_id: basic_auth_args.client_id,
+            organization_id: basic_auth_args.organization_id,
         },
         name: basic_auth_args.name.clone(),
         environment: env,

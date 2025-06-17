@@ -60,6 +60,19 @@ impl ClientSecret {
 }
 impl fmt::Display for SystemIdentity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let identity_type = match &self.identity_type {
+            SystemIdentityType::L1 {
+                client_secret,
+                credential_expiration,
+            } => {
+                format!(
+                    "L1(client_secret: {}, credential_expiration: {})",
+                    client_secret.clone().reveal(),
+                    credential_expiration
+                )
+            }
+            SystemIdentityType::L2 { pub_key } => format!("L2(pub_key: {})", pub_key),
+        };
         write!(
             f,
             "SystemIdentity(id: {}, name: {}, client_id: {}, organization_id: {}, identity_type: {})",
@@ -67,19 +80,7 @@ impl fmt::Display for SystemIdentity {
             self.name.clone().unwrap_or_else(|| "None".to_string()),
             self.client_id,
             self.organization_id,
-            match &self.identity_type {
-                SystemIdentityType::L1 {
-                    client_secret,
-                    credential_expiration,
-                } => {
-                    format!(
-                        "L1(client_secret: {}, credential_expiration: {})",
-                        client_secret.clone().reveal(),
-                        credential_expiration
-                    )
-                }
-                SystemIdentityType::L2 { pub_key } => format!("L2(pub_key: {})", pub_key),
-            }
+            identity_type,
         )
     }
 }
