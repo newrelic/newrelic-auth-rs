@@ -1,8 +1,5 @@
-use std::convert::From;
 use std::fmt;
 use std::fmt::Debug;
-use std::option::Option;
-use std::string::String;
 
 pub mod creation_response;
 pub mod generator;
@@ -88,7 +85,6 @@ impl fmt::Display for SystemIdentity {
 mod tests {
     use super::input_data::auth_method::AuthMethod;
     use crate::system_identity::input_data::SystemTokenCreationMetadata;
-    use alloc::borrow::ToOwned;
     use chrono::Utc;
     use mockall::Sequence;
     use std::clone::Clone;

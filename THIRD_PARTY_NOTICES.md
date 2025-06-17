@@ -649,6 +649,12 @@ Distributed under the following license(s):
 
 * MIT
 
+## nu-ansi-term <https://crates.io/crates/nu-ansi-term>
+
+Distributed under the following license(s):
+
+* MIT
+
 ## num-bigint <https://crates.io/crates/num-bigint>
 
 Distributed under the following license(s):
@@ -719,6 +725,12 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## openssl-sys <https://crates.io/crates/openssl-sys>
+
+Distributed under the following license(s):
+
+* MIT
+
+## overload <https://crates.io/crates/overload>
 
 Distributed under the following license(s):
 
@@ -955,6 +967,12 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## sharded-slab <https://crates.io/crates/sharded-slab>
+
+Distributed under the following license(s):
+
+* MIT
+
 ## shlex <https://crates.io/crates/shlex>
 
 Distributed under the following license(s):
@@ -1041,6 +1059,13 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## thiserror-impl <https://crates.io/crates/thiserror-impl>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## thread_local <https://crates.io/crates/thread_local>
 
 Distributed under the following license(s):
 
@@ -1136,6 +1161,18 @@ Distributed under the following license(s):
 * MIT
 
 ## tracing-core <https://crates.io/crates/tracing-core>
+
+Distributed under the following license(s):
+
+* MIT
+
+## tracing-log <https://crates.io/crates/tracing-log>
+
+Distributed under the following license(s):
+
+* MIT
+
+## tracing-subscriber <https://crates.io/crates/tracing-subscriber>
 
 Distributed under the following license(s):
 
@@ -1270,6 +1307,27 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * MIT
+
+## winapi <https://crates.io/crates/winapi>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## winapi-i686-pc-windows-gnu <https://crates.io/crates/winapi-i686-pc-windows-gnu>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## winapi-x86_64-pc-windows-gnu <https://crates.io/crates/winapi-x86_64-pc-windows-gnu>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
 
 ## windows-core <https://crates.io/crates/windows-core>
 

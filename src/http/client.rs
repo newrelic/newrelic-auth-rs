@@ -4,6 +4,7 @@ use http::Response as HttpResponse;
 use http::{Request, Response};
 use reqwest::blocking::{Client, Response as BlockingResponse};
 use reqwest::tls::TlsInfo;
+use tracing::debug;
 
 #[derive(Debug, Clone)]
 pub struct HttpClient {
@@ -31,6 +32,8 @@ impl HttpClient {
             .headers(request.headers().clone())
             .body(request.body().to_vec());
 
+        debug!("Request body: {:?}", req);
+
         let res = req
             .send()
             .map_err(|err| HttpResponseError::TransportError(err.to_string()))?;
@@ -43,7 +46,11 @@ fn try_build_response(res: BlockingResponse) -> Result<HttpResponse<Vec<u8>>, Ht
     let status = res.status();
     let version = res.version();
 
+    debug!("Response status: {:?}", status);
+    debug!("Response version: {:?}", version);
+
     let tls_info = res.extensions().get::<TlsInfo>().cloned();
+    debug!("TLS info: {:?}", tls_info);
 
     let body: Vec<u8> = res
         .bytes()
@@ -61,6 +68,8 @@ fn try_build_response(res: BlockingResponse) -> Result<HttpResponse<Vec<u8>>, Ht
     let response = response_builder
         .body(body)
         .map_err(|err| HttpResponseError::BuildingResponse(err.to_string()))?;
+
+    debug!("Response successfully built");
 
     Ok(response)
 }
@@ -92,9 +101,9 @@ pub enum HttpBuildError {
 
 #[derive(thiserror::Error, Debug)]
 enum HttpResponseError {
-    #[error("could read response body: {0}")]
+    #[error("could not read response body: {0}")]
     ReadingResponse(String),
-    #[error("could build response: {0}")]
+    #[error("could not build response: {0}")]
     BuildingResponse(String),
     #[error("http transport error: `{0}`")]
     TransportError(String),

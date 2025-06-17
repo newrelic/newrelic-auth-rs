@@ -11,5 +11,5 @@ TOKEN_URL="https://system-identity-oauth.service.newrelic.com/oauth2/token"
 
 Run with:
 ```shell
-cargo run --examples retrieve-token
+cargo run --example retrieve-token
 ```

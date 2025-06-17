@@ -1,7 +1,4 @@
 //! Full example to generate an L2 System Identity using the `newrelic-auth-rs` library.
-mod client;
-
-use client::HttpClient;
 use dotenvy::dotenv;
 
 use nr_auth::authenticator::HttpAuthenticator;
@@ -17,6 +14,7 @@ use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 
+use nr_auth::http::client::HttpClient;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};

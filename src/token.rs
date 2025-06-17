@@ -1,8 +1,8 @@
 use std::cmp::PartialOrd;
 use std::convert::TryFrom;
+use std::fmt;
 use std::result::Result;
 use std::result::Result::{Err, Ok};
-use std::string::{String, ToString};
 use std::time::Duration;
 
 use crate::{TokenRetrieverError, authenticator::TokenRetrievalResponse};
@@ -57,6 +57,20 @@ impl Token {
 
     pub fn token_type(&self) -> &TokenType {
         &self.token_type
+    }
+}
+
+impl fmt::Display for TokenType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TokenType::Bearer => write!(f, "Bearer"),
+        }
+    }
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", self.token_type, self.access_token)
     }
 }
 

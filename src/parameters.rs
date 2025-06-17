@@ -6,67 +6,81 @@ use crate::system_identity::input_data::{
     SystemIdentityCreationMetadata, SystemIdentityInput, SystemTokenCreationMetadata,
 };
 use crate::token::{AccessToken, Token, TokenType};
-use alloc::boxed::Box;
-use alloc::string::String;
 use chrono::DateTime;
-use clap::error::ErrorKind;
 use clap::{Args, Error, Subcommand, ValueEnum};
-use core::str::FromStr;
-use http::Uri;
 use std::clone::Clone;
 use std::convert::{From, Into};
-use std::default::Default;
 use std::fs;
-use std::option::Option;
 use std::path::PathBuf;
 use std::result::Result;
-use std::result::Result::Ok;
 use std::time::Duration;
 
 pub const DEFAULT_AUTHENTICATOR_TIMEOUT: Duration = Duration::from_secs(5);
 #[derive(Subcommand, Debug)]
 #[group(id = "input-auth-methods", required = true, multiple = false)]
 pub enum Commands {
-    /// Creates a new identity with a secret or with a private key, with specified credentials.
+    #[command(verbatim_doc_comment)]
+    /// Creates a new system identity using either client credentials or a signed JWT.
+    ///
+    /// Choose the type of identity to create; there are two distinct methods of authentication:
+    ///
+    /// 1. Client Credentials (L1):
+    ///    - Utilizes Client ID and Client Secret.
+    ///    - The Client Secret expires.
+    /// 2. Signed JWT (L2):
+    ///    - Utilizes Client ID and Public/Private Keys.
+    ///    - Does not expire.
+    ///
+    /// Both Parent and Child identities can be created using either method.
+    /// - Parent Identity: Has permissions to create other identities and must be established by a user with elevated permissions.
+    /// - Child Identity: Lacks additional permissions and is used primarily for authenticating requests to restricted endpoints.
     CreateIdentity {
-        /// Choose the type of identity to create; there are two distinct identity types.
-        ///
-        /// 1. Private Key Identity:
-        ///    - Known as a parent identity.
-        ///    - This identity type does not expire.
-        ///
-        /// 2. Secret Identity:
-        ///    - This identity type expires.
         #[command(subcommand)]
         identity_type: IdentityType,
     },
-    /// Retrieve a token providing a client secret or private key path.
-    RetrieveToken {
-        /// ID of the client
-        #[arg(long, short, required = true)]
-        client_id: Option<String>,
-
-        /// Environment to target
-        #[arg(short, long, required = true)]
-        environment: Environments,
-
-        /// Options for configuring the inputs to authenticate one of them at least should be added.
+    #[command(verbatim_doc_comment)]
+    /// Authenticates with New Relic and returns an authentication token.
+    ///
+    /// This function allows you to authenticate using either a client secret
+    /// or a private key path. Upon successful authentication, it retrieves
+    /// an authorization token.
+    ///
+    /// # Parameters
+    /// - `client_secret`: A string containing the client secret for authentication.
+    /// - `private_key_path`: A path to the private key file used for authentication.
+    ///
+    /// # Returns
+    /// - An authentication token if the process is successful.
+    Authenticate {
+        /// Basic information to authenticate in newrelic
         #[command(flatten)]
-        input_auth_args: AuthInputArgs,
+        auth_args: AuthenticationArgs,
 
         /// Select format how the Token should be obtained
-        #[arg(long, required = true)]
-        output_token_format: OutPutTokenFormat,
-
-        /// Custom endpoint configuration (only used if --environment=custom).
-        #[command(flatten)]
-        endpoints: ExternalEndpoints,
+        #[arg(long)]
+        output_token_format: OutputTokenFormat,
     },
 }
 
+#[derive(Args, Debug)]
+pub struct AuthenticationArgs {
+    /// ID of the client
+    #[arg(long, short)]
+    client_id: String,
+
+    /// Environment to target
+    #[arg(short, long)]
+    environment: Environments,
+
+    /// Options for configuring authentication inputs.
+    /// At least one authentication method must be specified.
+    #[command(flatten)]
+    input_auth_args: AuthInputArgs,
+}
+
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
-pub enum OutPutTokenFormat {
-    /// Returns only the access token without type or expiration day
+pub enum OutputTokenFormat {
+    /// Returns only the access token without type or expiration date
     #[value(name = "Plain")]
     Plain,
     /// Returns full token information in json format
@@ -88,24 +102,20 @@ pub struct AuthInputArgs {
 #[derive(Args, Debug, Clone)]
 pub struct BasicAuthArgs {
     /// Name for the new resource
-    #[arg(long, short, required = false)]
+    #[arg(long, short)]
     name: Option<String>,
 
     /// Organization ID for the resource
-    #[arg(long, short, required = true)]
+    #[arg(long, short)]
     organization_id: String,
 
     /// ID of the client
-    #[arg(long, short, required = true)]
+    #[arg(long, short)]
     client_id: String,
 
     /// Environment to target
-    #[arg(long, short, required = true)]
+    #[arg(long, short)]
     environment: Environments,
-
-    /// Custom endpoint configuration (only used if --environment=custom).
-    #[command(flatten)]
-    endpoints: ExternalEndpoints,
 }
 
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
@@ -116,27 +126,16 @@ pub enum Environments {
     EU,
     #[value(name = "Staging")]
     Staging,
-    #[value(name = "Custom")]
-    Custom,
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct ExternalEndpoints {
-    /// Custom endpoint for token renewal. Required with '--environment custom'.
-    #[arg(long)]
-    token_renewal_endpoint: Option<String>,
-
-    /// Custom endpoint for system identity creation. Required with '--environment custom'.
-    #[arg(long, short)]
-    system_identity_creation_endpoint: Option<String>,
 }
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum IdentityType {
+    #[command(verbatim_doc_comment)]
     /// Creates an identity whose type is 'secret'
     /// This type of identity expires
     ///
     /// EXAMPLE:
+    ///
     /// SystemIdentity {
     /// id: "2e483fe9",
     /// name: Some("test1"),
@@ -145,20 +144,20 @@ pub enum IdentityType {
     /// identity_type: L1 {
     /// client_secret: "AfYFAUjf9",
     /// credential_expiration: "2025-06-04T19:25:00Z"
-    /// }
-    /// }
+    /// }}
     Secret(SecretArgs),
-    /// Creates an identity whose type is 'private key' or known as a parent identity.
+    #[command(verbatim_doc_comment)]
+    /// Creates an identity whose type is 'private key'
     /// This type of identity does not expire.
     ///
     /// EXAMPLE:
+    ///
     /// SystemIdentity(
     /// id: e5af42f2,
     /// name: test,
     /// client_id: 8150a0ee,
     /// organization_id: b961cf81,
-    /// identity_type: L2(pub_key: LS0tLS1)
-    /// )
+    /// identity_type: L2(pub_key: LS0tLS1))
     Key(KeyArgs),
 }
 
@@ -206,23 +205,16 @@ pub struct OutputDestinationArgs {
 }
 
 pub fn create_metadata_for_token_retrieve(
-    client_id: String,
-    environment: Environments,
-    auth_args: &AuthInputArgs,
-    endpoints: ExternalEndpoints,
+    auth_args: AuthenticationArgs,
 ) -> Result<SystemTokenCreationMetadata, Box<dyn std::error::Error>> {
     let auth_method = select_auth_method(
-        auth_args.client_secret.clone(),
-        auth_args.private_key_path.clone(),
+        auth_args.input_auth_args.client_secret.clone(),
+        auth_args.input_auth_args.private_key_path.clone(),
     )?;
-    let environment = select_environment(
-        environment,
-        endpoints.token_renewal_endpoint,
-        endpoints.system_identity_creation_endpoint,
-    )?;
+    let environment = select_environment(auth_args.environment.clone())?;
 
     Ok(SystemTokenCreationMetadata {
-        client_id,
+        client_id: auth_args.client_id,
         environment,
         auth_method,
     })
@@ -244,21 +236,7 @@ pub fn create_metadata_for_identity_creation(
         ),
     };
 
-    let env = select_environment(
-        basic_auth_args.environment.clone(),
-        Some(
-            basic_auth_args
-                .endpoints
-                .token_renewal_endpoint
-                .unwrap_or_default(),
-        ),
-        Some(
-            basic_auth_args
-                .endpoints
-                .system_identity_creation_endpoint
-                .unwrap_or_default(),
-        ),
-    )?;
+    let env = select_environment(basic_auth_args.environment.clone())?;
 
     Ok(SystemIdentityCreationMetadata {
         system_identity_input: SystemIdentityInput {
@@ -271,33 +249,17 @@ pub fn create_metadata_for_identity_creation(
     })
 }
 
-pub fn select_environment(
-    environment: Environments,
-    token_url: Option<String>,
-    identity_url: Option<String>,
-) -> Result<NewRelicEnvironment, Error> {
+pub fn select_environment(environment: Environments) -> Result<NewRelicEnvironment, Error> {
     match environment {
         Environments::US => Ok(NewRelicEnvironment::US),
         Environments::EU => Ok(NewRelicEnvironment::EU),
         Environments::Staging => Ok(NewRelicEnvironment::Staging),
-        Environments::Custom => {
-            let token_uri_str = token_url.unwrap_or_default();
-            let identity_uri_str = identity_url.unwrap_or_default();
-
-            let token_uri = Uri::from_str(&token_uri_str)
-                .map_err(|e| Error::raw(ErrorKind::Format, format!("Invalid token URI: {}", e)))?;
-            let identity_uri = Uri::from_str(&identity_uri_str).map_err(|e| {
-                Error::raw(ErrorKind::Format, format!("Invalid identity URI: {}", e))
-            })?;
-
-            Ok(NewRelicEnvironment::Custom {
-                token_renewal_endpoint: token_uri,
-                system_identity_creation_uri: identity_uri,
-            })
-        }
     }
 }
 
+// We are using the same `Token` entity for token retrieval responses and identity creation.
+// Currently, the only useful parameter is `access_token`. We don't care about the expiration
+// date or the token type because Bearer is the only supported token type available.
 pub fn build_token_for_identity_creation(identity_type: &IdentityType) -> Token {
     let token = match identity_type {
         IdentityType::Secret(secret_args) => &secret_args.bearer_access_token,

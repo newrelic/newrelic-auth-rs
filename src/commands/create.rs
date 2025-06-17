@@ -31,12 +31,11 @@ where
     }
 
     pub fn create_l1_system_identity(self, token: Token) -> Result<SystemIdentity, CreateError> {
-        let identity = L1SystemIdentityGenerator {
+        L1SystemIdentityGenerator {
             iam_client: self.iam_client,
         }
         .generate(&token)
-        .map_err(|e| CreateError::CreateError(e.to_string()))?;
-        Ok(identity)
+        .map_err(|e| CreateError::CreateError(e.to_string()))
     }
     pub fn create_l2_system_identity(
         self,
@@ -54,14 +53,12 @@ where
             path: output_key_path,
         });
 
-        let identity = L2SystemIdentityGenerator {
+        L2SystemIdentityGenerator {
             key_creator,
             iam_client: self.iam_client,
         }
         .generate(&token)
-        .map_err(|e| CreateError::CreateError(e.to_string()))?;
-
-        Ok(identity)
+        .map_err(|e| CreateError::CreateError(e.to_string()))
     }
 }
 
@@ -174,18 +171,18 @@ mod tests {
         };
 
         let full_expected_response = r#"
-    {
-      "data": {
-        "systemIdentityCreate": {
-          "clientId": "client-abc-789",
-          "publicKey": "cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==",
-          "id": "identity-123",
-          "name": "test-identity",
-          "organizationId": "org-xyz-456"
+        {
+          "data": {
+            "systemIdentityCreate": {
+              "clientId": "client-abc-789",
+              "publicKey": "cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==",
+              "id": "identity-123",
+              "name": "test-identity",
+              "organizationId": "org-xyz-456"
+            }
+          }
         }
-      }
-    }
-    "#;
+        "#;
 
         let mock_http_client = setup_mock_http_client(full_expected_response);
         let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
