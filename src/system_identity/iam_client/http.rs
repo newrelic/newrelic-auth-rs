@@ -53,7 +53,7 @@ where
         .map_err(|e| IAMClientError::Encoder(format!("Failed to encode JSON: {e}")))?;
 
         let mut bearer_token_header =
-            HeaderValue::from_str(&format!("Bearer {}", token.access_token())).map_err(|_| {
+            HeaderValue::from_str(token.to_string().as_str()).map_err(|_| {
                 IAMClientError::Transport(
                     "invalid HTTP header value set for Authorization".to_string(),
                 )

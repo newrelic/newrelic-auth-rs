@@ -13,5 +13,5 @@ PRIVATE_KEY_PATH=""
 Run with:
 
 ```shell
-cargo run --examples generate-l2-si
+cargo run --example generate-l2-si
 ```

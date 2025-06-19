@@ -5,13 +5,12 @@
 //! - Configure and use a token retriever with caching.
 //! - Retrieve and print an access token.
 //!
-mod client;
 
-use client::HttpClient;
 use dotenvy::dotenv;
 use http::Uri;
 use nr_auth::TokenRetriever;
 use nr_auth::authenticator::HttpAuthenticator;
+use nr_auth::http::client::HttpClient;
 use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::token_retriever::TokenRetrieverWithCache;

@@ -32,7 +32,7 @@ Any other combination of fields is considered malformed, as we cannot decide bet
 
 We thus handle these cases using the definitions below.
 */
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::{SystemIdentity, SystemIdentityType};
@@ -51,13 +51,13 @@ impl SystemIdentityCreationResponse {
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Deserialize)]
-struct InnerData {
+pub struct InnerData {
     #[serde(rename = "systemIdentityCreate")]
     system_identity_create: SystemIdentityData,
 }
 
 /// The actual information returned from the System Identity creation response.
-#[derive(Debug, Default, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SystemIdentityData {
     pub client_id: String,

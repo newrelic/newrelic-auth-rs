@@ -1,4 +1,5 @@
-use std::fmt::{self, Debug};
+use std::fmt;
+use std::fmt::Debug;
 
 pub mod creation_response;
 pub mod generator;
@@ -7,7 +8,7 @@ pub mod identity_creator;
 pub mod input_data;
 
 /// System identity information. Final output of the System Identity creation process.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SystemIdentity {
     pub id: String,
     pub name: Option<String>,
@@ -54,39 +55,73 @@ impl ClientSecret {
         self.0
     }
 }
-
+impl fmt::Display for SystemIdentity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let identity_type = match &self.identity_type {
+            SystemIdentityType::L1 {
+                client_secret,
+                credential_expiration,
+            } => {
+                format!(
+                    "L1(client_secret: {}, credential_expiration: {})",
+                    client_secret.clone().reveal(),
+                    credential_expiration
+                )
+            }
+            SystemIdentityType::L2 { pub_key } => format!("L2(pub_key: {})", pub_key),
+        };
+        write!(
+            f,
+            "SystemIdentity(id: {}, name: {}, client_id: {}, organization_id: {}, identity_type: {})",
+            self.id,
+            self.name.clone().unwrap_or_else(|| "None".to_string()),
+            self.client_id,
+            self.organization_id,
+            identity_type,
+        )
+    }
+}
 #[cfg(test)]
 mod tests {
+    use super::input_data::auth_method::AuthMethod;
+    use crate::system_identity::input_data::SystemTokenCreationMetadata;
     use chrono::Utc;
     use mockall::Sequence;
-    use rstest::{Context, rstest};
+    use std::clone::Clone;
+    use std::convert::{Into, TryFrom};
+    use std::default::Default;
+    use std::option::Option::Some;
     use std::path::PathBuf;
 
+    use crate::system_identity::SystemIdentityType;
     use crate::{
         http_client::tests::MockHttpClient,
         jwt::signer::local::{LocalPrivateKeySigner, test::RS256_PRIVATE_KEY},
         key::creator::tests::MockCreator,
         system_identity::{
-            SystemIdentity,
+            ClientSecret, SystemIdentity,
             generator::L2SystemIdentityGenerator,
             iam_client::http::HttpIAMClient,
             identity_creator::tests::MockL2IAMClient,
             input_data::{
-                SystemIdentityCreationMetadata, SystemIdentityInput, auth_method::ClientSecret,
-                environment::NewRelicEnvironment, output_platform::OutputPlatform,
+                SystemIdentityCreationMetadata, SystemIdentityInput,
+                auth_method::ClientSecret as AuthClientSecret, environment::NewRelicEnvironment,
+                output_platform::OutputPlatform,
             },
         },
         token::{Token, TokenType},
         token_retriever::TokenRetrieverWithCache,
     };
+    use rstest::{Context, rstest};
+    use std::result::Result::Ok;
+    use std::string::{String, ToString};
 
-    use super::input_data::auth_method::AuthMethod;
     // The idea here is emulate what would be the flow of a CLI call to create a system identity.
     // The CLI would parse the command line arguments into a type with the actual concretions
     // required to perform the operation. Here we test mocking only the HTTP client and the
     // key creator. The rest are concretions that receive these as generics.
     #[rstest]
-    #[case(AuthMethod::ClientSecret(ClientSecret::from("client-secret")))]
+    #[case(AuthMethod::ClientSecret(AuthClientSecret::from("client-secret")))]
     #[case(AuthMethod::PrivateKey(RS256_PRIVATE_KEY.as_bytes().into()))]
     fn http_client_create_system_identity_from_client_secret(
         #[context] ctx: Context,
@@ -94,11 +129,16 @@ mod tests {
     ) {
         use crate::{TokenRetriever, authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl};
 
+        let cli_token_input = SystemTokenCreationMetadata {
+            client_id: format!("{}-client-id", ctx.name),
+            environment: NewRelicEnvironment::Staging,
+            auth_method,
+        };
+
         let cli_input = SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {
                 organization_id: "org-id".to_string(),
                 client_id: format!("{}-client-id", ctx.name),
-                auth_method,
             },
             name: ctx.name.to_string().into(),
             environment: NewRelicEnvironment::Staging,
@@ -192,7 +232,7 @@ mod tests {
             cli_input.environment.token_renewal_endpoint(),
         );
         let client_id = cli_input.system_identity_input.client_id.to_owned();
-        let token_retriever = match cli_input.system_identity_input.auth_method.to_owned() {
+        let token_retriever = match cli_token_input.auth_method.to_owned() {
             AuthMethod::ClientSecret(client_secret) => {
                 TokenRetrieverWithCache::new_with_secret(client_id, authenticator, client_secret)
             }
@@ -278,5 +318,41 @@ mod tests {
             result.identity_type,
             super::SystemIdentityType::L2 { pub_key } if pub_key == String::from_utf8_lossy(&[1u8, 2u8, 3u8])
         ));
+    }
+    #[test]
+    fn test_system_identity_display_l1() {
+        let system_identity = SystemIdentity {
+            id: "identity-123".to_string(),
+            name: Some("test-identity".to_string()),
+            client_id: "client-abc-789".to_string(),
+            organization_id: "org-xyz-456".to_string(),
+            identity_type: SystemIdentityType::L1 {
+                client_secret: ClientSecret::from("supersecret".to_string()),
+                credential_expiration: "2025-12-31T23:59:59Z".to_string(),
+            },
+        };
+
+        let display_str = format!("{}", system_identity);
+        let expected_str = "SystemIdentity(id: identity-123, name: test-identity, client_id: client-abc-789, organization_id: org-xyz-456, identity_type: L1(client_secret: supersecret, credential_expiration: 2025-12-31T23:59:59Z))";
+
+        assert_eq!(display_str, expected_str);
+    }
+
+    #[test]
+    fn test_system_identity_display_l2() {
+        let system_identity = SystemIdentity {
+            id: "identity-456".to_string(),
+            name: None,
+            client_id: "client-xyz-123".to_string(),
+            organization_id: "org-abc-789".to_string(),
+            identity_type: SystemIdentityType::L2 {
+                pub_key: "cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==".to_string(),
+            },
+        };
+
+        let display_str = format!("{}", system_identity);
+        let expected_str = "SystemIdentity(id: identity-456, name: None, client_id: client-xyz-123, organization_id: org-abc-789, identity_type: L2(pub_key: cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==))";
+
+        assert_eq!(display_str, expected_str);
     }
 }

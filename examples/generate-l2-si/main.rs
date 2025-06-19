@@ -1,7 +1,4 @@
 //! Full example to generate an L2 System Identity using the `newrelic-auth-rs` library.
-mod client;
-
-use client::HttpClient;
 use dotenvy::dotenv;
 
 use nr_auth::authenticator::HttpAuthenticator;
@@ -13,13 +10,14 @@ use nr_auth::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
 use nr_auth::TokenRetriever;
 use nr_auth::key::PrivateKeyPem;
 use nr_auth::system_identity::generator::L2SystemIdentityGenerator;
-use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
 use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 
+use nr_auth::http::client::HttpClient;
+use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
@@ -115,7 +113,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         system_identity_input: SystemIdentityInput {
             organization_id,
             client_id,
-            auth_method,
         },
         name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,
