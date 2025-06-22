@@ -47,7 +47,7 @@ fn handle_create_identity_command(
         IdentityType::Secret(_) => create_command.create_l1_system_identity(token)?,
         IdentityType::Key(_) => create_command.create_l2_system_identity(&meta, token)?,
     };
-    println!("{}", system_identity);
+    println!("{}", serde_json::to_string(&system_identity)?);
     Ok(())
 }
 
