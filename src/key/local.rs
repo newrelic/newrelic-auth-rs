@@ -40,8 +40,6 @@ pub struct KeyPairGeneratorLocalConfig {
 pub struct LocalCreator {
     /// The type of key to be created.
     key_type: KeyType,
-    /// The name associated with the key.
-    name: String,
     /// The file path where the private key will be stored.
     path: PathBuf,
 }
@@ -66,15 +64,11 @@ impl From<KeyPairGeneratorLocalConfig> for LocalCreator {
     fn from(
         KeyPairGeneratorLocalConfig {
             key_type,
-            name,
+            name: _,
             path,
         }: KeyPairGeneratorLocalConfig,
     ) -> Self {
-        Self {
-            key_type,
-            name,
-            path,
-        }
+        Self { key_type, path }
     }
 }
 
@@ -87,7 +81,7 @@ impl LocalCreator {
         );
         Self::validate_path(self.path.as_path())?;
 
-        let mut file = File::create(self.path.join(&self.name).as_path())
+        let mut file = File::create(self.path.as_path())
             .map_err(|e| LocalKeyCreationError::UnableToCreatePrivateKeyFile(e.to_string()))?;
         file.write_all(key)
             .map_err(|e| LocalKeyCreationError::UnableToWritePrivateKey(e.to_string()))?;
@@ -95,17 +89,13 @@ impl LocalCreator {
     }
 
     fn validate_path(path: &Path) -> Result<(), LocalKeyCreationError> {
-        if !path.exists() {
-            return Err(LocalKeyCreationError::InvalidPath(String::from(
-                "local key path does not exist",
-            )));
+        if !path.parent().is_some_and(Path::exists) {
+            Err(LocalKeyCreationError::InvalidPath(String::from(
+                "local key path parent directory does not exist",
+            )))
+        } else {
+            Ok(())
         }
-        if path.is_file() {
-            return Err(LocalKeyCreationError::InvalidPath(String::from(
-                "local key path needs to be a directory",
-            )));
-        }
-        Ok(())
     }
 }
 
