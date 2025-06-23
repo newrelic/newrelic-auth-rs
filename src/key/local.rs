@@ -1,7 +1,7 @@
 use crate::key::creator::{Creator, KeyPair, KeyType, PublicKeyPem};
 use rcgen::KeyPair as RcKeyPair;
 use rcgen::{PKCS_RSA_SHA512, RsaKeySize};
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -65,24 +65,34 @@ impl From<KeyPairGeneratorLocalConfig> for LocalCreator {
             file_path: path,
         }: KeyPairGeneratorLocalConfig,
     ) -> Self {
-        Self { key_type, file_path: path }
+        Self {
+            key_type,
+            file_path: path,
+        }
     }
 }
 
 impl LocalCreator {
     /// Persists the private key to the specified file path.
     fn persist_private_key(&self, key: &[u8]) -> Result<(), LocalKeyCreationError> {
+        Self::validate_path(&self.file_path)?;
+
         debug!(
             "persisting local private key in {}",
-            self.file_path.as_path().display()
+            self.file_path.display()
         );
-        Self::validate_path(self.file_path.as_path())?;
+        let parent_dir = self.file_path.parent().ok_or_else(|| {
+            LocalKeyCreationError::InvalidPath(String::from(
+                "local key path parent directory does not exist or is not a directory",
+            ))
+        })?;
+        fs::create_dir_all(parent_dir)
+            .map_err(|e| LocalKeyCreationError::UnableToCreatePrivateKeyFile(e.to_string()))?;
 
-        let mut file = File::create(self.file_path.as_path())
+        let mut file = File::create(&self.file_path)
             .map_err(|e| LocalKeyCreationError::UnableToCreatePrivateKeyFile(e.to_string()))?;
         file.write_all(key)
-            .map_err(|e| LocalKeyCreationError::UnableToWritePrivateKey(e.to_string()))?;
-        Ok(())
+            .map_err(|e| LocalKeyCreationError::UnableToWritePrivateKey(e.to_string()))
     }
 
     fn validate_path(path: &Path) -> Result<(), LocalKeyCreationError> {
@@ -90,12 +100,6 @@ impl LocalCreator {
         if path.exists() {
             Err(LocalKeyCreationError::InvalidPath(String::from(
                 "local key path already exists",
-            )))
-        }
-        // The parent directory must exist and be a directory
-        else if !path.parent().is_some_and(|p| p.exists() && p.is_dir()) {
-            Err(LocalKeyCreationError::InvalidPath(String::from(
-                "local key path parent directory does not exist or is not a directory",
             )))
         } else {
             Ok(())
@@ -122,7 +126,7 @@ fn rsa(key_type: &KeyType) -> Result<KeyPair, LocalKeyCreationError> {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, thread::sleep, time::Duration};
+    use std::fs;
 
     use assert_matches::assert_matches;
     use tempfile::{NamedTempFile, TempDir, tempdir};
@@ -147,24 +151,17 @@ mod tests {
     }
 
     #[test]
-    fn test_local_creator_create_invalid_path_non_existent_parent_dir() {
+    fn test_local_creator_create_path_on_non_existent_parent_dir() {
         let tmp_dir = tempdir().unwrap();
-        let key_path = tmp_dir.path().join("will-be-deleted-before-asserting");
-        // Ensure the temp dir is deleted
-        drop(tmp_dir);
-        sleep(Duration::from_millis(100));
+        let key_path = tmp_dir.path().join("ad-hoc-dir").join("key-filename");
+
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
             file_path: key_path,
         };
         let creator = LocalCreator::from(config);
         let result = creator.create();
-        assert_matches!(
-            result,
-            Err(LocalKeyCreationError::InvalidPath(error_message)) => {
-                assert_eq!(error_message, String::from("local key path parent directory does not exist or is not a directory"));
-            }
-        );
+        assert!(result.is_ok());
     }
 
     #[test]
