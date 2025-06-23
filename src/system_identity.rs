@@ -1,6 +1,8 @@
 use std::fmt;
 use std::fmt::Debug;
 
+use serde::Serialize;
+
 pub mod creation_response;
 pub mod generator;
 pub mod iam_client;
@@ -8,9 +10,10 @@ pub mod identity_creator;
 pub mod input_data;
 
 /// System identity information. Final output of the System Identity creation process.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct SystemIdentity {
     pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     pub client_id: String,
     pub organization_id: String,
@@ -25,7 +28,7 @@ pub struct SystemIdentity {
 /// If the request was to create an L2, the `SystemIdentityType` will contain the public key
 /// in Base64 format. This is the same public key that was used in the request to create the
 /// system identity.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum SystemIdentityType {
     L1 {
         client_secret: ClientSecret,
@@ -38,7 +41,7 @@ pub enum SystemIdentityType {
 
 type Base64PublicKey = String; // For L2 System Identity.
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize)]
 pub struct ClientSecret(String); // For L1 System Identity.
 impl Debug for ClientSecret {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
