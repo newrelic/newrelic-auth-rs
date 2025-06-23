@@ -49,7 +49,6 @@ where
 
         let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            name: metadata.name.clone().unwrap_or_default(),
             path: output_key_path,
         });
 
@@ -75,13 +74,13 @@ mod tests {
     use chrono::{Duration, Utc};
     use http::Response;
     use std::path::PathBuf;
+    use tempfile::tempdir;
 
     fn create_test_metadata(
-        output_path_str: Option<&str>,
+        output_path: PathBuf,
         name: Option<String>,
     ) -> SystemIdentityCreationMetadata {
-        let output_platform =
-            OutputPlatform::LocalPrivateKeyPath(PathBuf::from(output_path_str.unwrap_or("./mp")));
+        let output_platform = OutputPlatform::LocalPrivateKeyPath(output_path);
 
         SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {
@@ -117,7 +116,8 @@ mod tests {
 
     #[test]
     fn test_create_l1_system_identity_success() {
-        let metadata = create_test_metadata(None, Some("l1_identity_test".to_string()));
+        let metadata =
+            create_test_metadata(PathBuf::default(), Some("l1_identity_test".to_string()));
         let expected_identity = SystemIdentity {
             id: "identity-123".to_string(),
             name: Some("test-identity".to_string()),
@@ -159,7 +159,11 @@ mod tests {
     }
     #[test]
     fn test_create_l2_system_identity_success() {
-        let metadata = create_test_metadata(Some("/tmp"), Some("l2_identity_test".to_string()));
+        let tmp_dir = tempdir().unwrap();
+        let metadata = create_test_metadata(
+            tmp_dir.path().join("test-key"),
+            Some("l2_identity_test".to_string()),
+        );
         let expected_identity = SystemIdentity {
             id: "identity-123".to_string(),
             name: Some("test-identity".to_string()),
@@ -200,7 +204,11 @@ mod tests {
     }
     #[test]
     fn test_create_l2_system_identity_malformed_response() {
-        let metadata = create_test_metadata(Some("/tmp"), Some("l2_identity_test".to_string()));
+        let tmp_dir = tempdir().unwrap();
+        let metadata = create_test_metadata(
+            tmp_dir.path().join("test-key"),
+            Some("l2_identity_test".to_string()),
+        );
         let malformed_response = "{ invalid json }";
 
         let mock_http_client = setup_mock_http_client(malformed_response);
@@ -216,7 +224,8 @@ mod tests {
     }
     #[test]
     fn test_create_identity_with_empty_metadata() {
-        let metadata = create_test_metadata(Some("/tmp"), None);
+        let tmp_dir = tempdir().unwrap();
+        let metadata = create_test_metadata(tmp_dir.path().join("test-key"), None);
         let mock_http_client = setup_mock_http_client("");
         let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
         let command = CreateCommand::new(iam_client);

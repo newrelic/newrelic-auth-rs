@@ -29,8 +29,6 @@ pub enum LocalKeyCreationError {
 pub struct KeyPairGeneratorLocalConfig {
     /// The type of key to be created.
     pub key_type: KeyType,
-    /// The name associated with the key.
-    pub name: String,
     /// The file path where the private key will be stored.
     pub path: PathBuf,
 }
@@ -61,13 +59,7 @@ impl Creator for LocalCreator {
 }
 
 impl From<KeyPairGeneratorLocalConfig> for LocalCreator {
-    fn from(
-        KeyPairGeneratorLocalConfig {
-            key_type,
-            name: _,
-            path,
-        }: KeyPairGeneratorLocalConfig,
-    ) -> Self {
+    fn from(KeyPairGeneratorLocalConfig { key_type, path }: KeyPairGeneratorLocalConfig) -> Self {
         Self { key_type, path }
     }
 }
@@ -89,9 +81,16 @@ impl LocalCreator {
     }
 
     fn validate_path(path: &Path) -> Result<(), LocalKeyCreationError> {
-        if !path.parent().is_some_and(Path::exists) {
+        // Filename should not exist already
+        if path.exists() {
             Err(LocalKeyCreationError::InvalidPath(String::from(
-                "local key path parent directory does not exist",
+                "local key path already exists",
+            )))
+        }
+        // The parent directory must exist and be a directory
+        else if !path.parent().is_some_and(|p| p.exists() && p.is_dir()) {
+            Err(LocalKeyCreationError::InvalidPath(String::from(
+                "local key path parent directory does not exist or is not a directory",
             )))
         } else {
             Ok(())
@@ -118,10 +117,10 @@ fn rsa(key_type: &KeyType) -> Result<KeyPair, LocalKeyCreationError> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use std::{fs, thread::sleep, time::Duration};
 
     use assert_matches::assert_matches;
-    use tempfile::{NamedTempFile, TempDir};
+    use tempfile::{NamedTempFile, TempDir, tempdir};
 
     use super::*;
 
@@ -143,29 +142,31 @@ mod tests {
     }
 
     #[test]
-    fn test_local_creator_create_invalid_path_non_existent() {
-        let key_path = PathBuf::from("/tmp/non-existent-path");
+    fn test_local_creator_create_invalid_path_non_existent_parent_dir() {
+        let tmp_dir = tempdir().unwrap();
+        let key_path = tmp_dir.path().join("will-be-deleted-before-asserting");
+        // Ensure the temp dir is deleted
+        drop(tmp_dir);
+        sleep(Duration::from_millis(100));
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            name: "key".to_string(),
-            path: key_path.clone(),
+            path: key_path,
         };
         let creator = LocalCreator::from(config);
         let result = creator.create();
         assert_matches!(
             result,
             Err(LocalKeyCreationError::InvalidPath(error_message)) => {
-                assert_eq!(error_message, String::from("local key path does not exist"));
+                assert_eq!(error_message, String::from("local key path parent directory does not exist or is not a directory"));
             }
         );
     }
 
     #[test]
-    fn test_local_creator_create_invalid_path_file() {
+    fn test_local_creator_create_file_already_exists() {
         let tmp_file = NamedTempFile::new().unwrap();
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            name: "key".to_string(),
             path: tmp_file.path().to_path_buf(),
         };
         let creator = LocalCreator::from(config);
@@ -173,7 +174,7 @@ mod tests {
         assert_matches!(
             result,
             Err(LocalKeyCreationError::InvalidPath(error_message)) => {
-                assert_eq!(error_message, String::from("local key path needs to be a directory"));
+                assert_eq!(error_message, String::from("local key path already exists"));
             }
         );
     }
@@ -186,8 +187,7 @@ mod tests {
         let key_name = String::from("key");
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            name: key_name.clone(),
-            path: key_path.to_path_buf(),
+            path: key_path.join(&key_name),
         };
 
         let creator = LocalCreator::from(config);

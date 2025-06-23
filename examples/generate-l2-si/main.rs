@@ -123,7 +123,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,
-        name: "test-created-key".to_string(),
         path: key_path, // Note how this is related to AuthOutputPlatform above!
     });
 
