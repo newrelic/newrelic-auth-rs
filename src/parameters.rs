@@ -81,11 +81,11 @@ pub struct AuthenticationArgs {
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
 pub enum OutputTokenFormat {
     /// Returns only the access token without type or expiration date
-    #[value(name = "Plain")]
-    Plain,
+    #[value(name = "PLAIN", alias = "Plain", alias = "plain")]
+    PLAIN,
     /// Returns full token information in json format
-    #[value(name = "Json")]
-    Json,
+    #[value(name = "JSON", alias = "Json", alias = "json")]
+    JSON,
 }
 
 #[derive(Args, Debug)]
@@ -120,12 +120,12 @@ pub struct BasicAuthArgs {
 
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
 pub enum Environments {
-    #[value(name = "US")]
+    #[value(name = "US", alias = "Us", alias = "us")]
     US,
-    #[value(name = "EU")]
+    #[value(name = "EU", alias = "Eu", alias = "eu")]
     EU,
-    #[value(name = "Staging")]
-    Staging,
+    #[value(name = "STAGING", alias = "Staging", alias = "staging")]
+    STAGING,
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -253,7 +253,7 @@ pub fn select_environment(environment: Environments) -> Result<NewRelicEnvironme
     match environment {
         Environments::US => Ok(NewRelicEnvironment::US),
         Environments::EU => Ok(NewRelicEnvironment::EU),
-        Environments::Staging => Ok(NewRelicEnvironment::Staging),
+        Environments::STAGING => Ok(NewRelicEnvironment::Staging),
     }
 }
 
