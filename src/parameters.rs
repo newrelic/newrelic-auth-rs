@@ -199,9 +199,9 @@ pub struct OutputDestinationArgs {
     #[arg(long, value_enum)]
     output_platform: OutputPlatformChoice,
 
-    /// Folder path where the private key output will be saved (required if --output-platform=local-file).
+    /// Path to the file where the private key output will be saved (required if --output-platform=local-file).
     #[arg(long)]
-    output_local_path: Option<PathBuf>,
+    output_local_filepath: Option<PathBuf>,
 }
 
 pub fn create_metadata_for_token_retrieve(
@@ -231,7 +231,7 @@ pub fn create_metadata_for_identity_creation(
             key_args.basic_auth_args.clone(),
             select_output_platform(
                 &key_args.output_options.output_platform,
-                key_args.output_options.output_local_path.clone(),
+                key_args.output_options.output_local_filepath.clone(),
             )?,
         ),
     };
@@ -274,11 +274,11 @@ pub fn build_token_for_identity_creation(identity_type: &IdentityType) -> Token 
 
 pub fn select_output_platform(
     output_platform: &OutputPlatformChoice,
-    output_path: Option<PathBuf>,
+    output_filepath: Option<PathBuf>,
 ) -> Result<OutputPlatform, Error> {
     match output_platform {
         OutputPlatformChoice::LocalFile => Ok(OutputPlatform::LocalPrivateKeyPath(
-            output_path.unwrap_or_default(),
+            output_filepath.unwrap_or_default(),
         )),
     }
 }
