@@ -62,11 +62,11 @@ fn handle_authenticate_command(
     let retrieve_token_command = RetrieveTokenCommand::new(http_authenticator);
     let token = retrieve_token_command.retrieve_token(&meta)?;
     match output_token_format {
-        OutputTokenFormat::Plain => {
+        OutputTokenFormat::PLAIN => {
             println!("{}", token.access_token());
             Ok(())
         }
-        OutputTokenFormat::Json => {
+        OutputTokenFormat::JSON => {
             let output = serde_json::to_string_pretty(&token)?;
             println!("{}", output);
             Ok(())
