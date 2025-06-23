@@ -86,8 +86,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         panic!("Invalid environment value: NR_ENVIRONMENT={environment}")
     };
 
-    let key_path = env::current_dir()?;
-    let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
+    let file_path = env::current_dir()?.join("private_key.pem");
+    let output_platform = OutputPlatform::LocalPrivateKeyPath(file_path.to_owned());
 
     let http_client = HttpClient::new()?;
     let http_authenticator =
@@ -123,7 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,
-        path: key_path, // Note how this is related to AuthOutputPlatform above!
+        file_path, // Note how this is related to AuthOutputPlatform above!
     });
 
     let system_identity_generator = L2SystemIdentityGenerator {

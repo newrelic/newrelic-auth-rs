@@ -30,7 +30,7 @@ pub struct KeyPairGeneratorLocalConfig {
     /// The type of key to be created.
     pub key_type: KeyType,
     /// The file path where the private key will be stored.
-    pub path: PathBuf,
+    pub file_path: PathBuf,
 }
 
 /// A creator for generating and managing cryptographic keys locally.
@@ -39,7 +39,7 @@ pub struct LocalCreator {
     /// The type of key to be created.
     key_type: KeyType,
     /// The file path where the private key will be stored.
-    path: PathBuf,
+    file_path: PathBuf,
 }
 
 impl Creator for LocalCreator {
@@ -59,8 +59,13 @@ impl Creator for LocalCreator {
 }
 
 impl From<KeyPairGeneratorLocalConfig> for LocalCreator {
-    fn from(KeyPairGeneratorLocalConfig { key_type, path }: KeyPairGeneratorLocalConfig) -> Self {
-        Self { key_type, path }
+    fn from(
+        KeyPairGeneratorLocalConfig {
+            key_type,
+            file_path: path,
+        }: KeyPairGeneratorLocalConfig,
+    ) -> Self {
+        Self { key_type, file_path: path }
     }
 }
 
@@ -69,11 +74,11 @@ impl LocalCreator {
     fn persist_private_key(&self, key: &[u8]) -> Result<(), LocalKeyCreationError> {
         debug!(
             "persisting local private key in {}",
-            self.path.as_path().display()
+            self.file_path.as_path().display()
         );
-        Self::validate_path(self.path.as_path())?;
+        Self::validate_path(self.file_path.as_path())?;
 
-        let mut file = File::create(self.path.as_path())
+        let mut file = File::create(self.file_path.as_path())
             .map_err(|e| LocalKeyCreationError::UnableToCreatePrivateKeyFile(e.to_string()))?;
         file.write_all(key)
             .map_err(|e| LocalKeyCreationError::UnableToWritePrivateKey(e.to_string()))?;
@@ -150,7 +155,7 @@ mod tests {
         sleep(Duration::from_millis(100));
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            path: key_path,
+            file_path: key_path,
         };
         let creator = LocalCreator::from(config);
         let result = creator.create();
@@ -167,7 +172,7 @@ mod tests {
         let tmp_file = NamedTempFile::new().unwrap();
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            path: tmp_file.path().to_path_buf(),
+            file_path: tmp_file.path().to_path_buf(),
         };
         let creator = LocalCreator::from(config);
         let result = creator.create();
@@ -187,7 +192,7 @@ mod tests {
         let key_name = String::from("key");
         let config = KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            path: key_path.join(&key_name),
+            file_path: key_path.join(&key_name),
         };
 
         let creator = LocalCreator::from(config);

@@ -49,7 +49,7 @@ where
 
         let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
             key_type: KeyType::Rsa4096,
-            path: output_key_path,
+            file_path: output_key_path,
         });
 
         L2SystemIdentityGenerator {
