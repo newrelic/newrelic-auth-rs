@@ -81,6 +81,9 @@ jobs:
           cp ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli ./newrelic-auth-cli-arm64
           cp ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli ./newrelic-auth-cli-amd64
           
+          chmod +x newrelic-auth-cli-arm64
+          chmod +x newrelic-auth-cli-amd64
+          
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-arm64
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-amd64
 
