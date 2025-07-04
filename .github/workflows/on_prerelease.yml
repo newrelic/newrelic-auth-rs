@@ -78,11 +78,14 @@ jobs:
           cross build --target "aarch64-unknown-linux-musl" --profile release 
           cross build --target "x86_64-unknown-linux-musl" --profile release 
           
-          cp ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli ./newrelic-auth-cli-arm64
-          cp ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli ./newrelic-auth-cli-amd64
-          
-          gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-arm64
-          gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli-amd64
+          chmod +x ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli
+          chmod +x ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli
+
+          tar -czf newrelic-auth-cli_arm64.tar.gz -C ./target/aarch64-unknown-linux-musl/release newrelic-auth-cli
+          tar -czf newrelic-auth-cli_amd64.tar.gz -C ./target/x86_64-unknown-linux-musl/release newrelic-auth-cli
+
+          gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli_arm64.tar.gz
+          gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli_amd64.tar.gz
 
   notify-failure:
     if: ${{ failure() }}
