@@ -25,7 +25,7 @@ reqwest = { version = "0.12.20", default-features = false, features = [
 uuid = { version = "1", features = ["serde", "v7"] }
 tracing = "0.1"
 http = "1"
-rcgen = { version = "0.13", features = ["aws_lc_rs"] }
+rcgen = { version = "0.14", features = ["aws_lc_rs"] }
 base64 = "0.22"
 tracing-subscriber = "0.3.19"
 
