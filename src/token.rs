@@ -140,8 +140,8 @@ mod test {
                 &err_msg,
                 TokenRetrieverError::TokenRetrieverError(e) if e == "Source duration value is out of range for the target type"
             ),
-            "Expected TokenRetrieverError with specific message: '{}'",
-            err_msg
+            "{}",
+            format!("Expected TokenRetrieverError with specific message: '{err_msg}'"),
         );
     }
 }

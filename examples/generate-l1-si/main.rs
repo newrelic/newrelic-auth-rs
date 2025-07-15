@@ -15,6 +15,8 @@ use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, Syste
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 
 use nr_auth::http::client::HttpClient;
+use nr_auth::http::config::{HttpConfig, ProxyConfig};
+use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
@@ -87,8 +89,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let key_path = env::current_dir()?;
     let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
-
-    let http_client = HttpClient::new()?;
+    let http_config = HttpConfig::new(
+        DEFAULT_AUTHENTICATOR_TIMEOUT,
+        DEFAULT_AUTHENTICATOR_TIMEOUT,
+        ProxyConfig::default(),
+    );
+    let http_client = HttpClient::new(http_config)?;
     let http_authenticator =
         HttpAuthenticator::new(http_client.clone(), environment.token_renewal_endpoint());
     let http_token_retriever = match &auth_method {

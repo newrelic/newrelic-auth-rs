@@ -1,3 +1,4 @@
+use crate::http::config::ProxyConfig;
 use crate::key::PrivateKeyPem;
 use crate::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use crate::system_identity::input_data::environment::NewRelicEnvironment;
@@ -60,6 +61,34 @@ pub enum Commands {
         #[arg(long)]
         output_token_format: OutputTokenFormat,
     },
+}
+
+#[derive(Args, Debug)]
+pub struct ProxyArgs {
+    /// Proxy configuration for the NR AUTH HTTP Client.
+    ///
+    /// The priority for the proxy configuration is as follows:
+    /// 1. Arguments provided directly in the application.
+    /// 2. Environment variables (`HTTP_PROXY` and `HTTPS_PROXY`).
+    ///
+    /// If neither arguments nor environment variables are provided, the client operates without a proxy.
+    ///
+    /// **Proxy URL Format:**
+    /// `<protocol>://<user>:<password>@<host>:<port>`
+    /// - `protocol`: e.g., `http` or `https`.
+    /// - `user` and `password`: Optional credentials for authentication.
+    /// - `host`: Required domain or IP address.
+    /// - `port`: Optional port number.
+    #[arg(long, verbatim_doc_comment)]
+    proxy_url: Option<String>,
+
+    /// System path with the CA certificates in PEM format. All `.pem` files in the directory are read.
+    #[arg(long)]
+    proxy_ca_dir: Option<PathBuf>,
+
+    /// System path with the CA certificate in PEM format.
+    #[arg(long)]
+    proxy_ca_file: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
@@ -296,5 +325,79 @@ pub fn select_auth_method(
         Ok(AuthMethod::PrivateKey(PrivateKeyPem::from(
             private_key.into_bytes(),
         )))
+    }
+}
+
+pub fn build_proxy_args(proxy_args: ProxyArgs) -> Result<ProxyConfig, Error> {
+    let config_result = ProxyConfig::new(
+        proxy_args.proxy_url.unwrap_or_default(),
+        proxy_args.proxy_ca_file.unwrap_or_default(),
+        proxy_args.proxy_ca_dir.unwrap_or_default(),
+    )?;
+
+    let config = config_result.try_with_url_from_env()?;
+
+    Ok(config)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_build_proxy_with_args() {
+        let proxy_args = ProxyArgs {
+            proxy_url: Some("http://proxy.example.com:8080".to_string()),
+            proxy_ca_file: Some(PathBuf::from("/path/to/certs")),
+            proxy_ca_dir: Some(PathBuf::from("/path/to/ca.pem")),
+        };
+
+        let result = build_proxy_args(proxy_args);
+        assert!(result.is_ok());
+
+        let proxy_config = result.unwrap();
+        assert_eq!(
+            proxy_config.url_as_string(),
+            "http://proxy.example.com:8080/"
+        );
+        assert_eq!(
+            proxy_config.ca_bundle_file(),
+            PathBuf::from("/path/to/ca.pem")
+        );
+        assert_eq!(
+            proxy_config.ca_bundle_dir(),
+            PathBuf::from("/path/to/certs")
+        );
+    }
+
+    #[test]
+    fn test_build_proxy_without_args() {
+        let result = build_proxy_args(ProxyArgs {
+            proxy_url: None,
+            proxy_ca_dir: None,
+            proxy_ca_file: None,
+        });
+        assert!(result.is_ok());
+
+        let proxy_config = result.unwrap();
+        assert_eq!(proxy_config, ProxyConfig::default());
+    }
+
+    #[test]
+    fn test_build_proxy_invalid_url() {
+        let proxy_args = ProxyArgs {
+            proxy_url: Some("http://".to_string()),
+            proxy_ca_file: None,
+            proxy_ca_dir: None,
+        };
+
+        let result = build_proxy_args(proxy_args);
+        if let Err(e) = result {
+            assert!(
+                e.to_string().contains("invalid proxy url"),
+                "Error message did not contain the expected invalid URL context"
+            );
+        }
     }
 }
