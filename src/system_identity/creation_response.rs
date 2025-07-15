@@ -207,9 +207,8 @@ mod tests {
         let result = system_identity_data.try_into();
         assert!(
             check(&result),
-            "Case {} failed. Result {:?}",
-            case_name,
-            result
+            "{}",
+            format!("Case {case_name} failed. Result {result:?}"),
         );
     }
 }

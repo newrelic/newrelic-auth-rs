@@ -71,7 +71,7 @@ impl fmt::Display for SystemIdentity {
                     credential_expiration
                 )
             }
-            SystemIdentityType::L2 { pub_key } => format!("L2(pub_key: {})", pub_key),
+            SystemIdentityType::L2 { pub_key } => format!("L2(pub_key: {pub_key})"),
         };
         write!(
             f,
@@ -266,8 +266,8 @@ mod tests {
         let result = system_identity_generator.generate(&token);
         assert!(
             result.is_ok(),
-            "Failed to generate system identity: {:?}",
-            result
+            "{}",
+            format!("Failed to generate system identity: {result:?}"),
         );
 
         let result = result.unwrap();
@@ -335,7 +335,7 @@ mod tests {
             },
         };
 
-        let display_str = format!("{}", system_identity);
+        let display_str = format!("{system_identity}");
         let expected_str = "SystemIdentity(id: identity-123, name: test-identity, client_id: client-abc-789, organization_id: org-xyz-456, identity_type: L1(client_secret: supersecret, credential_expiration: 2025-12-31T23:59:59Z))";
 
         assert_eq!(display_str, expected_str);
@@ -353,7 +353,7 @@ mod tests {
             },
         };
 
-        let display_str = format!("{}", system_identity);
+        let display_str = format!("{system_identity}");
         let expected_str = "SystemIdentity(id: identity-456, name: None, client_id: client-xyz-123, organization_id: org-abc-789, identity_type: L2(pub_key: cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==))";
 
         assert_eq!(display_str, expected_str);
