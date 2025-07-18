@@ -37,7 +37,7 @@ impl TryFrom<&str> for NewRelicEnvironment {
             "us" => Ok(Self::US),
             "eu" => Ok(Self::EU),
             "staging" => Ok(Self::Staging),
-            _ => Err(format!("Invalid environment: {}", value)),
+            _ => Err(format!("Invalid environment: {value}")),
         }
     }
 }
