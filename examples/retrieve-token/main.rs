@@ -11,8 +11,10 @@ use http::Uri;
 use nr_auth::TokenRetriever;
 use nr_auth::authenticator::HttpAuthenticator;
 use nr_auth::http::client::HttpClient;
+use nr_auth::http::config::{HttpConfig, ProxyConfig};
 use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
+use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -45,7 +47,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signer = LocalPrivateKeySigner::try_from(PathBuf::from(private_key_path).as_path())?;
     let jwt_signer = JwtSignerImpl::Local(signer);
 
-    let client = HttpClient::new()?;
+    let http_config = HttpConfig::new(
+        DEFAULT_AUTHENTICATOR_TIMEOUT,
+        DEFAULT_AUTHENTICATOR_TIMEOUT,
+        ProxyConfig::default(),
+    );
+    let client = HttpClient::new(http_config)?;
     let authenticator = HttpAuthenticator::new(client, Uri::try_from(&token_url)?);
 
     let token_retriever =

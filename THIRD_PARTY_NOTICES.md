@@ -83,6 +83,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## atomic-waker <https://crates.io/crates/atomic-waker>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## autocfg <https://crates.io/crates/autocfg>
 
 Distributed under the following license(s):
@@ -264,6 +271,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## equivalent <https://crates.io/crates/equivalent>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## errno <https://crates.io/crates/errno>
 
 Distributed under the following license(s):
@@ -333,6 +347,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## futures-sink <https://crates.io/crates/futures-sink>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## futures-task <https://crates.io/crates/futures-task>
 
 Distributed under the following license(s):
@@ -362,6 +383,19 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## glob <https://crates.io/crates/glob>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## h2 <https://crates.io/crates/h2>
+
+Distributed under the following license(s):
+
+* MIT
+
+## hashbrown <https://crates.io/crates/hashbrown>
 
 Distributed under the following license(s):
 
@@ -402,6 +436,13 @@ Distributed under the following license(s):
 * MIT
 
 ## httparse <https://crates.io/crates/httparse>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## httpdate <https://crates.io/crates/httpdate>
 
 Distributed under the following license(s):
 
@@ -499,6 +540,13 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## idna_adapter <https://crates.io/crates/idna_adapter>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
+## indexmap <https://crates.io/crates/indexmap>
 
 Distributed under the following license(s):
 
@@ -987,6 +1035,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## signal-hook-registry <https://crates.io/crates/signal-hook-registry>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## simple_asn1 <https://crates.io/crates/simple_asn1>
 
 Distributed under the following license(s):
@@ -1131,6 +1186,12 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## tokio-util <https://crates.io/crates/tokio-util>
+
+Distributed under the following license(s):
+
+* MIT
+
 ## tower <https://crates.io/crates/tower>
 
 Distributed under the following license(s):
@@ -1227,6 +1288,13 @@ Distributed under the following license(s):
 * MIT
 
 ## uuid <https://crates.io/crates/uuid>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
+## value-bag <https://crates.io/crates/value-bag>
 
 Distributed under the following license(s):
 
