@@ -1,5 +1,6 @@
 name: 🧪 On PR testing
-
+permissions:
+  contents: read
 on:
   pull_request:
 
@@ -19,15 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: codespell-project/actions-codespell@v2.1
 
-  fmt:
-    runs-on: ubuntu-latest
-    name: Format test / stable
-    steps:
-      - uses: actions/checkout@v4
-      - run: rustup update stable && rustup default stable
-      - run: cargo fmt --check
-
-  build_and_test:
+  build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
@@ -41,11 +34,28 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_VERSION }}
+
       - run: cargo build --verbose
       - run: cargo test --all-targets --verbose
       - run: cargo test --doc
 
-  clippy_packages:
+  cargo-fmt:
+    runs-on: ubuntu-latest
+    name: Format test / stable
+    steps:
+      - uses: actions/checkout@v4
+      - name: Obtain Rust version from project
+        run: |
+          RUST_VERSION=$(grep "rust-version" Cargo.toml | cut -d "=" -f2 | tr -d "[:space:]")
+          echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
+      - name: Install Rust ${{ env.RUST_VERSION }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+      - run: cargo fmt --check
+
+  cargo-clippy:
     runs-on: ubuntu-latest
     name: clippy / ${{ matrix.toolchain }}
     permissions:
@@ -61,6 +71,38 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_VERSION }}
-      - run: |
-          rustup component add clippy --toolchain=${{ env.RUST_VERSION }}
-          cargo clippy --tests -- -D clippy::all
+          components: clippy
+      - run: cargo clippy -- -D clippy::all
+
+  security:
+    uses: ./.github/workflows/component_security.yml
+
+  third-party-notices-check:
+    name: ⚖️ Third party licenses
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: newrelic/rust-licenses-noticer@v1
+        with:
+          template-file: THIRD_PARTY_NOTICES.md.tmpl
+
+  check-all-green:
+    name: 🟢 All required checks and tests pass
+    if: always()
+
+    needs:
+      - cargo-clippy
+      - cargo-fmt
+      - codespell
+      - security
+      - third-party-notices-check
+      - build-and-test
+
+    runs-on: Ubuntu-latest
+
+    steps:
+    - name: Decide whether the needed jobs succeeded or failed
+      uses: re-actors/alls-green@release/v1
+      with:
+        jobs: ${{ toJSON(needs) }}
