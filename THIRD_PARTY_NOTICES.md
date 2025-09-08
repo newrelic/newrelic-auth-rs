@@ -292,6 +292,13 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## find-msvc-tools <https://crates.io/crates/find-msvc-tools>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## fnv <https://crates.io/crates/fnv>
 
 Distributed under the following license(s):
@@ -1489,7 +1496,7 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## wit-bindgen-rt <https://crates.io/crates/wit-bindgen-rt>
+## wit-bindgen <https://crates.io/crates/wit-bindgen>
 
 Distributed under the following license(s):
 
