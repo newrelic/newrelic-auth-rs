@@ -409,13 +409,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## home <https://crates.io/crates/home>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## http <https://crates.io/crates/http>
 
 Distributed under the following license(s):
@@ -616,13 +609,6 @@ Distributed under the following license(s):
 * MIT
 
 ## lazy_static <https://crates.io/crates/lazy_static>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## lazycell <https://crates.io/crates/lazycell>
 
 Distributed under the following license(s):
 
@@ -995,6 +981,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## serde_core <https://crates.io/crates/serde_core>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## serde_derive <https://crates.io/crates/serde_derive>
 
 Distributed under the following license(s):
@@ -1316,6 +1309,14 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## wasip2 <https://crates.io/crates/wasip2>
+
+Distributed under the following license(s):
+
+* Apache-2.0 WITH LLVM-exception
+* Apache-2.0
+* MIT
+
 ## wasm-bindgen <https://crates.io/crates/wasm-bindgen>
 
 Distributed under the following license(s):
@@ -1370,12 +1371,6 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * CDLA-Permissive-2.0
-
-## which <https://crates.io/crates/which>
-
-Distributed under the following license(s):
-
-* MIT
 
 ## windows-core <https://crates.io/crates/windows-core>
 
