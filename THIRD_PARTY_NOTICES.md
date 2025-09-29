@@ -842,6 +842,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## signature <https://crates.io/crates/signature>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## simple_asn1 <https://crates.io/crates/simple_asn1>
 
 Distributed under the following license(s):
