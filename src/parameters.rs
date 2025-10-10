@@ -18,7 +18,6 @@ use std::time::Duration;
 
 pub const DEFAULT_AUTHENTICATOR_TIMEOUT: Duration = Duration::from_secs(5);
 #[derive(Subcommand, Debug)]
-#[group(id = "input-auth-methods", required = true, multiple = false)]
 pub enum Commands {
     #[command(verbatim_doc_comment)]
     /// Creates a new system identity using either client credentials or a signed JWT.
@@ -118,13 +117,14 @@ pub enum OutputTokenFormat {
 }
 
 #[derive(Args, Debug)]
+#[group(required = true, multiple = false)]
 pub struct AuthInputArgs {
     /// Client secret for authentication during creation
-    #[arg(long, group = "input-auth-methods")]
+    #[arg(long)]
     client_secret: Option<String>,
 
     /// Path to the private key file used for authentication
-    #[arg(long, group = "input-auth-methods")]
+    #[arg(long)]
     private_key_path: Option<PathBuf>,
 }
 

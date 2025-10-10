@@ -60,7 +60,8 @@ fn handle_authenticate_command(
     auth_input_args: AuthenticationArgs,
     output_token_format: OutputTokenFormat,
 ) -> Result<(), Box<dyn Error>> {
-    let meta = create_metadata_for_token_retrieve(auth_input_args)?;
+    let meta =
+        create_metadata_for_token_retrieve(auth_input_args).map_err(|e| format!("Error: {e}"))?;
     let http_authenticator =
         HttpAuthenticator::new(http_client, meta.environment.token_renewal_endpoint());
     let retrieve_token_command = RetrieveTokenCommand::new(http_authenticator);
