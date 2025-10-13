@@ -129,7 +129,7 @@ BrPkB8yrZjJU/fpF2D6HzGfinKRboBTcmo7mUF2wuYARj/IsuEklh0gz7rseIf7G
         // Validation
         let mut validation = Validation::new(Algorithm::RS256);
         validation.sub = Some(client_id.to_owned());
-        validation.set_audience(&[audience.clone()]);
+        validation.set_audience(std::slice::from_ref(&audience));
         validation.set_required_spec_claims(&["exp", "sub", "aud"]);
 
         // Create local signer
