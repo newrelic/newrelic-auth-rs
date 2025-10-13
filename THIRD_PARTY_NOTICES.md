@@ -1281,13 +1281,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## value-bag <https://crates.io/crates/value-bag>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
-
 ## vcpkg <https://crates.io/crates/vcpkg>
 
 Distributed under the following license(s):
