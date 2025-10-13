@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Hash the input data
     let mut hasher = Sha512::new();
     hasher.update(input);
-    let digest = hasher.finalize().as_slice().to_vec();
+    let digest = hasher.finalize().to_vec();
     let hashed_input = base64_encode(digest);
     debug!("hashed_input: {}", hashed_input);
 
