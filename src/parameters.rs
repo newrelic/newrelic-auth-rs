@@ -62,7 +62,7 @@ pub enum Commands {
     },
 }
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug)]
 pub struct ProxyArgs {
     /// Proxy configuration for the NR AUTH HTTP Client.
     ///
@@ -147,7 +147,7 @@ pub struct BasicAuthArgs {
     environment: Environments,
 }
 
-#[derive(ValueEnum, Clone, Debug, PartialEq)]
+#[derive(ValueEnum, Copy, Clone, Debug, PartialEq)]
 pub enum Environments {
     #[value(name = "US", alias = "Us", alias = "us")]
     US,
@@ -243,7 +243,7 @@ pub fn create_metadata_for_token_retrieve(
 
     Ok(SystemTokenCreationMetadata {
         client_id: auth_args.client_id,
-        environment: auth_args.environment.clone().into(),
+        environment: auth_args.environment.into(),
         auth_method,
     })
 }
@@ -271,7 +271,7 @@ pub fn create_metadata_for_identity_creation(
             organization_id: basic_auth_args.organization_id,
         },
         name: basic_auth_args.name.clone(),
-        environment: basic_auth_args.environment.clone().into(),
+        environment: basic_auth_args.environment.into(),
         output_platform,
     })
 }
