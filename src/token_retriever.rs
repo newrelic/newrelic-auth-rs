@@ -2,32 +2,35 @@ use crate::authenticator::{Authenticator, GrantType, TokenRetrievalRequest};
 use crate::jwt::signer::JwtSigner;
 use crate::system_identity::input_data::auth_method::ClientSecret;
 use crate::token::Token;
+use crate::token_retriever::credential::{
+    AuthCredentialBuilder, ClientSecretAuthBuilder, JwtSignerAuthBuilder,
+};
 use crate::{ClientID, TokenRetriever, TokenRetrieverError};
 
 use ::http::Uri;
-use credential::{DEFAULT_AUDIENCE, TokenCredential};
+use credential::DEFAULT_AUDIENCE;
 use std::sync::Mutex;
 use tracing::debug;
 
 mod credential;
 
 #[derive(Debug)]
-pub struct TokenRetrieverWithCache<A, J>
+pub struct TokenRetrieverWithCache<A, C>
 where
     A: Authenticator,
-    J: JwtSigner,
+    C: AuthCredentialBuilder,
 {
     client_id: ClientID,
     tokens: Mutex<Option<Token>>,
-    credential: TokenCredential<J>,
+    credential: C,
     authenticator: A,
     retries: u8,
 }
 
-impl<A, J> TokenRetriever for TokenRetrieverWithCache<A, J>
+impl<A, C> TokenRetriever for TokenRetrieverWithCache<A, C>
 where
     A: Authenticator,
-    J: JwtSigner,
+    C: AuthCredentialBuilder,
 {
     fn retrieve(&self) -> Result<Token, TokenRetrieverError> {
         let mut cached_token = self
@@ -71,7 +74,7 @@ where
     }
 }
 
-impl<A, J> TokenRetrieverWithCache<A, J>
+impl<A, J> TokenRetrieverWithCache<A, JwtSignerAuthBuilder<J>>
 where
     A: Authenticator,
     J: JwtSigner,
@@ -85,12 +88,17 @@ where
         Self {
             client_id,
             tokens: Mutex::new(None),
-            credential: TokenCredential::JwtSigner { aud, jwt_signer },
+            credential: JwtSignerAuthBuilder { aud, jwt_signer },
             authenticator,
             retries: 0,
         }
     }
+}
 
+impl<A> TokenRetrieverWithCache<A, ClientSecretAuthBuilder>
+where
+    A: Authenticator,
+{
     /// Creates a new `TokenRetrieverWithCache` that uses a client secret to operate.
     ///
     /// This is intended to be used when the parent System Identity is L1, as it will
@@ -99,12 +107,18 @@ where
         Self {
             client_id,
             tokens: Mutex::new(None),
-            credential: TokenCredential::ClientSecret { secret },
+            credential: ClientSecretAuthBuilder { secret },
             authenticator,
             retries: 0,
         }
     }
+}
 
+impl<A, C> TokenRetrieverWithCache<A, C>
+where
+    A: Authenticator,
+    C: AuthCredentialBuilder,
+{
     pub fn with_retries(self, retries: u8) -> Self {
         Self { retries, ..self }
     }

@@ -98,12 +98,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let http_client = HttpClient::new(http_config)?;
     let http_authenticator =
         HttpAuthenticator::new(http_client.clone(), environment.token_renewal_endpoint());
-    let http_token_retriever = match &auth_method {
+    let token = match &auth_method {
         AuthMethod::ClientSecret(client_secret) => TokenRetrieverWithCache::new_with_secret(
             client_id.to_owned(),
             http_authenticator,
             client_secret.to_owned(),
-        ),
+        )
+        .retrieve()?,
         AuthMethod::PrivateKey(private_key_pem) => {
             let jwt_signer =
                 JwtSignerImpl::Local(LocalPrivateKeySigner::try_from(private_key_pem)?);
@@ -112,6 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 http_authenticator,
                 jwt_signer,
             )
+            .retrieve()?
         }
     };
 
@@ -137,7 +139,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         key_creator,
     };
 
-    let token = http_token_retriever.retrieve()?;
     let result = system_identity_generator.generate(&token)?;
 
     println!("System Identity created successfully: {result:?}");

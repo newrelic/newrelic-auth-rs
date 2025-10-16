@@ -26,28 +26,30 @@ where
         self,
         metadata: &SystemTokenCreationMetadata,
     ) -> Result<Token, TokenRetrieverError> {
-        let http_token_retriever = match &metadata.auth_method {
-            AuthMethod::ClientSecret(client_secret) => TokenRetrieverWithCache::new_with_secret(
-                metadata.client_id.to_owned(),
-                self.authenticator,
-                client_secret.to_owned(),
-            ),
+        let token_result = match &metadata.auth_method {
+            AuthMethod::ClientSecret(client_secret) => {
+                let retriever = TokenRetrieverWithCache::new_with_secret(
+                    metadata.client_id.to_owned(),
+                    self.authenticator,
+                    client_secret.to_owned(),
+                );
+                retriever.retrieve()
+            }
             AuthMethod::PrivateKey(private_key_pem) => {
                 let jwt_signer = JwtSignerImpl::Local(
                     LocalPrivateKeySigner::try_from(private_key_pem)
                         .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?,
                 );
-                TokenRetrieverWithCache::new_with_jwt_signer(
+                let retriever = TokenRetrieverWithCache::new_with_jwt_signer(
                     metadata.client_id.to_owned(),
                     self.authenticator,
                     jwt_signer,
-                )
+                );
+                retriever.retrieve()
             }
         };
 
-        http_token_retriever
-            .retrieve()
-            .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))
+        token_result.map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))
     }
 }
 
