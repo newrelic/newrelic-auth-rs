@@ -12,7 +12,7 @@ use credential::DEFAULT_AUDIENCE;
 use std::sync::Mutex;
 use tracing::debug;
 
-mod credential;
+pub mod credential;
 
 #[derive(Debug)]
 pub struct TokenRetrieverWithCache<A, C>
