@@ -12,21 +12,6 @@ or by e-mailing [open-source@newrelic.com](mailto:open-source@newrelic.com).
 For any licenses that require the disclosure of source code, the source code
 can be found at <https://github.com/newrelic/newrelic-auth-rs>.
 
-## addr2line <https://crates.io/crates/addr2line>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
-
-## adler2 <https://crates.io/crates/adler2>
-
-Distributed under the following license(s):
-
-* 0BSD
-* MIT
-* Apache-2.0
-
 ## aho-corasick <https://crates.io/crates/aho-corasick>
 
 Distributed under the following license(s):
@@ -104,13 +89,6 @@ Distributed under the following license(s):
 * ISC
 * Apache-2.0
 * OpenSSL
-
-## backtrace <https://crates.io/crates/backtrace>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
 
 ## base64 <https://crates.io/crates/base64>
 
@@ -375,13 +353,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## gimli <https://crates.io/crates/gimli>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## glob <https://crates.io/crates/glob>
 
 Distributed under the following license(s):
@@ -546,13 +517,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## io-uring <https://crates.io/crates/io-uring>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## ipnet <https://crates.io/crates/ipnet>
 
 Distributed under the following license(s):
@@ -663,14 +627,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## miniz_oxide <https://crates.io/crates/miniz_oxide>
-
-Distributed under the following license(s):
-
-* MIT
-* Zlib
-* Apache-2.0
-
 ## mio <https://crates.io/crates/mio>
 
 Distributed under the following license(s):
@@ -723,13 +679,6 @@ Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
-
-## object <https://crates.io/crates/object>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
 
 ## once_cell <https://crates.io/crates/once_cell>
 
@@ -888,13 +837,6 @@ Distributed under the following license(s):
 
 * Apache-2.0
 * ISC
-
-## rustc-demangle <https://crates.io/crates/rustc-demangle>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
 
 ## rustc-hash <https://crates.io/crates/rustc-hash>
 

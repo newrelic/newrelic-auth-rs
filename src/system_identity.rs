@@ -235,14 +235,18 @@ mod tests {
             cli_input.environment.token_renewal_endpoint(),
         );
         let client_id = cli_input.system_identity_input.client_id.to_owned();
-        let token_retriever = match cli_token_input.auth_method.to_owned() {
+        let token = match cli_token_input.auth_method.to_owned() {
             AuthMethod::ClientSecret(client_secret) => {
                 TokenRetrieverWithCache::new_with_secret(client_id, authenticator, client_secret)
+                    .retrieve()
+                    .unwrap()
             }
             AuthMethod::PrivateKey(private_key_pem) => {
                 let signer = LocalPrivateKeySigner::try_from(private_key_pem).unwrap();
                 let jwt_signer = JwtSignerImpl::Local(signer);
                 TokenRetrieverWithCache::new_with_jwt_signer(client_id, authenticator, jwt_signer)
+                    .retrieve()
+                    .unwrap()
             }
         };
 
@@ -262,7 +266,6 @@ mod tests {
             iam_client,
         };
 
-        let token = token_retriever.retrieve().unwrap();
         let result = system_identity_generator.generate(&token);
         assert!(
             result.is_ok(),
