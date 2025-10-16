@@ -240,14 +240,14 @@ pub fn create_metadata_for_token_retrieve(
         auth_args.input_auth_args.client_secret.clone(),
         auth_args.input_auth_args.private_key_path.clone(),
     )?;
-    let environment = select_environment(auth_args.environment.clone())?;
 
     Ok(SystemTokenCreationMetadata {
         client_id: auth_args.client_id,
-        environment,
+        environment: auth_args.environment.clone().into(),
         auth_method,
     })
 }
+
 pub fn create_metadata_for_identity_creation(
     identity_type: &IdentityType,
 ) -> Result<SystemIdentityCreationMetadata, Box<dyn std::error::Error>> {
@@ -265,24 +265,24 @@ pub fn create_metadata_for_identity_creation(
         ),
     };
 
-    let env = select_environment(basic_auth_args.environment.clone())?;
-
     Ok(SystemIdentityCreationMetadata {
         system_identity_input: SystemIdentityInput {
             client_id: basic_auth_args.client_id,
             organization_id: basic_auth_args.organization_id,
         },
         name: basic_auth_args.name.clone(),
-        environment: env,
+        environment: basic_auth_args.environment.clone().into(),
         output_platform,
     })
 }
 
-pub fn select_environment(environment: Environments) -> Result<NewRelicEnvironment, Error> {
-    match environment {
-        Environments::US => Ok(NewRelicEnvironment::US),
-        Environments::EU => Ok(NewRelicEnvironment::EU),
-        Environments::STAGING => Ok(NewRelicEnvironment::Staging),
+impl From<Environments> for NewRelicEnvironment {
+    fn from(value: Environments) -> Self {
+        match value {
+            Environments::US => NewRelicEnvironment::US,
+            Environments::EU => NewRelicEnvironment::EU,
+            Environments::STAGING => NewRelicEnvironment::Staging,
+        }
     }
 }
 
