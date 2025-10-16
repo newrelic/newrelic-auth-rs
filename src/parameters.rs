@@ -62,7 +62,7 @@ pub enum Commands {
     },
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ProxyArgs {
     /// Proxy configuration for the NR AUTH HTTP Client.
     ///
