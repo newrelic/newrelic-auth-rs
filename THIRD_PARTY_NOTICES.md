@@ -1259,13 +1259,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## wasm-bindgen-backend <https://crates.io/crates/wasm-bindgen-backend>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## wasm-bindgen-futures <https://crates.io/crates/wasm-bindgen-futures>
 
 Distributed under the following license(s):
