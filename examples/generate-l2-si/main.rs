@@ -30,18 +30,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .join(env!("CARGO_BIN_NAME"));
     env::set_current_dir(&example_dir).expect("Failed to change directory");
 
+    // Load environment variables from an .env file if present
     let _ = dotenv().inspect_err(|e| {
         println!(".env file not found. Copy .env.dist file to .env and fill the variables: {e}");
     });
 
+    // Assert that required environment variables are set
     let Ok(client_id) = env::var("CLIENT_ID") else {
         panic!("Environment variable CLIENT_ID is not set.")
     };
     let Ok(organization_id) = env::var("ORGANIZATION_ID") else {
         panic!("Environment variable ORGANIZATION_ID is not set.")
     };
+    let Ok(environment) = env::var("NR_ENVIRONMENT") else {
+        panic!("Environment variable NR_ENVIRONMENT is not set.")
+    };
+    let Ok(environment) = NewRelicEnvironment::try_from(environment.as_str()) else {
+        panic!("Invalid environment value: NR_ENVIRONMENT={environment}")
+    };
+
+    // Determine the authentication method to use depending on available environment variables
     // Has a client secret been set?
     let client_secret_auth_method = env::var("CLIENT_SECRET")
+        .map_err(|e| {
+            io::Error::other(format!(
+                "Attempt to retrieve env var CLIENT_SECRET had error {e}"
+            ))
+        })
         .map(ClientSecret::from)
         .map(AuthMethod::ClientSecret)
         .inspect_err(|e| {
@@ -62,7 +77,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .inspect_err(|e| {
             println!("No private key path provided, falling back to other auth methods: {e}");
         });
-
     let private_key_pem_auth_method = env::var("PRIVATE_KEY_PEM")
         .map_err(|e| {
             io::Error::other(format!(
@@ -80,13 +94,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .or(private_key_pem_auth_method)?;
 
     println!("Using auth method: {auth_method:?}");
-
-    let Ok(environment) = env::var("NR_ENVIRONMENT") else {
-        panic!("Environment variable NR_ENVIRONMENT is not set.")
-    };
-    let Ok(environment) = NewRelicEnvironment::try_from(environment.as_str()) else {
-        panic!("Invalid environment value: NR_ENVIRONMENT={environment}")
-    };
 
     let file_path = env::current_dir()?.join("private_key.pem");
     let output_platform = OutputPlatform::LocalPrivateKeyPath(file_path.to_owned());
