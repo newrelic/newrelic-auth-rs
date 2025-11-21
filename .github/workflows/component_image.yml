@@ -1,8 +1,4 @@
 name: 📞 Build container images
-
-permissions:
-  contents: read
-
 on:
   workflow_call:
     inputs:
@@ -14,6 +10,8 @@ on:
         description: 'Push image'
         type: boolean
         required: true
+permissions:
+  contents: read
 
 jobs:
   build-image:

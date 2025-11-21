@@ -1,11 +1,10 @@
+name: Release
 on:
   release:
     types:
       - released
     tags:
       - '*'
-
-name: Release
 permissions:
   contents: read
 jobs:

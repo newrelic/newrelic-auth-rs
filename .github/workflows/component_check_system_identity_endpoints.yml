@@ -1,6 +1,4 @@
 name: 📞 Check System Identity Generation
-permissions:
-  contents: read
 on:
   workflow_call:
     inputs:
@@ -15,6 +13,8 @@ on:
         required: true
       private_key_pem:
         required: true
+permissions:
+  contents: read
 
 env:
   NR_ENVIRONMENT: ${{ inputs.environment }}
