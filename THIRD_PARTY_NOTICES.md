@@ -12,13 +12,6 @@ or by e-mailing [open-source@newrelic.com](mailto:open-source@newrelic.com).
 For any licenses that require the disclosure of source code, the source code
 can be found at <https://github.com/newrelic/newrelic-auth-rs>.
 
-## aho-corasick <https://crates.io/crates/aho-corasick>
-
-Distributed under the following license(s):
-
-* Unlicense
-* MIT
-
 ## android_system_properties <https://crates.io/crates/android_system_properties>
 
 Distributed under the following license(s):
@@ -97,12 +90,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## bindgen <https://crates.io/crates/bindgen>
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
-
 ## bitflags <https://crates.io/crates/bitflags>
 
 Distributed under the following license(s):
@@ -130,13 +117,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## cexpr <https://crates.io/crates/cexpr>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
-
 ## cfg-if <https://crates.io/crates/cfg-if>
 
 Distributed under the following license(s):
@@ -149,12 +129,6 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * MIT
-* Apache-2.0
-
-## clang-sys <https://crates.io/crates/clang-sys>
-
-Distributed under the following license(s):
-
 * Apache-2.0
 
 ## clap <https://crates.io/crates/clap>
@@ -233,13 +207,6 @@ Distributed under the following license(s):
 
 * CC0-1.0
 * MIT-0
-* Apache-2.0
-
-## either <https://crates.io/crates/either>
-
-Distributed under the following license(s):
-
-* MIT
 * Apache-2.0
 
 ## equivalent <https://crates.io/crates/equivalent>
@@ -347,13 +314,6 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## getrandom <https://crates.io/crates/getrandom>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## glob <https://crates.io/crates/glob>
 
 Distributed under the following license(s):
 
@@ -538,13 +498,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## itertools <https://crates.io/crates/itertools>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## itoa <https://crates.io/crates/itoa>
 
 Distributed under the following license(s):
@@ -586,12 +539,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## libloading <https://crates.io/crates/libloading>
-
-Distributed under the following license(s):
-
-* ISC
-
 ## linux-raw-sys <https://crates.io/crates/linux-raw-sys>
 
 Distributed under the following license(s):
@@ -620,13 +567,6 @@ Distributed under the following license(s):
 * Unlicense
 * MIT
 
-## minimal-lexical <https://crates.io/crates/minimal-lexical>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## mio <https://crates.io/crates/mio>
 
 Distributed under the following license(s):
@@ -639,12 +579,6 @@ Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
-
-## nom <https://crates.io/crates/nom>
-
-Distributed under the following license(s):
-
-* MIT
 
 ## nu-ansi-term <https://crates.io/crates/nu-ansi-term>
 
@@ -767,13 +701,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## prettyplease <https://crates.io/crates/prettyplease>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## proc-macro2 <https://crates.io/crates/proc-macro2>
 
 Distributed under the following license(s):
@@ -803,27 +730,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## regex <https://crates.io/crates/regex>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## regex-automata <https://crates.io/crates/regex-automata>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## regex-syntax <https://crates.io/crates/regex-syntax>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## reqwest <https://crates.io/crates/reqwest>
 
 Distributed under the following license(s):
@@ -837,13 +743,6 @@ Distributed under the following license(s):
 
 * Apache-2.0
 * ISC
-
-## rustc-hash <https://crates.io/crates/rustc-hash>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
 
 ## rustix <https://crates.io/crates/rustix>
 
@@ -968,8 +867,8 @@ Distributed under the following license(s):
 
 Distributed under the following license(s):
 
-* Apache-2.0
 * MIT
+* Apache-2.0
 
 ## simple_asn1 <https://crates.io/crates/simple_asn1>
 
