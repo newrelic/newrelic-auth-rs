@@ -1,6 +1,4 @@
 name: 📞 Check System Identity Generation
-permissions:
-  contents: read
 on:
   workflow_call:
     inputs:
@@ -15,6 +13,8 @@ on:
         required: true
       private_key_pem:
         required: true
+permissions:
+  contents: read
 
 env:
   NR_ENVIRONMENT: ${{ inputs.environment }}
@@ -27,7 +27,7 @@ jobs:
     name: Test System Identity creation endpoints
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
@@ -37,7 +37,7 @@ jobs:
           echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
 
       - name: Install Rust ${{ env.RUST_VERSION }}
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@0b1efabc08b657293548b77fb76cc02d26091c7e # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
