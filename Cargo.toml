@@ -9,41 +9,41 @@ license-file = "./LICENSE.md"
 rust-version = "1.89.0"
 
 [dependencies]
-chrono = { version = "0.4.41", features = ["serde"] }
-thiserror = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-jsonwebtoken = "9"
-clap = { version = "4.5.40", features = ["derive"] }
-reqwest = { version = "0.12.20", default-features = false, features = [
+chrono = { version = "0.4.42", features = ["serde"] }
+thiserror = "2.0.17"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+jsonwebtoken = "9.3.1"
+clap = { version = "4.5.53", features = ["derive"] }
+reqwest = { version = "0.12.24", default-features = false, features = [
     "blocking",
     "rustls-tls",
     "rustls-tls-native-roots",
     "socks",
     "json",
 ] }
-uuid = { version = "1", features = ["serde", "v7"] }
-tracing = "0.1"
-http = "1"
-rcgen = { version = "0.14", features = ["aws_lc_rs"] }
-base64 = "0.22"
-tracing-subscriber = "0.3.19"
+uuid = { version = "1.18.1", features = ["serde", "v7"] }
+tracing = "0.1.41"
+http = "1.4.0"
+rcgen = { version = "0.14.5", features = ["aws_lc_rs"] }
+base64 = "0.22.1"
+tracing-subscriber = "0.3.20"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
 mockall = "0.14.0"
-http = "1"
-thiserror = "2"
+http = "1.4.0"
+thiserror = "2.0.17"
 # Alpha version needed to test proxy the feature, it is safe because it is only used as dev-dependency
-httpmock = { version = "0.8.0-alpha.1", features = ["proxy"] }
-dotenvy = "0"
-vaultrs = { version = "0", default-features = false, features = ["native-tls"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-tracing-subscriber = "0"
-base64 = "0"
-sha2 = "0"
-tempfile = "3"
-rstest = "0.26.0"
+httpmock = { version = "0.8.2", features = ["proxy"] }
+dotenvy = "0.15.7"
+vaultrs = { version = "0.7.4", default-features = false, features = ["native-tls"] }
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
+tracing-subscriber = "0.3.20"
+base64 = "0.22.1"
+sha2 = "0.10.9"
+tempfile = "3.23.0"
+rstest = "0.26.1"
 
 [[bin]]
 name = "newrelic-auth-cli"
