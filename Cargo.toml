@@ -23,11 +23,11 @@ reqwest = { version = "0.12.24", default-features = false, features = [
     "json",
 ] }
 uuid = { version = "1.18.1", features = ["serde", "v7"] }
-tracing = "0.1.41"
+tracing = "0.1.43"
 http = "1.4.0"
 rcgen = { version = "0.14.5", features = ["aws_lc_rs"] }
 base64 = "0.22.1"
-tracing-subscriber = "0.3.20"
+tracing-subscriber = "0.3.22"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
@@ -39,7 +39,7 @@ httpmock = { version = "0.8.2", features = ["proxy"] }
 dotenvy = "0.15.7"
 vaultrs = { version = "0.7.4", default-features = false, features = ["native-tls"] }
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
-tracing-subscriber = "0.3.20"
+tracing-subscriber = "0.3.22"
 base64 = "0.22.1"
 sha2 = "0.10.9"
 tempfile = "3.23.0"
