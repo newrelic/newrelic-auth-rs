@@ -22,7 +22,7 @@ reqwest = { version = "0.12.24", default-features = false, features = [
     "socks",
     "json",
 ] }
-uuid = { version = "1.18.1", features = ["serde", "v7"] }
+uuid = { version = "1.19.0", features = ["serde", "v7"] }
 tracing = "0.1.43"
 http = "1.4.0"
 rcgen = { version = "0.14.5", features = ["aws_lc_rs"] }
