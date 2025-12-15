@@ -24,7 +24,11 @@ See the [documentation](https://newrelic.github.io/newrelic-auth-rs/) documentat
 ### Usage
 There is a Docker image available to use the CLI without installing it locally or building from source:
 ```bash
-docker run  newrelic/agent-control-system-identity-registration:nightly [...]
+docker run newrelic/agent-control-system-identity-registration:nightly [...]
+```
+Notice that you might need to mount a volume to provide access to your private key file.
+```bash
+docker run -v /our/pey/path:/private-key.pem  newrelic/agent-control-system-identity-registration:nightly [...] --private-key-path /private-key.pem
 ```
 
 Authentication Command Usage:
