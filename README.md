@@ -21,6 +21,39 @@ nr-auth = { git = "https://github.com/newrelic/newrelic-auth-rs.git", tag = "0.0
 
 See the [documentation](https://newrelic.github.io/newrelic-auth-rs/) documentation for details.
 
+### Usage
+There is a Docker image available to use the CLI without installing it locally or building from source:
+```bash
+docker run newrelic/agent-control-system-identity-registration:nightly [...]
+```
+Notice that you might need to mount a volume to provide access to your private key file.
+```bash
+docker run -v /our/pey/path:/private-key.pem  newrelic/agent-control-system-identity-registration:nightly [...] --private-key-path /private-key.pem
+```
+
+Authentication Command Usage:
+```bash
+# Authenticate using a client secret
+newrelic_auth_cli authenticate --client-id your_client_id --environment STAGING --client-secret your_client_secret --output-token-format JSON
+# Authenticate using a private key
+newrelic_auth_cli authenticate --client-id your_client_id --environment STAGING --private-key-path /path/to/key.pem --output-token-format PLAIN
+```
+
+Create Identity Command Usage:
+```bash
+# Create a "secret" type identity using an access token
+newrelic_auth_cli create-identity secret --name test1 --client-id your_client_id --organization-id your_org_id --environment US --client-secret your_secret --bearer-access-token your_access_token
+# Create a "key" type identity using an access token
+newrelic_auth_cli create-identity key --name test --client-id your_client_id --organization-id your_org_id --environment EU --bearer-access-token your_access_token --output-local-path /path/to/store/private_key.pem
+```
+
+Notice that the command support proxy:
+```bash
+HTTPS_PROXY=https://localhost:8080 newrelic_auth_cli [...]
+``` 
+
+
+
 ## Support
 
 * [New Relic Community](https://forum.newrelic.com/): The best place to engage in troubleshooting questions.
