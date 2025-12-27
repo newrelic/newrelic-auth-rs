@@ -12,10 +12,10 @@ rust-version = "1.89.0"
 chrono = { version = "0.4.42", features = ["serde"] }
 thiserror = "2.0.17"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = "1.0.148"
 jsonwebtoken = "9.3.1"
 clap = { version = "4.5.53", features = ["derive"] }
-reqwest = { version = "0.12.26", default-features = false, features = [
+reqwest = { version = "0.12.28", default-features = false, features = [
     "blocking",
     "rustls-tls",
     "rustls-tls-native-roots",
@@ -23,7 +23,7 @@ reqwest = { version = "0.12.26", default-features = false, features = [
     "json",
 ] }
 uuid = { version = "1.19.0", features = ["serde", "v7"] }
-tracing = "0.1.43"
+tracing = "0.1.44"
 http = "1.4.0"
 rcgen = { version = "0.14.6", features = ["aws_lc_rs"] }
 base64 = "0.22.1"
@@ -42,7 +42,7 @@ tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = "0.3.22"
 base64 = "0.22.1"
 sha2 = "0.10.9"
-tempfile = "3.23.0"
+tempfile = "3.24.0"
 rstest = "0.26.1"
 
 [[bin]]
