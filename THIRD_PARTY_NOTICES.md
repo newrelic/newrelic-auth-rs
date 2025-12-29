@@ -1380,3 +1380,9 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * Unicode-3.0
+
+## zmij <https://crates.io/crates/zmij>
+
+Distributed under the following license(s):
+
+* MIT
