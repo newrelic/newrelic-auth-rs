@@ -1172,6 +1172,12 @@ Distributed under the following license(s):
 
 * CDLA-Permissive-2.0
 
+## webpki-roots <https://crates.io/crates/webpki-roots>
+
+Distributed under the following license(s):
+
+* CDLA-Permissive-2.0
+
 ## winapi-util <https://crates.io/crates/winapi-util>
 
 Distributed under the following license(s):
