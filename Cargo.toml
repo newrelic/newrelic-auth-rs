@@ -31,9 +31,7 @@ thiserror = "2.0.17"
 # Alpha version needed to test proxy the feature, it is safe because it is only used as dev-dependency
 httpmock = { version = "0.8.2", features = ["proxy"] }
 dotenvy = "0.15.7"
-vaultrs = { version = "0.7.4", default-features = false, features = [
-    "native-tls",
-] }
+vaultrs = "0.7.4"
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = "0.3.22"
 base64 = "0.22.1"
