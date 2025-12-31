@@ -19,8 +19,6 @@ pub struct HttpClient {
 impl HttpClient {
     pub fn new(http_config: HttpConfig) -> Result<Self, HttpBuildError> {
         let mut builder = Client::builder()
-            .use_rustls_tls()
-            .tls_built_in_native_certs(true)
             .timeout(http_config.timeout)
             .connect_timeout(http_config.conn_timeout);
 
