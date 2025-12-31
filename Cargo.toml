@@ -15,13 +15,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.148"
 jsonwebtoken = "9.3.1"
 clap = { version = "4.5.53", features = ["derive"] }
-reqwest = { version = "0.13.1", default-features = false, features = [
-    "blocking",
-    "rustls-tls",
-    "rustls-tls-native-roots",
-    "socks",
-    "json",
-] }
+reqwest = { version = "0.13.1", features = ["blocking", "socks", "json"] }
 uuid = { version = "1.19.0", features = ["serde", "v7"] }
 tracing = "0.1.44"
 http = "1.4.0"
@@ -37,7 +31,9 @@ thiserror = "2.0.17"
 # Alpha version needed to test proxy the feature, it is safe because it is only used as dev-dependency
 httpmock = { version = "0.8.2", features = ["proxy"] }
 dotenvy = "0.15.7"
-vaultrs = { version = "0.7.4", default-features = false, features = ["native-tls"] }
+vaultrs = { version = "0.7.4", default-features = false, features = [
+    "native-tls",
+] }
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = "0.3.22"
 base64 = "0.22.1"
