@@ -6,7 +6,7 @@ edition = "2024"
 authors = ["The New Relic Agent Control Team"]
 publish = false
 license-file = "./LICENSE.md"
-rust-version = "1.89.0"
+rust-version = "1.93.0"
 
 [dependencies]
 chrono = { version = "0.4.43", features = ["serde"] }
@@ -14,7 +14,7 @@ thiserror = "2.0.18"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 jsonwebtoken = { version = "10.3.0", features = [ "aws_lc_rs" ]}
-clap = { version = "4.5.56", features = ["derive"] }
+clap = { version = "4.5.57", features = ["derive"] }
 reqwest = { version = "0.13.1", features = ["blocking", "socks", "json"] }
 uuid = { version = "1.20.0", features = ["serde", "v7"] }
 tracing = "0.1.44"
@@ -29,7 +29,7 @@ mockall = "0.14.0"
 http = "1.4.0"
 thiserror = "2.0.18"
 # Alpha version needed to test proxy the feature, it is safe because it is only used as dev-dependency
-httpmock = { version = "0.8.2", features = ["proxy"] }
+httpmock = { version = "0.8.3", features = ["proxy"] }
 dotenvy = "0.15.7"
 vaultrs = "0.7.4"
 tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
