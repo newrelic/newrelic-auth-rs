@@ -6,7 +6,7 @@ edition = "2024"
 authors = ["The New Relic Agent Control Team"]
 publish = false
 license-file = "./LICENSE.md"
-rust-version = "1.89.0"
+rust-version = "1.93.0"
 
 [dependencies]
 chrono = { version = "0.4.43", features = ["serde"] }
