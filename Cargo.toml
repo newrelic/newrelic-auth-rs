@@ -16,7 +16,7 @@ serde_json = "1.0.149"
 jsonwebtoken = { version = "10.3.0", features = [ "aws_lc_rs" ]}
 clap = { version = "4.5.58", features = ["derive"] }
 reqwest = { version = "0.13.2", features = ["blocking", "socks", "json"] }
-uuid = { version = "1.20.0", features = ["serde", "v7"] }
+uuid = { version = "1.21.0", features = ["serde", "v7"] }
 tracing = "0.1.44"
 http = "1.4.0"
 rcgen = { version = "0.14.7", features = ["aws_lc_rs"] }
