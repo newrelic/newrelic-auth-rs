@@ -35,12 +35,17 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
+      - name: Install Zig
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
+
+      - uses: taiki-e/install-action@a37010ded18ff788be4440302bd6830b1ae50d8b # v2.68.25
+        with:
+          tool: cargo-zigbuild@0.20.1
+
       - name: Build newrelic auth cli
         run: |
-          which cross || cargo install cross
-          export RUSTFLAGS="-C target-feature=+crt-static"
-          cross build --target "aarch64-unknown-linux-musl" --profile release 
-          cross build --target "x86_64-unknown-linux-musl" --profile release 
+          cargo zigbuild --release --target "aarch64-unknown-linux-musl" 
+          cargo zigbuild --release --target "x86_64-unknown-linux-musl"  
           cp ./target/aarch64-unknown-linux-musl/release/newrelic-auth-cli ./target/newrelic-auth-cli-arm64
           cp ./target/x86_64-unknown-linux-musl/release/newrelic-auth-cli ./target/newrelic-auth-cli-amd64
 
