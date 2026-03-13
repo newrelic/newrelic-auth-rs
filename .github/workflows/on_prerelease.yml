@@ -137,7 +137,8 @@ jobs:
           cargo xwin build --release --target "x86_64-pc-windows-msvc" 
           
           # Prepare Windows binaries (zip format)
-          zip newrelic-auth-cli_windows_amd64.zip ./target/x86_64-pc-windows-msvc/release/newrelic-auth-cli.exe
+          cp ./target/x86_64-pc-windows-msvc/release/newrelic-auth-cli.exe newrelic-auth-cli.exe 
+          zip newrelic-auth-cli_windows_amd64.zip ./newrelic-auth-cli.exe
 
           # Upload all binaries
           gh release upload ${{ github.event.release.tag_name }} newrelic-auth-cli_windows_amd64.zip
