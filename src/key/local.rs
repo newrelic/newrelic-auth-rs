@@ -211,12 +211,14 @@ mod tests {
     }
 
     fn is_private_key_content(content: &str) -> bool {
-        content.starts_with("-----BEGIN PRIVATE KEY-----")
-            && content.ends_with("-----END PRIVATE KEY-----\n")
+        let trimmed = content.trim_end();
+        trimmed.starts_with("-----BEGIN PRIVATE KEY-----")
+            && trimmed.ends_with("-----END PRIVATE KEY-----")
     }
 
     fn is_public_key_content(content: &str) -> bool {
-        content.starts_with("-----BEGIN PUBLIC KEY-----")
-            && content.ends_with("-----END PUBLIC KEY-----\n")
+        let trimmed = content.trim_end();
+        trimmed.starts_with("-----BEGIN PUBLIC KEY-----")
+            && trimmed.ends_with("-----END PUBLIC KEY-----")
     }
 }
