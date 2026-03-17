@@ -1,0 +1,13 @@
+name: ⏯️ Generate pre-release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prerelease:
+    uses: newrelic/newrelic-agent-control/.github/workflows/shared_component_trigger_prerelease.yml@main
+    secrets:
+      bot_token: ${{ secrets.AC_BOT_TOKEN }}
