@@ -81,7 +81,9 @@ Distributed under the following license(s):
 
 * ISC
 * Apache-2.0
-* OpenSSL
+* MIT
+* BSD-3-Clause
+* MIT-0
 
 ## base64 <https://crates.io/crates/base64>
 
