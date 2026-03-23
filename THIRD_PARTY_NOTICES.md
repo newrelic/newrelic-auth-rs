@@ -81,7 +81,9 @@ Distributed under the following license(s):
 
 * ISC
 * Apache-2.0
-* OpenSSL
+* MIT
+* BSD-3-Clause
+* MIT-0
 
 ## base64 <https://crates.io/crates/base64>
 
@@ -506,6 +508,13 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## jni-sys <https://crates.io/crates/jni-sys>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## jni-sys-macros <https://crates.io/crates/jni-sys-macros>
 
 Distributed under the following license(s):
 
