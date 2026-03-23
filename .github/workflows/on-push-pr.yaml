@@ -1,6 +1,9 @@
 name: 🧪 On PR testing
 on:
   pull_request:
+  push:
+    branches:
+      - 'renovate/**'
 permissions:
   contents: read
 
