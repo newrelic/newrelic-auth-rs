@@ -98,8 +98,9 @@ impl LocalCreator {
     fn validate_path(path: &Path) -> Result<(), LocalKeyCreationError> {
         // Filename should not exist already
         if path.exists() {
-            Err(LocalKeyCreationError::InvalidPath(String::from(
-                "local key path already exists",
+            Err(LocalKeyCreationError::InvalidPath(format!(
+                "local key path already exists at {}",
+                path.display()
             )))
         } else {
             Ok(())
@@ -176,7 +177,7 @@ mod tests {
         assert_matches!(
             result,
             Err(LocalKeyCreationError::InvalidPath(error_message)) => {
-                assert_eq!(error_message, String::from("local key path already exists"));
+                assert_eq!(error_message, format!("local key path already exists at {}", tmp_file.path().display()));
             }
         );
     }
