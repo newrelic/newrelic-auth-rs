@@ -1,22 +1,19 @@
 //! Full example to generate an L1 System Identity using the `newrelic-auth-rs` library.
 use dotenvy::dotenv;
-
+use nr_auth::TokenRetriever;
 use nr_auth::authenticator::HttpAuthenticator;
+use nr_auth::http::client::HttpClient;
+use nr_auth::http::config::{HttpConfig, ProxyConfig};
 use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
-
-use nr_auth::TokenRetriever;
 use nr_auth::key::PrivateKeyPem;
+use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use nr_auth::system_identity::generator::L1SystemIdentityGenerator;
+use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
 use nr_auth::token_retriever::TokenRetrieverWithCache;
-
-use nr_auth::http::client::HttpClient;
-use nr_auth::http::config::{HttpConfig, ProxyConfig};
-use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
-use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 

@@ -51,7 +51,7 @@ fn handle_create_identity_command(
     let system_identity = match identity_type {
         IdentityType::Secret(_) => create_command.create_l1_system_identity(token)?,
         IdentityType::Key(key_args) => {
-            let output_platform = select_output_platform(key_args);
+            let output_platform = select_output_platform(&key_args);
             create_command.create_l2_system_identity(&output_platform, token)?
         }
     };

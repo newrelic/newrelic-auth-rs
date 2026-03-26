@@ -287,14 +287,15 @@ pub fn build_token_for_identity_creation(identity_type: &IdentityType) -> Token 
     )
 }
 
-pub fn select_output_platform(key_args: KeyArgs) -> OutputPlatform {
-    let output_platform = &key_args.output_options.output_platform;
-    let output_filepath = key_args.output_options.output_local_filepath.clone();
-
-    match output_platform {
-        OutputPlatformChoice::LocalFile => {
-            OutputPlatform::LocalPrivateKeyPath(output_filepath.unwrap_or_default())
-        }
+pub fn select_output_platform(key_args: &KeyArgs) -> OutputPlatform {
+    match key_args.output_options.output_platform {
+        OutputPlatformChoice::LocalFile => OutputPlatform::LocalPrivateKeyPath(
+            key_args
+                .output_options
+                .output_local_filepath
+                .clone()
+                .unwrap_or_default(),
+        ),
     }
 }
 

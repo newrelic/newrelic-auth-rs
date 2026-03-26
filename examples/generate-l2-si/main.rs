@@ -1,25 +1,21 @@
 //! Full example to generate an L2 System Identity using the `newrelic-auth-rs` library.
 use dotenvy::dotenv;
-
+use nr_auth::TokenRetriever;
 use nr_auth::authenticator::HttpAuthenticator;
+use nr_auth::http::client::HttpClient;
+use nr_auth::http::config::{HttpConfig, ProxyConfig};
 use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
+use nr_auth::key::PrivateKeyPem;
 use nr_auth::key::creator::KeyType;
 use nr_auth::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
-
-use nr_auth::TokenRetriever;
-use nr_auth::key::PrivateKeyPem;
+use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use nr_auth::system_identity::generator::L2SystemIdentityGenerator;
+use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
-use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
 use nr_auth::token_retriever::TokenRetrieverWithCache;
-
-use nr_auth::http::client::HttpClient;
-use nr_auth::http::config::{HttpConfig, ProxyConfig};
-use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
-use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
@@ -96,7 +92,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Using auth method: {auth_method:?}");
 
     let file_path = env::current_dir()?.join("private_key.pem");
-    let output_platform = OutputPlatform::LocalPrivateKeyPath(file_path.to_owned());
     let http_config = HttpConfig::new(
         DEFAULT_AUTHENTICATOR_TIMEOUT,
         DEFAULT_AUTHENTICATOR_TIMEOUT,
