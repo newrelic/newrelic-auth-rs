@@ -138,9 +138,11 @@ pub struct BasicAuthArgs {
     #[arg(long, short)]
     organization_id: String,
 
-    /// ID of the client
+    /// [DEPRECATED] Optional client ID - no longer used by the API.
+    /// The API returns a new client_id after creating the identity.
+    /// This parameter is kept for backward compatibility only.
     #[arg(long, short)]
-    client_id: String,
+    client_id: Option<String>,
 
     /// Environment to target
     #[arg(long, short)]
@@ -267,7 +269,6 @@ pub fn create_metadata_for_identity_creation(
 
     Ok(SystemIdentityCreationMetadata {
         system_identity_input: SystemIdentityInput {
-            client_id: basic_auth_args.client_id,
             organization_id: basic_auth_args.organization_id,
         },
         name: basic_auth_args.name.clone(),
