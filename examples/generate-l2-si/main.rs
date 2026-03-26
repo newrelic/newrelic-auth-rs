@@ -1,5 +1,6 @@
 //! Full example to generate an L2 System Identity using the `newrelic-auth-rs` library.
 use dotenvy::dotenv;
+
 use nr_auth::TokenRetriever;
 use nr_auth::authenticator::HttpAuthenticator;
 use nr_auth::http::client::HttpClient;
@@ -12,6 +13,7 @@ use nr_auth::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
 use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use nr_auth::system_identity::generator::L2SystemIdentityGenerator;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
+use nr_auth::system_identity::iam_client::http::IAMAuthCredential;
 use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
@@ -129,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,
-        file_path, // Note how this is related to AuthOutputPlatform above!
+        file_path,
     });
 
     let system_identity_generator = L2SystemIdentityGenerator {
@@ -137,7 +139,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         key_creator,
     };
 
-    let result = system_identity_generator.generate(&token)?;
+    let auth_credential = IAMAuthCredential::BearerToken(token.access_token().to_string());
+    let result = system_identity_generator.generate(&auth_credential)?;
 
     println!("System Identity created successfully: {result:?}");
 

@@ -41,14 +41,20 @@ newrelic_auth_cli authenticate --client-id your_client_id --environment STAGING 
 
 Create Identity Command Usage:
 ```bash
-# Create a "secret" type identity using an access token
+# Create a "secret" type identity using a bearer access token
 newrelic_auth_cli create-identity secret --name test1 --organization-id your_org_id --environment US --bearer-access-token your_access_token
 
-# Create a "key" type identity using an access token
+# Create a "key" type identity using a bearer access token
 newrelic_auth_cli create-identity key --name test --organization-id your_org_id --environment EU --bearer-access-token your_access_token --output-platform local-file --output-local-filepath /path/to/store/private_key.pem
+
+# Create a "secret" type identity using an API key 
+newrelic_auth_cli create-identity secret --name test1 --organization-id your_org_id --environment US --api-key NRAK-XXXXXXXXXXXXX
+
+# Create a "key" type identity using an API key
+newrelic_auth_cli create-identity key --name test --organization-id your_org_id --environment EU --api-key NRAK-XXXXXXXXXXXXX --output-platform local-file --output-local-filepath /path/to/store/private_key.pem
 ```
 
-**Note**: The `--client-id` parameter is now **deprecated** and optional. The API does not use this value - it returns a new `client_id` after creating the identity. This parameter is kept only for backward compatibility.
+**Note:** You must provide **either** `--bearer-access-token` **OR** `--api-key`, not both.
 
 Notice that the command support proxy:
 ```bash

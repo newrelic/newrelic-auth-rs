@@ -1,5 +1,6 @@
 //! Full example to generate an L1 System Identity using the `newrelic-auth-rs` library.
 use dotenvy::dotenv;
+
 use nr_auth::TokenRetriever;
 use nr_auth::authenticator::HttpAuthenticator;
 use nr_auth::http::client::HttpClient;
@@ -10,6 +11,7 @@ use nr_auth::key::PrivateKeyPem;
 use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
 use nr_auth::system_identity::generator::L1SystemIdentityGenerator;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
+use nr_auth::system_identity::iam_client::http::IAMAuthCredential;
 use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
@@ -127,7 +129,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let system_identity_generator = L1SystemIdentityGenerator { iam_client };
 
-    let result = system_identity_generator.generate(&token)?;
+    let auth_credential = IAMAuthCredential::BearerToken(token.access_token().to_string());
+    let result = system_identity_generator.generate(&auth_credential)?;
 
     // Use `reveal` on the client secret to get the string value
     println!("System Identity created successfully: {result:?}");

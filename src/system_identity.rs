@@ -88,7 +88,6 @@ impl fmt::Display for SystemIdentity {
 mod tests {
     use super::input_data::auth_method::AuthMethod;
     use crate::system_identity::input_data::SystemTokenCreationMetadata;
-    use chrono::Utc;
     use mockall::Sequence;
     use std::clone::Clone;
     use std::convert::{Into, TryFrom};
@@ -102,14 +101,13 @@ mod tests {
         system_identity::{
             ClientSecret, SystemIdentity,
             generator::L2SystemIdentityGenerator,
-            iam_client::http::HttpIAMClient,
+            iam_client::{http::HttpIAMClient, http::IAMAuthCredential},
             identity_creator::tests::MockL2IAMClient,
             input_data::{
                 SystemIdentityCreationMetadata, auth_method::ClientSecret as AuthClientSecret,
                 environment::NewRelicEnvironment,
             },
         },
-        token::{Token, TokenType},
         token_retriever::TokenRetrieverWithCache,
     };
     use rstest::{Context, rstest};
@@ -263,7 +261,8 @@ mod tests {
             iam_client,
         };
 
-        let result = system_identity_generator.generate(&token);
+        let auth_credential = IAMAuthCredential::BearerToken(token.access_token().to_string());
+        let result = system_identity_generator.generate(&auth_credential);
         assert!(
             result.is_ok(),
             "{}",
@@ -310,8 +309,8 @@ mod tests {
             iam_client,
         };
 
-        let token = Token::new("test-token".to_string(), TokenType::Bearer, Utc::now());
-        let result = system_identity_generator.generate(&token);
+        let auth_credential = IAMAuthCredential::BearerToken("test-token".to_string());
+        let result = system_identity_generator.generate(&auth_credential);
         assert!(result.is_ok());
         let result = result.unwrap();
         assert_eq!(result.name, Some("test".to_string()));
