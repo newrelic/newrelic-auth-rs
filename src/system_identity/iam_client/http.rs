@@ -77,7 +77,7 @@ where
         let pub_key_b64 = maybe_pub_key.map(|k| general_purpose::STANDARD.encode(k));
         let request = Self::build_request(
             self.metadata.name.as_ref(),
-            &self.metadata.system_identity_input.organization_id,
+            &self.metadata.organization_id,
             pub_key_b64,
             token,
             &self.metadata.environment.identity_creation_endpoint(),

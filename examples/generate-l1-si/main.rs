@@ -8,10 +8,9 @@ use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::TokenRetriever;
 use nr_auth::key::PrivateKeyPem;
 use nr_auth::system_identity::generator::L1SystemIdentityGenerator;
+use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
-use nr_auth::system_identity::input_data::output_platform::OutputPlatform;
-use nr_auth::system_identity::input_data::{SystemIdentityCreationMetadata, SystemIdentityInput};
 use nr_auth::token_retriever::TokenRetrieverWithCache;
 
 use nr_auth::http::client::HttpClient;
@@ -93,8 +92,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Using auth method: {auth_method:?}");
 
-    let key_path = env::current_dir()?;
-    let output_platform = OutputPlatform::LocalPrivateKeyPath(key_path.to_owned());
     let http_config = HttpConfig::new(
         DEFAULT_AUTHENTICATOR_TIMEOUT,
         DEFAULT_AUTHENTICATOR_TIMEOUT,
@@ -124,10 +121,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let system_identity_creation_metadata = SystemIdentityCreationMetadata {
-        system_identity_input: SystemIdentityInput { organization_id },
+        organization_id,
         name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,
-        output_platform,
     };
 
     let iam_client = HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
