@@ -125,10 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let system_identity_creation_metadata = SystemIdentityCreationMetadata {
-        system_identity_input: SystemIdentityInput {
-            organization_id,
-            client_id,
-        },
+        system_identity_input: SystemIdentityInput { organization_id },
         name: format!("test-{}", env!("CARGO_BIN_NAME")).into(),
         environment,
         output_platform,

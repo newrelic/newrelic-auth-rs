@@ -46,9 +46,6 @@ newrelic_auth_cli create-identity secret --name test1 --organization-id your_org
 
 # Create a "key" type identity using an access token
 newrelic_auth_cli create-identity key --name test --organization-id your_org_id --environment EU --bearer-access-token your_access_token --output-platform local-file --output-local-filepath /path/to/store/private_key.pem
-
-# Create a "secret" type identity using an API key (no authentication step needed)
-newrelic_auth_cli create-identity secret --name test1 --organization-id your_org_id --environment US --api-key NRAK-XXXXXXXXXXXXX
 ```
 
 **Note**: The `--client-id` parameter is now **deprecated** and optional. The API does not use this value - it returns a new `client_id` after creating the identity. This parameter is kept only for backward compatibility.
