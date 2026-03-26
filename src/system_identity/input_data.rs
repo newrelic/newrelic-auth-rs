@@ -7,7 +7,6 @@ pub mod output_platform;
 
 use auth_method::AuthMethod;
 use environment::NewRelicEnvironment;
-use output_platform::OutputPlatform;
 
 /// Represents the input data required to create a System Identity.
 ///
@@ -16,16 +15,9 @@ use output_platform::OutputPlatform;
 /// for example from CLI arguments or by library usage, before reaching for any actual creation service.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SystemIdentityCreationMetadata {
-    pub system_identity_input: SystemIdentityInput,
+    pub organization_id: String,
     pub name: Option<String>,
     pub environment: NewRelicEnvironment,
-    pub output_platform: OutputPlatform,
-}
-
-/// The existing System Identity data that is required as input to create a new System Identity.
-#[derive(Debug, Clone, PartialEq)]
-pub struct SystemIdentityInput {
-    pub organization_id: String,
 }
 
 /// Represents the input data required to create an Identity Token.

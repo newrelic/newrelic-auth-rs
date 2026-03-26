@@ -8,6 +8,7 @@ use nr_auth::parameters::{
     AuthenticationArgs, Commands, DEFAULT_AUTHENTICATOR_TIMEOUT, IdentityType, OutputTokenFormat,
     ProxyArgs, build_proxy_args, build_token_for_identity_creation,
     create_metadata_for_identity_creation, create_metadata_for_token_retrieve,
+    select_output_platform,
 };
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::error::Error;
@@ -49,7 +50,10 @@ fn handle_create_identity_command(
     let create_command = CreateCommand::new(iam_client);
     let system_identity = match identity_type {
         IdentityType::Secret(_) => create_command.create_l1_system_identity(token)?,
-        IdentityType::Key(_) => create_command.create_l2_system_identity(&meta, token)?,
+        IdentityType::Key(key_args) => {
+            let output_platform = select_output_platform(&key_args);
+            create_command.create_l2_system_identity(&output_platform, token)?
+        }
     };
     println!("{}", serde_json::to_string(&system_identity)?);
     Ok(())

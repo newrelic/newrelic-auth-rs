@@ -92,9 +92,7 @@ mod tests {
     use mockall::Sequence;
     use std::clone::Clone;
     use std::convert::{Into, TryFrom};
-    use std::default::Default;
     use std::option::Option::Some;
-    use std::path::PathBuf;
 
     use crate::system_identity::SystemIdentityType;
     use crate::{
@@ -107,9 +105,8 @@ mod tests {
             iam_client::http::HttpIAMClient,
             identity_creator::tests::MockL2IAMClient,
             input_data::{
-                SystemIdentityCreationMetadata, SystemIdentityInput,
-                auth_method::ClientSecret as AuthClientSecret, environment::NewRelicEnvironment,
-                output_platform::OutputPlatform,
+                SystemIdentityCreationMetadata, auth_method::ClientSecret as AuthClientSecret,
+                environment::NewRelicEnvironment,
             },
         },
         token::{Token, TokenType},
@@ -139,12 +136,9 @@ mod tests {
         };
 
         let cli_input = SystemIdentityCreationMetadata {
-            system_identity_input: SystemIdentityInput {
-                organization_id: "org-id".to_string(),
-            },
+            organization_id: "org-id".to_string(),
             name: ctx.name.to_string().into(),
             environment: NewRelicEnvironment::Staging,
-            output_platform: OutputPlatform::LocalPrivateKeyPath(PathBuf::default()),
         };
         let expected_name = cli_input.name.to_owned();
 

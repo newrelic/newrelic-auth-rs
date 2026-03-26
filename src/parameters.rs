@@ -4,7 +4,7 @@ use crate::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use crate::system_identity::input_data::environment::NewRelicEnvironment;
 use crate::system_identity::input_data::output_platform::OutputPlatform;
 use crate::system_identity::input_data::{
-    SystemIdentityCreationMetadata, SystemIdentityInput, SystemTokenCreationMetadata,
+    SystemIdentityCreationMetadata, SystemTokenCreationMetadata,
 };
 use crate::token::{AccessToken, Token, TokenType};
 use chrono::DateTime;
@@ -31,9 +31,6 @@ pub enum Commands {
     ///    - Utilizes Client ID and Public/Private Keys.
     ///    - Does not expire.
     ///
-    /// Both Parent and Child identities can be created using either method.
-    /// - Parent Identity: Has permissions to create other identities and must be established by a user with elevated permissions.
-    /// - Child Identity: Lacks additional permissions and is used primarily for authenticating requests to restricted endpoints.
     CreateIdentity {
         #[command(subcommand)]
         identity_type: IdentityType,
@@ -253,27 +250,15 @@ pub fn create_metadata_for_token_retrieve(
 pub fn create_metadata_for_identity_creation(
     identity_type: &IdentityType,
 ) -> Result<SystemIdentityCreationMetadata, Box<dyn std::error::Error>> {
-    let (basic_auth_args, output_platform) = match identity_type {
-        IdentityType::Secret(secret_args) => (
-            secret_args.basic_auth_args.clone(),
-            OutputPlatform::LocalPrivateKeyPath("./".into()),
-        ),
-        IdentityType::Key(key_args) => (
-            key_args.basic_auth_args.clone(),
-            select_output_platform(
-                &key_args.output_options.output_platform,
-                key_args.output_options.output_local_filepath.clone(),
-            )?,
-        ),
+    let basic_auth_args = match identity_type {
+        IdentityType::Secret(secret_args) => secret_args.basic_auth_args.clone(),
+        IdentityType::Key(key_args) => key_args.basic_auth_args.clone(),
     };
 
     Ok(SystemIdentityCreationMetadata {
-        system_identity_input: SystemIdentityInput {
-            organization_id: basic_auth_args.organization_id,
-        },
+        organization_id: basic_auth_args.organization_id,
         name: basic_auth_args.name.clone(),
         environment: basic_auth_args.environment.into(),
-        output_platform,
     })
 }
 
@@ -302,14 +287,15 @@ pub fn build_token_for_identity_creation(identity_type: &IdentityType) -> Token 
     )
 }
 
-pub fn select_output_platform(
-    output_platform: &OutputPlatformChoice,
-    output_filepath: Option<PathBuf>,
-) -> Result<OutputPlatform, Error> {
-    match output_platform {
-        OutputPlatformChoice::LocalFile => Ok(OutputPlatform::LocalPrivateKeyPath(
-            output_filepath.unwrap_or_default(),
-        )),
+pub fn select_output_platform(key_args: &KeyArgs) -> OutputPlatform {
+    match key_args.output_options.output_platform {
+        OutputPlatformChoice::LocalFile => OutputPlatform::LocalPrivateKeyPath(
+            key_args
+                .output_options
+                .output_local_filepath
+                .clone()
+                .unwrap_or_default(),
+        ),
     }
 }
 
