@@ -26,7 +26,6 @@ pub struct SystemIdentityCreationMetadata {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SystemIdentityInput {
     pub organization_id: String,
-    pub client_id: String,
 }
 
 /// Represents the input data required to create an Identity Token.

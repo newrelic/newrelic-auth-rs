@@ -85,7 +85,6 @@ mod tests {
         SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {
                 organization_id: "org-id".to_string(),
-                client_id: "test_client_id".to_string(),
             },
             name: name.or_else(|| Some("default_test_name".to_string())),
             environment: NewRelicEnvironment::Staging,

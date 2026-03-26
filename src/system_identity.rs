@@ -131,9 +131,9 @@ mod tests {
         #[case] auth_method: AuthMethod,
     ) {
         use crate::{TokenRetriever, authenticator::HttpAuthenticator, jwt::signer::JwtSignerImpl};
-
+        let client_id_test = format!("{}-client-id", ctx.name);
         let cli_token_input = SystemTokenCreationMetadata {
-            client_id: format!("{}-client-id", ctx.name),
+            client_id: client_id_test.clone(),
             environment: NewRelicEnvironment::Staging,
             auth_method,
         };
@@ -141,13 +141,11 @@ mod tests {
         let cli_input = SystemIdentityCreationMetadata {
             system_identity_input: SystemIdentityInput {
                 organization_id: "org-id".to_string(),
-                client_id: format!("{}-client-id", ctx.name),
             },
             name: ctx.name.to_string().into(),
             environment: NewRelicEnvironment::Staging,
             output_platform: OutputPlatform::LocalPrivateKeyPath(PathBuf::default()),
         };
-        let expected_client_id = cli_input.system_identity_input.client_id.to_owned();
         let expected_name = cli_input.name.to_owned();
 
         let mut token_retriever_http_client = MockHttpClient::new();
@@ -234,19 +232,24 @@ mod tests {
             token_retriever_http_client,
             cli_input.environment.token_renewal_endpoint(),
         );
-        let client_id = cli_input.system_identity_input.client_id.to_owned();
         let token = match cli_token_input.auth_method.to_owned() {
-            AuthMethod::ClientSecret(client_secret) => {
-                TokenRetrieverWithCache::new_with_secret(client_id, authenticator, client_secret)
-                    .retrieve()
-                    .unwrap()
-            }
+            AuthMethod::ClientSecret(client_secret) => TokenRetrieverWithCache::new_with_secret(
+                client_id_test,
+                authenticator,
+                client_secret,
+            )
+            .retrieve()
+            .unwrap(),
             AuthMethod::PrivateKey(private_key_pem) => {
                 let signer = LocalPrivateKeySigner::try_from(private_key_pem).unwrap();
                 let jwt_signer = JwtSignerImpl::Local(signer);
-                TokenRetrieverWithCache::new_with_jwt_signer(client_id, authenticator, jwt_signer)
-                    .retrieve()
-                    .unwrap()
+                TokenRetrieverWithCache::new_with_jwt_signer(
+                    client_id_test,
+                    authenticator,
+                    jwt_signer,
+                )
+                .retrieve()
+                .unwrap()
             }
         };
 
@@ -275,10 +278,9 @@ mod tests {
 
         let result = result.unwrap();
         assert_eq!(result.name, expected_name);
-        assert_eq!(result.client_id, expected_client_id);
         assert!(matches!(
             result.identity_type,
-            super::SystemIdentityType::L2 { pub_key } if pub_key == String::from_utf8_lossy(&[1u8, 2u8, 3u8])
+            SystemIdentityType::L2 { pub_key } if pub_key == String::from_utf8_lossy(&[1u8, 2u8, 3u8])
         ));
     }
 
