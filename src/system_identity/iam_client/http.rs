@@ -15,6 +15,8 @@ use http::{
 };
 use serde_json::{Value, json};
 
+const API_KEY_HEADER: &str = "Api-Key";
+
 /// Authentication credential for creating system identities
 #[derive(Debug, Clone)]
 pub enum IAMAuthCredential {
@@ -82,7 +84,7 @@ where
                     )
                 })?;
                 api_key_header.set_sensitive(true);
-                request_builder = request_builder.header("Api-Key", api_key_header);
+                request_builder = request_builder.header(API_KEY_HEADER, api_key_header);
             }
         }
 
