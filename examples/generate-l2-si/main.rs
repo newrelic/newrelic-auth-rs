@@ -127,7 +127,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         environment,
     };
 
-    let iam_client = HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
+    let iam_client = &HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
 
     let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
         key_type: KeyType::Rsa4096,

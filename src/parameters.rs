@@ -43,6 +43,15 @@ pub enum Commands {
         identity_type: IdentityType,
     },
     #[command(verbatim_doc_comment)]
+    /// Creates a bootstrap system identity with NR Control Group membership.
+    ///
+    /// Bootstrap identities can create other identities. Only API key authentication is supported.
+    ///
+    CreateBootstrapIdentity {
+        #[command(subcommand)]
+        identity_type: IdentityTypeBootstrap,
+    },
+    #[command(verbatim_doc_comment)]
     /// Authenticates with New Relic and returns an authentication token.
     ///
     /// This function allows you to authenticate using either a client secret
@@ -196,6 +205,16 @@ pub enum IdentityType {
     Key(KeyArgs),
 }
 
+#[derive(Subcommand, Debug, Clone)]
+pub enum IdentityTypeBootstrap {
+    #[command(verbatim_doc_comment)]
+    /// Creates L1 bootstrap identity (expires).
+    Secret(SecretArgsBootstrap),
+    #[command(verbatim_doc_comment)]
+    /// Creates L2 bootstrap identity (does not expire).
+    Key(KeyArgsBootstrap),
+}
+
 #[derive(Args, Debug, Clone)]
 pub struct KeyArgs {
     /// Basic information need for auth name, client_id, etc.
@@ -220,6 +239,27 @@ pub struct SecretArgs {
     /// Authentication method for identity creation
     #[command(flatten)]
     auth_credential: AuthCredentialArgs,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct KeyArgsBootstrap {
+    #[command(flatten)]
+    basic_auth_args: BasicAuthArgs,
+
+    #[arg(long)]
+    api_key: String,
+
+    #[command(flatten)]
+    output_options: OutputDestinationArgs,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct SecretArgsBootstrap {
+    #[command(flatten)]
+    basic_auth_args: BasicAuthArgs,
+
+    #[arg(long)]
+    api_key: String,
 }
 
 #[derive(Args, Debug, Clone)]
@@ -338,6 +378,39 @@ pub fn select_auth_method(
         Ok(AuthMethod::PrivateKey(PrivateKeyPem::from(
             private_key.into_bytes(),
         )))
+    }
+}
+
+pub fn create_metadata_for_bootstrap_identity_creation(
+    identity_type: &IdentityTypeBootstrap,
+) -> SystemIdentityCreationMetadata {
+    let basic_auth_args = match identity_type {
+        IdentityTypeBootstrap::Secret(secret_args) => secret_args.basic_auth_args.clone(),
+        IdentityTypeBootstrap::Key(key_args) => key_args.basic_auth_args.clone(),
+    };
+
+    SystemIdentityCreationMetadata {
+        organization_id: basic_auth_args.organization_id,
+        name: basic_auth_args.name.clone(),
+        environment: basic_auth_args.environment.into(),
+    }
+}
+
+pub fn extract_api_key_from_bootstrap(identity_type: &IdentityTypeBootstrap) -> String {
+    match identity_type {
+        IdentityTypeBootstrap::Secret(secret_args) => secret_args.api_key.clone(),
+        IdentityTypeBootstrap::Key(key_args) => key_args.api_key.clone(),
+    }
+}
+
+pub fn select_output_platform_bootstrap(key_args: KeyArgsBootstrap) -> OutputPlatform {
+    let output_platform = &key_args.output_options.output_platform;
+    let output_filepath = key_args.output_options.output_local_filepath.clone();
+
+    match output_platform {
+        OutputPlatformChoice::LocalFile => {
+            OutputPlatform::LocalPrivateKeyPath(output_filepath.unwrap_or_default())
+        }
     }
 }
 

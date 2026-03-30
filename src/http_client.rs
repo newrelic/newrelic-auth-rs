@@ -30,10 +30,8 @@ pub trait HttpClient {
 
 #[cfg(test)]
 pub(super) mod tests {
-
     use super::*;
-
-    use mockall::{mock, predicate::*};
+    use mockall::mock;
 
     // Create a mock for the HttpClient trait using the mock! macro
     mock! {

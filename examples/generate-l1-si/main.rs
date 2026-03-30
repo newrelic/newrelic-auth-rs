@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         environment,
     };
 
-    let iam_client = HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
+    let iam_client = &HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
 
     let system_identity_generator = L1SystemIdentityGenerator { iam_client };
 

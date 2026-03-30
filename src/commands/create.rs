@@ -14,18 +14,18 @@ pub enum CreateError {
     CreateError(String),
 }
 
-pub struct CreateCommand<C>
+pub struct CreateCommand<'a, C>
 where
     C: HttpClient,
 {
-    iam_client: HttpIAMClient<C>,
+    iam_client: &'a HttpIAMClient<C>,
 }
 
-impl<C> CreateCommand<C>
+impl<'a, C> CreateCommand<'a, C>
 where
     C: HttpClient,
 {
-    pub fn new(iam_client: HttpIAMClient<C>) -> Self {
+    pub fn new(iam_client: &'a HttpIAMClient<C>) -> Self {
         Self { iam_client }
     }
 
@@ -138,7 +138,7 @@ mod tests {
         "#;
 
         let mock_http_client = setup_mock_http_client(full_expected_response);
-        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let iam_client = &HttpIAMClient::new(mock_http_client, metadata);
         let command = CreateCommand::new(iam_client);
         let auth_credential = dummy_bearer_credential();
         let result = command.create_l1_with_credential(&auth_credential);
@@ -181,7 +181,7 @@ mod tests {
         "#;
 
         let mock_http_client = setup_mock_http_client(full_expected_response);
-        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let iam_client = &HttpIAMClient::new(mock_http_client, metadata);
         let command = CreateCommand::new(iam_client);
         let auth_credential = dummy_bearer_credential();
 
@@ -203,7 +203,7 @@ mod tests {
         let malformed_response = "{ invalid json }";
 
         let mock_http_client = setup_mock_http_client(malformed_response);
-        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let iam_client = &HttpIAMClient::new(mock_http_client, metadata);
         let command = CreateCommand::new(iam_client);
         let auth_credential = dummy_bearer_credential();
         let result = command.create_l2_with_credential(&output_platform, &auth_credential);
@@ -217,7 +217,7 @@ mod tests {
     fn test_create_identity_with_empty_metadata() {
         let metadata = create_test_metadata(None);
         let mock_http_client = setup_mock_http_client("");
-        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let iam_client = &HttpIAMClient::new(mock_http_client, metadata);
         let command = CreateCommand::new(iam_client);
         let auth_credential = dummy_bearer_credential();
 
@@ -258,7 +258,7 @@ mod tests {
         "#;
 
         let mock_http_client = setup_mock_http_client(full_expected_response);
-        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let iam_client = &HttpIAMClient::new(mock_http_client, metadata);
         let command = CreateCommand::new(iam_client);
         let auth_credential = dummy_api_key_credential();
         let result = command.create_l1_with_credential(&auth_credential);
@@ -302,7 +302,7 @@ mod tests {
         "#;
 
         let mock_http_client = setup_mock_http_client(full_expected_response);
-        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let iam_client = &HttpIAMClient::new(mock_http_client, metadata);
         let command = CreateCommand::new(iam_client);
         let auth_credential = dummy_api_key_credential();
 
