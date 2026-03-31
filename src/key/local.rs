@@ -115,6 +115,8 @@ mod tests {
     use assert_matches::assert_matches;
     use tempfile::{NamedTempFile, TempDir, tempdir};
 
+    use crate::key::rsa::tests::{is_private_key_content, is_public_key_content};
+
     use super::*;
 
     #[test]
@@ -175,17 +177,5 @@ mod tests {
             is_private_key_content(private_key_content.as_str()),
             "invalid private key content"
         );
-    }
-
-    fn is_private_key_content(content: &str) -> bool {
-        let trimmed = content.trim_end();
-        trimmed.starts_with("-----BEGIN PRIVATE KEY-----")
-            && trimmed.ends_with("-----END PRIVATE KEY-----")
-    }
-
-    fn is_public_key_content(content: &str) -> bool {
-        let trimmed = content.trim_end();
-        trimmed.starts_with("-----BEGIN PUBLIC KEY-----")
-            && trimmed.ends_with("-----END PUBLIC KEY-----")
     }
 }
