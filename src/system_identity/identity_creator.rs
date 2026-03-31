@@ -1,21 +1,21 @@
-use crate::token::Token;
-
 use super::SystemIdentity;
+use super::iam_client::http::IAMAuthCredential;
 
-/// Interface describing being able to create L2 System Identities.
+/// Interface describing being able to create L1 System Identities.
 pub trait L1IdentityCreator {
-    // TODO type Output;
     type Error: std::error::Error;
-    fn create_l1_system_identity(&self, token: &Token) -> Result<SystemIdentity, Self::Error>;
+    fn create_l1_system_identity(
+        &self,
+        auth_credentials: &IAMAuthCredential,
+    ) -> Result<SystemIdentity, Self::Error>;
 }
 
 /// Interface describing being able to create L2 System Identities.
 pub trait L2IdentityCreator {
-    // TODO type Output;
     type Error: std::error::Error;
     fn create_l2_system_identity(
         &self,
-        token: &Token,
+        auth_credentials: &IAMAuthCredential,
         pub_key: &[u8],
     ) -> Result<SystemIdentity, Self::Error>;
 }
@@ -35,7 +35,7 @@ pub mod tests {
         pub L1IAMClient {}
         impl L1IdentityCreator for L1IAMClient {
             type Error = MockIAMClientError;
-            fn create_l1_system_identity(&self, token: &Token)
+            fn create_l1_system_identity(&self, auth_credentials: &IAMAuthCredential)
               -> Result<SystemIdentity, MockIAMClientError>;
         }
     }
@@ -46,7 +46,7 @@ pub mod tests {
             type Error = MockIAMClientError;
             fn create_l2_system_identity(
                 &self,
-                token: &Token,
+                auth_credentials: &IAMAuthCredential,
                 pub_key: &[u8]
             ) -> Result<SystemIdentity, MockIAMClientError>;
         }

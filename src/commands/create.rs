@@ -4,8 +4,8 @@ use crate::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
 use crate::system_identity::SystemIdentity;
 use crate::system_identity::generator::{L1SystemIdentityGenerator, L2SystemIdentityGenerator};
 use crate::system_identity::iam_client::http::HttpIAMClient;
+use crate::system_identity::iam_client::http::IAMAuthCredential;
 use crate::system_identity::input_data::output_platform::OutputPlatform;
-use crate::token::Token;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -29,17 +29,23 @@ where
         Self { iam_client }
     }
 
-    pub fn create_l1_system_identity(self, token: Token) -> Result<SystemIdentity, CreateError> {
+    /// Create L1 identity using IAMAuthCredential (supports both Bearer token and API key)
+    pub fn create_l1_with_credential(
+        self,
+        auth_credentials: &IAMAuthCredential,
+    ) -> Result<SystemIdentity, CreateError> {
         L1SystemIdentityGenerator {
             iam_client: self.iam_client,
         }
-        .generate(&token)
+        .generate(auth_credentials)
         .map_err(|e| CreateError::CreateError(e.to_string()))
     }
-    pub fn create_l2_system_identity(
+
+    /// Create L2 identity using IAMAuthCredential (supports both Bearer token and API key)
+    pub fn create_l2_with_credential(
         self,
         output_platform: &OutputPlatform,
-        token: Token,
+        auth_credentials: &IAMAuthCredential,
     ) -> Result<SystemIdentity, CreateError> {
         let output_key_path = match output_platform {
             OutputPlatform::LocalPrivateKeyPath(path) => path,
@@ -55,7 +61,7 @@ where
             key_creator,
             iam_client: self.iam_client,
         }
-        .generate(&token)
+        .generate(auth_credentials)
         .map_err(|e| CreateError::CreateError(e.to_string()))
     }
 }
@@ -65,12 +71,11 @@ mod tests {
     use super::*;
     use crate::commands::create::CreateError::CreateError;
     use crate::http_client::tests::MockHttpClient;
+    use crate::system_identity::iam_client::http::IAMAuthCredential;
     use crate::system_identity::input_data::SystemIdentityCreationMetadata;
     use crate::system_identity::input_data::environment::NewRelicEnvironment;
     use crate::system_identity::input_data::output_platform::OutputPlatform;
     use crate::system_identity::{ClientSecret, SystemIdentityType};
-    use crate::token::{Token, TokenType};
-    use chrono::{Duration, Utc};
     use http::Response;
     use tempfile::tempdir;
 
@@ -82,12 +87,12 @@ mod tests {
         }
     }
 
-    fn dummy_token() -> Token {
-        Token::new(
-            "dummy-test-token".to_string(),
-            TokenType::Bearer,
-            Utc::now() + Duration::minutes(10),
-        )
+    fn dummy_bearer_credential() -> IAMAuthCredential {
+        IAMAuthCredential::BearerToken("dummy-test-token".to_string())
+    }
+
+    fn dummy_api_key_credential() -> IAMAuthCredential {
+        IAMAuthCredential::ApiKey("NRAK-DUMMY-API-KEY".to_string())
     }
 
     fn setup_mock_http_client(expected_response: &'static str) -> MockHttpClient {
@@ -135,8 +140,8 @@ mod tests {
         let mock_http_client = setup_mock_http_client(full_expected_response);
         let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
         let command = CreateCommand::new(iam_client);
-        let token = dummy_token();
-        let result = command.create_l1_system_identity(token);
+        let auth_credential = dummy_bearer_credential();
+        let result = command.create_l1_with_credential(&auth_credential);
         assert!(
             result.is_ok(),
             "L1 creation failed when it should have succeeded. Error: {:?}",
@@ -178,9 +183,9 @@ mod tests {
         let mock_http_client = setup_mock_http_client(full_expected_response);
         let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
         let command = CreateCommand::new(iam_client);
-        let token = dummy_token();
+        let auth_credential = dummy_bearer_credential();
 
-        let result = command.create_l2_system_identity(&output_platform, token);
+        let result = command.create_l2_with_credential(&output_platform, &auth_credential);
         assert!(
             result.is_ok(),
             "L2 creation failed when it should have succeeded. Error: {:?}",
@@ -200,8 +205,8 @@ mod tests {
         let mock_http_client = setup_mock_http_client(malformed_response);
         let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
         let command = CreateCommand::new(iam_client);
-        let token = dummy_token();
-        let result = command.create_l2_system_identity(&output_platform, token);
+        let auth_credential = dummy_bearer_credential();
+        let result = command.create_l2_with_credential(&output_platform, &auth_credential);
 
         assert!(
             matches!(result, Err(CreateError(_))),
@@ -214,12 +219,100 @@ mod tests {
         let mock_http_client = setup_mock_http_client("");
         let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
         let command = CreateCommand::new(iam_client);
-        let token = dummy_token();
+        let auth_credential = dummy_bearer_credential();
 
-        let result_l1 = command.create_l1_system_identity(token.clone());
+        let result_l1 = command.create_l1_with_credential(&auth_credential);
         assert!(
             result_l1.is_err(),
             "Expected error with empty metadata for L1"
         );
+    }
+
+    #[test]
+    fn test_create_l1_with_api_key() {
+        let metadata = create_test_metadata(Some("l1_api_key_test".to_string()));
+        let expected_identity = SystemIdentity {
+            id: "identity-456".to_string(),
+            name: Some("api-key-identity".to_string()),
+            client_id: "client-def-456".to_string(),
+            organization_id: "org-api-789".to_string(),
+            identity_type: SystemIdentityType::L1 {
+                client_secret: ClientSecret::from("api-key-secret".to_string()),
+                credential_expiration: "2026-06-30T23:59:59Z".to_string(),
+            },
+        };
+
+        let full_expected_response = r#"
+        {
+          "data": {
+            "systemIdentityCreate": {
+              "clientId": "client-def-456",
+              "id": "identity-456",
+              "name": "api-key-identity",
+              "organizationId": "org-api-789",
+              "clientSecret": "api-key-secret",
+              "credentialExpiration": "2026-06-30T23:59:59Z"
+            }
+          }
+        }
+        "#;
+
+        let mock_http_client = setup_mock_http_client(full_expected_response);
+        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let command = CreateCommand::new(iam_client);
+        let auth_credential = dummy_api_key_credential();
+        let result = command.create_l1_with_credential(&auth_credential);
+        assert!(
+            result.is_ok(),
+            "L1 creation with API key failed. Error: {:?}",
+            result.err()
+        );
+
+        assert_eq!(result.unwrap(), expected_identity);
+    }
+
+    #[test]
+    fn test_create_l2_with_api_key() {
+        let tmp_dir = tempdir().unwrap();
+        let metadata = create_test_metadata(Some("l2_api_key_test".to_string()));
+        let output_platform = OutputPlatform::LocalPrivateKeyPath(tmp_dir.path().join("test-key"));
+
+        let expected_identity = SystemIdentity {
+            id: "identity-789".to_string(),
+            name: Some("api-key-l2-identity".to_string()),
+            client_id: "client-ghi-789".to_string(),
+            organization_id: "org-api-123".to_string(),
+            identity_type: SystemIdentityType::L2 {
+                pub_key: "YXBpS2V5UHVibGljS2V5QmFzZTY0".to_string(),
+            },
+        };
+
+        let full_expected_response = r#"
+        {
+          "data": {
+            "systemIdentityCreate": {
+              "clientId": "client-ghi-789",
+              "publicKey": "YXBpS2V5UHVibGljS2V5QmFzZTY0",
+              "id": "identity-789",
+              "name": "api-key-l2-identity",
+              "organizationId": "org-api-123"
+            }
+          }
+        }
+        "#;
+
+        let mock_http_client = setup_mock_http_client(full_expected_response);
+        let iam_client = HttpIAMClient::new(mock_http_client, metadata.clone());
+        let command = CreateCommand::new(iam_client);
+        let auth_credential = dummy_api_key_credential();
+
+        let result = command.create_l2_with_credential(&output_platform, &auth_credential);
+        assert!(
+            result.is_ok(),
+            "L2 creation with API key failed. Error: {:?}",
+            result.err()
+        );
+
+        assert_eq!(result.unwrap(), expected_identity);
     }
 }

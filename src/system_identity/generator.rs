@@ -1,13 +1,11 @@
-use std::fmt;
-
-use thiserror::Error;
-
-use crate::{key::creator::Creator as KeyCreator, token::Token};
-
 use super::{
     SystemIdentity,
+    iam_client::http::IAMAuthCredential,
     identity_creator::{L1IdentityCreator, L2IdentityCreator},
 };
+use crate::key::creator::Creator as KeyCreator;
+use std::fmt;
+use thiserror::Error;
 
 /// This type is responsible for generating a System Identity and its associated key pair.
 pub struct L2SystemIdentityGenerator<K, I>
@@ -26,7 +24,7 @@ where
 {
     pub fn generate(
         &self,
-        token: &Token,
+        auth_credential: &IAMAuthCredential,
     ) -> Result<SystemIdentity, SystemIdentityGenerationError<K, I>> {
         let pub_key = self
             .key_creator
@@ -34,7 +32,7 @@ where
             .map_err(SystemIdentityGenerationError::KeyPairCreator)?;
 
         self.iam_client
-            .create_l2_system_identity(token, pub_key.as_slice())
+            .create_l2_system_identity(auth_credential, pub_key.as_slice())
             .map_err(SystemIdentityGenerationError::IAMClient)
     }
 }
@@ -44,8 +42,11 @@ pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
 }
 
 impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
-    pub fn generate(&self, token: &Token) -> Result<SystemIdentity, I::Error> {
-        self.iam_client.create_l1_system_identity(token)
+    pub fn generate(
+        &self,
+        auth_credential: &IAMAuthCredential,
+    ) -> Result<SystemIdentity, I::Error> {
+        self.iam_client.create_l1_system_identity(auth_credential)
     }
 }
 

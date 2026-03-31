@@ -1,10 +1,4 @@
-use base64::{Engine, engine::general_purpose};
-use http::{
-    HeaderValue, Request, StatusCode, Uri,
-    header::{AUTHORIZATION, CONTENT_TYPE},
-};
-use serde_json::{Value, json};
-
+use super::error::IAMClientError;
 use crate::{
     http_client::HttpClient,
     system_identity::{
@@ -13,10 +7,24 @@ use crate::{
         identity_creator::{L1IdentityCreator, L2IdentityCreator},
         input_data::SystemIdentityCreationMetadata,
     },
-    token::Token,
 };
+use base64::{Engine, engine::general_purpose};
+use http::{
+    HeaderValue, Request, StatusCode, Uri,
+    header::{AUTHORIZATION, CONTENT_TYPE},
+};
+use serde_json::{Value, json};
 
-use super::error::IAMClientError;
+const API_KEY_HEADER: &str = "Api-Key";
+
+/// Authentication credential for creating system identities
+#[derive(Debug, Clone)]
+pub enum IAMAuthCredential {
+    /// Bearer token from OAuth authentication
+    BearerToken(String),
+    /// New Relic User API Key
+    ApiKey(String),
+}
 
 /// Implementation of the IAMClient trait for a generic HTTP client.
 pub struct HttpIAMClient<C>
@@ -42,7 +50,7 @@ where
         maybe_name: Option<&String>,
         organization_id: &str,
         maybe_pub_key_b64: Option<String>,
-        token: &Token,
+        auth_credentials: &IAMAuthCredential,
         system_identity_creation_endpoint: &Uri,
     ) -> Result<Request<Vec<u8>>, IAMClientError> {
         let json_body = serde_json::to_vec(&assemble_json_value(
@@ -52,26 +60,42 @@ where
         ))
         .map_err(|e| IAMClientError::Encoder(format!("Failed to encode JSON: {e}")))?;
 
-        let mut bearer_token_header =
-            HeaderValue::from_str(token.to_string().as_str()).map_err(|_| {
-                IAMClientError::Transport(
-                    "invalid HTTP header value set for Authorization".to_string(),
-                )
-            })?;
-        bearer_token_header.set_sensitive(true);
-
-        http::Request::builder()
+        let mut request_builder = Request::builder()
             .uri(system_identity_creation_endpoint)
             .method("POST")
-            .header(CONTENT_TYPE, "application/json")
-            .header(AUTHORIZATION, bearer_token_header)
+            .header(CONTENT_TYPE, "application/json");
+
+        // Add authentication header based on credential type
+        match auth_credentials {
+            IAMAuthCredential::BearerToken(token) => {
+                let mut bearer_token_header = HeaderValue::from_str(&format!("Bearer {}", token))
+                    .map_err(|_| {
+                    IAMClientError::Transport(
+                        "invalid HTTP header value set for Authorization".to_string(),
+                    )
+                })?;
+                bearer_token_header.set_sensitive(true);
+                request_builder = request_builder.header(AUTHORIZATION, bearer_token_header);
+            }
+            IAMAuthCredential::ApiKey(api_key) => {
+                let mut api_key_header = HeaderValue::from_str(api_key).map_err(|_| {
+                    IAMClientError::Transport(
+                        "invalid HTTP header value set for Api-Key".to_string(),
+                    )
+                })?;
+                api_key_header.set_sensitive(true);
+                request_builder = request_builder.header(API_KEY_HEADER, api_key_header);
+            }
+        }
+
+        request_builder
             .body(json_body)
             .map_err(|e| IAMClientError::Encoder(format!("Failed to build request: {e}")))
     }
 
     fn create_system_identity(
         &self,
-        token: &Token,
+        auth_credentials: &IAMAuthCredential,
         maybe_pub_key: Option<&[u8]>,
     ) -> Result<SystemIdentity, IAMClientError> {
         let pub_key_b64 = maybe_pub_key.map(|k| general_purpose::STANDARD.encode(k));
@@ -79,7 +103,7 @@ where
             self.metadata.name.as_ref(),
             &self.metadata.organization_id,
             pub_key_b64,
-            token,
+            auth_credentials,
             &self.metadata.environment.identity_creation_endpoint(),
         )?;
 
@@ -143,10 +167,10 @@ where
     type Error = IAMClientError;
     fn create_l2_system_identity(
         &self,
-        token: &Token,
+        auth_credentials: &IAMAuthCredential,
         pub_key: &[u8],
     ) -> Result<SystemIdentity, Self::Error> {
-        self.create_system_identity(token, pub_key.into())
+        self.create_system_identity(auth_credentials, Some(pub_key))
     }
 }
 
@@ -155,35 +179,30 @@ where
     C: HttpClient,
 {
     type Error = IAMClientError;
-    fn create_l1_system_identity(&self, token: &Token) -> Result<SystemIdentity, Self::Error> {
-        self.create_system_identity(token, None)
+    fn create_l1_system_identity(
+        &self,
+        auth_credentials: &IAMAuthCredential,
+    ) -> Result<SystemIdentity, Self::Error> {
+        self.create_system_identity(auth_credentials, None)
     }
 }
 
 #[cfg(test)]
 mod tests {
-
-    use chrono::Utc;
+    use super::*;
+    use crate::http_client::tests::MockHttpClient;
     use http::Method;
     use rstest::rstest;
 
-    use crate::{
-        http_client::tests::MockHttpClient,
-        token::{AccessToken, TokenType},
-    };
-
-    use super::*;
-
     #[rstest]
-    #[case(None)]
-    #[case(Some("cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==".to_owned()))]
-    fn build_request(#[case] maybe_pub_key_b64: Option<String>) {
+    #[case(None, IAMAuthCredential::BearerToken("test_token".to_string()))]
+    #[case(Some("cHVibGljS2V5QmFzZTY0RW5jb2RlZFN0cmluZw==".to_owned()), IAMAuthCredential::BearerToken("test_token".to_string()))]
+    #[case(None, IAMAuthCredential::ApiKey("NRAK-XXXXXXXXXX".to_string()))]
+    fn build_request(
+        #[case] maybe_pub_key_b64: Option<String>,
+        #[case] auth_credential: IAMAuthCredential,
+    ) {
         let uri: Uri = "https://example.com/graphql".parse().unwrap();
-        let token = Token::new(
-            AccessToken::from("test_token"),
-            TokenType::Bearer,
-            Utc::now(),
-        );
         let name = "test_identity";
         let org_id = "org_123";
 
@@ -191,7 +210,7 @@ mod tests {
             Some(&name.to_string()),
             org_id,
             maybe_pub_key_b64.clone(),
-            &token,
+            &auth_credential,
             &uri,
         )
         .unwrap();
@@ -202,11 +221,25 @@ mod tests {
             request.headers().get(CONTENT_TYPE).unwrap(),
             &HeaderValue::from_static("application/json")
         );
-        assert_eq!(
-            request.headers().get(AUTHORIZATION).unwrap(),
-            &HeaderValue::from_str(&format!("Bearer {}", token.access_token())).unwrap()
-        );
-        assert!(request.headers().get(AUTHORIZATION).unwrap().is_sensitive());
+
+        // Check correct authentication header based on credential type
+        match &auth_credential {
+            IAMAuthCredential::BearerToken(token) => {
+                assert_eq!(
+                    request.headers().get(AUTHORIZATION).unwrap(),
+                    &HeaderValue::from_str(&format!("Bearer {}", token)).unwrap()
+                );
+                assert!(request.headers().get(AUTHORIZATION).unwrap().is_sensitive());
+            }
+            IAMAuthCredential::ApiKey(api_key) => {
+                assert_eq!(
+                    request.headers().get("Api-Key").unwrap(),
+                    &HeaderValue::from_str(api_key).unwrap()
+                );
+                assert!(request.headers().get("Api-Key").unwrap().is_sensitive());
+            }
+        }
+
         let body: serde_json::Value = serde_json::from_slice(request.body()).unwrap();
         assert_eq!(
             body,

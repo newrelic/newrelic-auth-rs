@@ -6,8 +6,7 @@ use crate::system_identity::input_data::output_platform::OutputPlatform;
 use crate::system_identity::input_data::{
     SystemIdentityCreationMetadata, SystemTokenCreationMetadata,
 };
-use crate::token::{AccessToken, Token, TokenType};
-use chrono::DateTime;
+use clap::error::ErrorKind::MissingRequiredArgument;
 use clap::{Args, Error, Subcommand, ValueEnum};
 use std::clone::Clone;
 use std::convert::{From, Into};
@@ -15,6 +14,14 @@ use std::fs;
 use std::path::PathBuf;
 use std::result::Result;
 use std::time::Duration;
+
+#[derive(Debug, Clone)]
+pub enum IdentityCreationCredential {
+    /// Bearer token from OAuth authentication flow
+    BearerToken(String),
+    /// New Relic User API Key
+    ApiKey(String),
+}
 
 pub const DEFAULT_AUTHENTICATOR_TIMEOUT: Duration = Duration::from_secs(5);
 #[derive(Subcommand, Debug)]
@@ -195,9 +202,9 @@ pub struct KeyArgs {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    /// Add the access token for identity creation, only bearer token type is accepted
-    #[arg(long)]
-    bearer_access_token: String,
+    /// Authentication method for identity creation
+    #[command(flatten)]
+    auth_credential: AuthCredentialArgs,
 
     /// Options for configuring the output destination (required for Key identity)
     #[command(flatten)]
@@ -210,9 +217,21 @@ pub struct SecretArgs {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    /// Add the access token for identity creation, only bearer token type is accepted
+    /// Authentication method for identity creation
+    #[command(flatten)]
+    auth_credential: AuthCredentialArgs,
+}
+
+#[derive(Args, Debug, Clone)]
+#[group(required = true, multiple = false)]
+pub struct AuthCredentialArgs {
+    /// Bearer access token obtained from authentication (from authenticate command)
     #[arg(long)]
-    bearer_access_token: String,
+    bearer_access_token: Option<String>,
+
+    /// New Relic User API Key for identity creation (does not expire, alternative to bearer token)
+    #[arg(long)]
+    api_key: Option<String>,
 }
 
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
@@ -249,17 +268,17 @@ pub fn create_metadata_for_token_retrieve(
 
 pub fn create_metadata_for_identity_creation(
     identity_type: &IdentityType,
-) -> Result<SystemIdentityCreationMetadata, Box<dyn std::error::Error>> {
+) -> SystemIdentityCreationMetadata {
     let basic_auth_args = match identity_type {
         IdentityType::Secret(secret_args) => secret_args.basic_auth_args.clone(),
         IdentityType::Key(key_args) => key_args.basic_auth_args.clone(),
     };
 
-    Ok(SystemIdentityCreationMetadata {
+    SystemIdentityCreationMetadata {
         organization_id: basic_auth_args.organization_id,
         name: basic_auth_args.name.clone(),
         environment: basic_auth_args.environment.into(),
-    })
+    }
 }
 
 impl From<Environments> for NewRelicEnvironment {
@@ -272,30 +291,37 @@ impl From<Environments> for NewRelicEnvironment {
     }
 }
 
-// We are using the same `Token` entity for token retrieval responses and identity creation.
-// Currently, the only useful parameter is `access_token`. We don't care about the expiration
-// date or the token type because Bearer is the only supported token type available.
-pub fn build_token_for_identity_creation(identity_type: &IdentityType) -> Token {
-    let token = match identity_type {
-        IdentityType::Secret(secret_args) => &secret_args.bearer_access_token,
-        IdentityType::Key(key_args) => &key_args.bearer_access_token,
+/// Extracts the authentication credential from the identity creation arguments
+pub fn extract_identity_creation_credential(
+    identity_type: &IdentityType,
+) -> Result<IdentityCreationCredential, Box<dyn std::error::Error>> {
+    let auth_credential = match identity_type {
+        IdentityType::Secret(secret_args) => &secret_args.auth_credential,
+        IdentityType::Key(key_args) => &key_args.auth_credential,
     };
-    Token::new(
-        AccessToken::from(token),
-        TokenType::Bearer,
-        DateTime::default(),
-    )
+
+    if let Some(bearer_token) = &auth_credential.bearer_access_token {
+        Ok(IdentityCreationCredential::BearerToken(
+            bearer_token.clone(),
+        ))
+    } else if let Some(api_key) = &auth_credential.api_key {
+        Ok(IdentityCreationCredential::ApiKey(api_key.clone()))
+    } else {
+        Err(Error::raw(
+            MissingRequiredArgument,
+            "Either --bearer-access-token or --api-key must be provided",
+        ))?
+    }
 }
 
-pub fn select_output_platform(key_args: &KeyArgs) -> OutputPlatform {
-    match key_args.output_options.output_platform {
-        OutputPlatformChoice::LocalFile => OutputPlatform::LocalPrivateKeyPath(
-            key_args
-                .output_options
-                .output_local_filepath
-                .clone()
-                .unwrap_or_default(),
-        ),
+pub fn select_output_platform(key_args: KeyArgs) -> OutputPlatform {
+    let output_platform = &key_args.output_options.output_platform;
+    let output_filepath = key_args.output_options.output_local_filepath.clone();
+
+    match output_platform {
+        OutputPlatformChoice::LocalFile => {
+            OutputPlatform::LocalPrivateKeyPath(output_filepath.unwrap_or_default())
+        }
     }
 }
 
