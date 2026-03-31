@@ -2,6 +2,7 @@ use crate::jwt::signer::local::{LocalPrivateKeySigner, LocalPrivateKeySignerErro
 
 pub mod creator;
 pub mod local;
+pub mod rsa;
 
 /// Represents a PEM-encoded private key "byte string".
 #[derive(Clone, PartialEq)]

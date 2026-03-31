@@ -1,6 +1,5 @@
-use crate::key::creator::{Creator, KeyPair, KeyType, PublicKeyPem};
-use rcgen::KeyPair as RcKeyPair;
-use rcgen::{PKCS_RSA_SHA512, RsaKeySize};
+use crate::key::creator::{Creator, KeyType, PublicKeyPem};
+use crate::key::rsa::rsa;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -49,7 +48,8 @@ impl Creator for LocalCreator {
     /// Returns the public key in PEM format, or an error if key creation fails.
     fn create(&self) -> Result<PublicKeyPem, Self::Error> {
         let key_pair = match self.key_type {
-            KeyType::Rsa4096 => rsa(&self.key_type)?,
+            KeyType::Rsa4096 => rsa(&self.key_type)
+                .map_err(|err| LocalKeyCreationError::UnableToGenerateKey(err.to_string()))?,
         };
 
         self.persist_private_key(&key_pair.private_key)?;
@@ -108,23 +108,6 @@ impl LocalCreator {
     }
 }
 
-/// Generates an RSA key pair based on the specified key type.
-///
-/// Returns the generated `KeyPair` or an error if key generation fails.
-fn rsa(key_type: &KeyType) -> Result<KeyPair, LocalKeyCreationError> {
-    let key_size = match key_type {
-        KeyType::Rsa4096 => RsaKeySize::_4096,
-    };
-
-    let rsa = RcKeyPair::generate_rsa_for(&PKCS_RSA_SHA512, key_size)
-        .map_err(|e| LocalKeyCreationError::UnableToGenerateKey(e.to_string()))?;
-
-    Ok(KeyPair {
-        private_key: rsa.serialize_pem().into_bytes(),
-        public_key: rsa.public_key_pem().into_bytes(),
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -132,24 +115,9 @@ mod tests {
     use assert_matches::assert_matches;
     use tempfile::{NamedTempFile, TempDir, tempdir};
 
+    use crate::key::rsa::tests::{is_private_key_content, is_public_key_content};
+
     use super::*;
-
-    #[test]
-    fn test_rsa_key_generation() {
-        let key_pair = rsa(&KeyType::Rsa4096).expect("Failed to generate RSA key pair");
-        // Assert on private and public key content
-        let priv_key = String::from_utf8(key_pair.private_key.clone()).expect("invalid utf8");
-        assert!(
-            is_private_key_content(priv_key.as_str()),
-            "invalid private key content"
-        );
-
-        let pub_key = String::from_utf8(key_pair.public_key.clone()).expect("invalid utf8");
-        assert!(
-            is_public_key_content(pub_key.as_str()),
-            "invalid public key content"
-        );
-    }
 
     #[test]
     fn test_local_creator_create_path_on_non_existent_parent_dir() {
@@ -209,17 +177,5 @@ mod tests {
             is_private_key_content(private_key_content.as_str()),
             "invalid private key content"
         );
-    }
-
-    fn is_private_key_content(content: &str) -> bool {
-        let trimmed = content.trim_end();
-        trimmed.starts_with("-----BEGIN PRIVATE KEY-----")
-            && trimmed.ends_with("-----END PRIVATE KEY-----")
-    }
-
-    fn is_public_key_content(content: &str) -> bool {
-        let trimmed = content.trim_end();
-        trimmed.starts_with("-----BEGIN PUBLIC KEY-----")
-            && trimmed.ends_with("-----END PUBLIC KEY-----")
     }
 }
