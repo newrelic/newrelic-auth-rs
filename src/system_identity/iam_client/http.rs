@@ -99,8 +99,7 @@ where
         let system_identity_response: SystemIdentityCreationResponse =
                     serde_json::from_value(json.clone()).map_err(|e| {
                         IAMClientError::Decoder(format!(
-                            "Failed to decode JSON response for system identity creation: {e}. Response body: {}",
-                            json.to_string()
+                            "Failed to decode JSON response for system identity creation: {e}. Response body: {json}"
                         ))
                     })?;
 
@@ -137,8 +136,7 @@ where
             .and_then(|items| items.as_array())
             .ok_or_else(|| {
                 IAMClientError::Decoder(format!(
-                    "Failed to extract groups from response. Body: {}",
-                    json.to_string()
+                    "Failed to extract groups from response. Body: {json}"
                 ))
             })?;
 
@@ -202,10 +200,10 @@ where
             )));
         }
 
-        let json: Value = serde_json::from_slice(&body).map_err(|e| {
+        let json: Value = serde_json::from_slice(body).map_err(|e| {
             IAMClientError::Decoder(format!(
                 "Failed to decode JSON response: {e}. Body: {}",
-                String::from_utf8_lossy(&body)
+                String::from_utf8_lossy(body)
             ))
         })?;
 
