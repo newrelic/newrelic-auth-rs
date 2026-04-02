@@ -80,7 +80,7 @@ fn handle_create_bootstrap_identity_command(
     let metadata = create_metadata_for_bootstrap_identity_creation(&identity_type);
     let auth_credential = IAMAuthCredential::ApiKey(extract_api_key_from_bootstrap(&identity_type));
 
-    let iam_client = &HttpIAMClient::new(http_client.clone(), metadata);
+    let iam_client = &HttpIAMClient::new(http_client, metadata);
     let create_command = CreateCommand::new(iam_client);
 
     let system_identity = match identity_type {

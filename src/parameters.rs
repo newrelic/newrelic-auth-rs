@@ -208,10 +208,10 @@ pub enum IdentityType {
 #[derive(Subcommand, Debug, Clone)]
 pub enum IdentityTypeBootstrap {
     #[command(verbatim_doc_comment)]
-    /// Creates L1 bootstrap identity (expires).
+    /// Creates secret (L1, expires) bootstrap identity.
     Secret(SecretArgsBootstrap),
     #[command(verbatim_doc_comment)]
-    /// Creates L2 bootstrap identity (does not expire).
+    /// Creates key (L2, does not expire) bootstrap identity.
     Key(KeyArgsBootstrap),
 }
 

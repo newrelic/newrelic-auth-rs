@@ -115,8 +115,8 @@ where
         Ok(system_identity)
     }
 
-    /// Find a system identity group by name. Returns the first match.
-    pub fn find_system_identity_group_by_name(
+    /// Find a system identity group_id by name. Returns the first match.
+    pub fn find_system_identity_group_id_by_name(
         &self,
         group_name: &str,
         auth_credentials: &IAMAuthCredential,
@@ -176,7 +176,7 @@ where
         auth_credentials: &IAMAuthCredential,
     ) -> Result<(), IAMClientError> {
         let group_id =
-            self.find_system_identity_group_by_name(NR_CONTROL_GROUP_NAME, auth_credentials)?;
+            self.find_system_identity_group_id_by_name(NR_CONTROL_GROUP_NAME, auth_credentials)?;
         self.add_identity_to_group_by_id(identity_id, &group_id, auth_credentials)
     }
 
@@ -292,6 +292,7 @@ mod tests {
     use crate::system_identity::input_data::{
         SystemIdentityCreationMetadata, environment::NewRelicEnvironment,
     };
+    use assert_matches::assert_matches;
     use http::{Method, Response, Uri};
     use rstest::rstest;
 
@@ -382,7 +383,7 @@ mod tests {
         r#"{"data":{"customerAdministration":{"systemIdentityGroups":{"items":[]}}}}"#,
         None
     )]
-    fn test_find_system_identity_group_by_name(
+    fn test_find_system_identity_group_id_by_name(
         #[case] response_body: &str,
         #[case] expected_group_id: Option<&str>,
     ) {
@@ -415,8 +416,8 @@ mod tests {
 
         let iam_client = HttpIAMClient::new(mock_http_client, metadata);
         let auth_credential = IAMAuthCredential::BearerToken("test-token".to_string());
-        let result =
-            iam_client.find_system_identity_group_by_name(NR_CONTROL_GROUP_NAME, &auth_credential);
+        let result = iam_client
+            .find_system_identity_group_id_by_name(NR_CONTROL_GROUP_NAME, &auth_credential);
 
         if let Some(expected_id) = expected_group_id {
             assert_eq!(result.unwrap(), expected_id);
@@ -461,13 +462,9 @@ mod tests {
         let result = iam_client.perform_graphql_request(&auth_credential, query);
 
         if let Some(expected_msg) = expected_error_contains {
-            assert!(result.is_err());
-            match result {
-                Err(IAMClientError::Transport(msg)) => {
-                    assert!(msg.contains(expected_msg));
-                }
-                _ => panic!("Expected Transport error"),
-            }
+            assert_matches!(result.unwrap_err(), IAMClientError::Transport(msg) =>{
+                assert!(msg.contains(expected_msg))
+            })
         } else {
             assert!(result.is_ok());
         }

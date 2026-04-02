@@ -56,14 +56,13 @@ newrelic_auth_cli create-identity key --name test --organization-id your_org_id 
 
 **Note:** You must provide **either** `--bearer-access-token` **OR** `--api-key`, not both.
 
-Create Bootstrap Identity Command Usage:
+Create Bootstrap Identity (an identity that can create other identities) Command Usage:
 ```bash
-# Create a bootstrap identity (with NR Control Group membership) using an API key
-# Bootstrap identities can create other identities. Supports both "secret" (L1, expires) and "key" (L2, does not expire) types.
-newrelic_auth_cli create-bootstrap-identity --name bootstrap-identity --organization-id your_org_id --environment US --api-key NRAK-XXXXXXXXXXXXX secret
+# Create a bootstrap "secret" type identity, this expires in 12 hours
+newrelic_auth_cli create-bootstrap-identity secret --name bootstrap-identity --organization-id your_org_id --environment US --api-key NRAK-XXXXXXXXXXXXX 
 
 # Create a bootstrap "key" type identity
-newrelic_auth_cli create-bootstrap-identity --name bootstrap-identity --organization-id your_org_id --environment US --api-key NRAK-XXXXXXXXXXXXX key --output-platform local-file --output-local-filepath /path/to/store/private_key.pem
+newrelic_auth_cli create-bootstrap-identity key --name bootstrap-identity --organization-id your_org_id --environment US --api-key NRAK-XXXXXXXXXXXXX --output-platform local-file --output-local-filepath /path/to/store/private_key.pem
 ```
 
 Notice that the command support proxy:
