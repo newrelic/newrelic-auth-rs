@@ -6,9 +6,10 @@ use nr_auth::http::client::HttpClient;
 use nr_auth::http::config::HttpConfig;
 use nr_auth::parameters::{
     AuthenticationArgs, Commands, DEFAULT_AUTHENTICATOR_TIMEOUT, IdentityCreationCredential,
-    IdentityType, OutputTokenFormat, ProxyArgs, build_proxy_args,
-    create_metadata_for_identity_creation, create_metadata_for_token_retrieve,
-    extract_identity_creation_credential, select_output_platform,
+    IdentityType, IdentityTypeBootstrap, OutputTokenFormat, ProxyArgs, build_proxy_args,
+    create_metadata_for_bootstrap_identity_creation, create_metadata_for_identity_creation,
+    create_metadata_for_token_retrieve, extract_api_key_from_bootstrap,
+    extract_identity_creation_credential, select_output_platform, select_output_platform_bootstrap,
 };
 use nr_auth::system_identity::iam_client::http::{HttpIAMClient, IAMAuthCredential};
 use std::error::Error;
@@ -33,6 +34,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         Commands::CreateIdentity { identity_type } => {
             handle_create_identity_command(http_client, identity_type)
         }
+        Commands::CreateBootstrapIdentity { identity_type } => {
+            handle_create_bootstrap_identity_command(http_client, identity_type)
+        }
         Commands::Authenticate {
             auth_args,
             output_token_format,
@@ -46,14 +50,13 @@ fn handle_create_identity_command(
 ) -> Result<(), Box<dyn Error>> {
     let credential = extract_identity_creation_credential(&identity_type)?;
 
-    // Convert the credential to IAMAuthCredential
     let iam_auth_credential = match credential {
         IdentityCreationCredential::BearerToken(token) => IAMAuthCredential::BearerToken(token),
         IdentityCreationCredential::ApiKey(api_key) => IAMAuthCredential::ApiKey(api_key),
     };
 
     let meta = create_metadata_for_identity_creation(&identity_type);
-    let iam_client = HttpIAMClient::new(http_client, meta.clone());
+    let iam_client = &HttpIAMClient::new(http_client, meta);
     let create_command = CreateCommand::new(iam_client);
 
     let system_identity = match identity_type {
@@ -65,6 +68,32 @@ fn handle_create_identity_command(
             create_command.create_l2_with_credential(&output_platform, &iam_auth_credential)?
         }
     };
+
+    println!("{}", serde_json::to_string(&system_identity)?);
+    Ok(())
+}
+
+fn handle_create_bootstrap_identity_command(
+    http_client: HttpClient,
+    identity_type: IdentityTypeBootstrap,
+) -> Result<(), Box<dyn Error>> {
+    let metadata = create_metadata_for_bootstrap_identity_creation(&identity_type);
+    let auth_credential = IAMAuthCredential::ApiKey(extract_api_key_from_bootstrap(&identity_type));
+
+    let iam_client = &HttpIAMClient::new(http_client, metadata);
+    let create_command = CreateCommand::new(iam_client);
+
+    let system_identity = match identity_type {
+        IdentityTypeBootstrap::Secret(_) => {
+            create_command.create_l1_with_credential(&auth_credential)?
+        }
+        IdentityTypeBootstrap::Key(key_args) => {
+            let output_platform = select_output_platform_bootstrap(key_args);
+            create_command.create_l2_with_credential(&output_platform, &auth_credential)?
+        }
+    };
+
+    iam_client.add_identity_to_nr_control_group_by_id(&system_identity.id, &auth_credential)?;
 
     println!("{}", serde_json::to_string(&system_identity)?);
     Ok(())

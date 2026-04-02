@@ -246,7 +246,7 @@ mod tests {
         };
 
         // IAMClient from HttpClient
-        let iam_client = HttpIAMClient::new(
+        let iam_client = &HttpIAMClient::new(
             iam_client_http_client,
             cli_input, // I compare with this value later on, so we keep it here
         );
@@ -306,7 +306,7 @@ mod tests {
 
         let system_identity_generator = L2SystemIdentityGenerator {
             key_creator,
-            iam_client,
+            iam_client: &iam_client,
         };
 
         let auth_credential = IAMAuthCredential::BearerToken("test-token".to_string());

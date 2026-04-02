@@ -8,16 +8,16 @@ use std::fmt;
 use thiserror::Error;
 
 /// This type is responsible for generating a System Identity and its associated key pair.
-pub struct L2SystemIdentityGenerator<K, I>
+pub struct L2SystemIdentityGenerator<'a, K, I>
 where
     K: KeyCreator,
     I: L2IdentityCreator,
 {
     pub key_creator: K,
-    pub iam_client: I,
+    pub iam_client: &'a I,
 }
 
-impl<K, I> L2SystemIdentityGenerator<K, I>
+impl<K, I> L2SystemIdentityGenerator<'_, K, I>
 where
     K: KeyCreator,
     I: L2IdentityCreator,
@@ -37,11 +37,11 @@ where
     }
 }
 
-pub struct L1SystemIdentityGenerator<I: L1IdentityCreator> {
-    pub iam_client: I,
+pub struct L1SystemIdentityGenerator<'a, I: L1IdentityCreator> {
+    pub iam_client: &'a I,
 }
 
-impl<I: L1IdentityCreator> L1SystemIdentityGenerator<I> {
+impl<I: L1IdentityCreator> L1SystemIdentityGenerator<'_, I> {
     pub fn generate(
         &self,
         auth_credential: &IAMAuthCredential,
