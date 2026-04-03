@@ -8,11 +8,8 @@ use crate::system_identity::input_data::{
     SystemIdentityCreationMetadata, SystemTokenCreationMetadata,
 };
 use clap::{Args, Error, Subcommand, ValueEnum};
-use std::clone::Clone;
-use std::convert::{From, Into};
 use std::fs;
 use std::path::PathBuf;
-use std::result::Result;
 use std::time::Duration;
 
 pub const DEFAULT_AUTHENTICATOR_TIMEOUT: Duration = Duration::from_secs(5);
@@ -31,6 +28,10 @@ pub enum Commands {
     ///    - Does not expire.
     ///
     CreateIdentity {
+        /// Basic information need for auth name, client_id, etc.
+        #[command(flatten)]
+        basic_auth_args: BasicAuthArgs,
+
         #[command(subcommand)]
         identity_type: StandardIdentityType,
     },
@@ -40,6 +41,10 @@ pub enum Commands {
     /// Bootstrap identities can create other identities. Only API key authentication is supported.
     ///
     CreateBootstrapIdentity {
+        /// Basic information need for auth name, client_id, etc.
+        #[command(flatten)]
+        basic_auth_args: BasicAuthArgs,
+
         #[command(subcommand)]
         identity_type: IdentityTypeBootstrap,
     },
@@ -154,6 +159,16 @@ pub struct BasicAuthArgs {
     environment: Environments,
 }
 
+impl BasicAuthArgs {
+    pub fn to_system_identity_creation_metadata(&self) -> SystemIdentityCreationMetadata {
+        SystemIdentityCreationMetadata {
+            organization_id: self.organization_id.clone(),
+            name: self.name.clone(),
+            environment: self.environment.into(),
+        }
+    }
+}
+
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq)]
 pub enum Environments {
     #[value(name = "US", alias = "Us", alias = "us")]
@@ -178,28 +193,15 @@ impl IdentityType {
         }
     }
 
-    pub fn get_creation_metadata(&self) -> SystemIdentityCreationMetadata {
-        let basic_auth_args = match self {
-            Self::Standard(identity_type) => identity_type.get_basic_auth_args(),
-            Self::Bootstrap(identity_type) => identity_type.get_basic_auth_args(),
-        };
-
-        SystemIdentityCreationMetadata {
-            organization_id: basic_auth_args.organization_id,
-            name: basic_auth_args.name.clone(),
-            environment: basic_auth_args.environment.into(),
-        }
-    }
-
     pub fn get_variant(&self) -> IdentityVariant {
         match self {
-            Self::Standard(StandardIdentityType::Secret(_)) => IdentityVariant::Secret,
-            Self::Standard(StandardIdentityType::Key(key_args)) => {
-                IdentityVariant::Key(select_output_platform(&key_args.output_options))
+            Self::Standard(StandardIdentityType::Secret { .. }) => IdentityVariant::Secret,
+            Self::Standard(StandardIdentityType::Key { output_options, .. }) => {
+                IdentityVariant::Key(select_output_platform(output_options))
             }
-            Self::Bootstrap(IdentityTypeBootstrap::Secret(_)) => IdentityVariant::Secret,
-            Self::Bootstrap(IdentityTypeBootstrap::Key(key_args)) => {
-                IdentityVariant::Key(select_output_platform(&key_args.output_options))
+            Self::Bootstrap(IdentityTypeBootstrap::Secret { .. }) => IdentityVariant::Secret,
+            Self::Bootstrap(IdentityTypeBootstrap::Key { output_options, .. }) => {
+                IdentityVariant::Key(select_output_platform(output_options))
             }
         }
     }
@@ -240,7 +242,11 @@ pub enum StandardIdentityType {
     /// client_secret: "AfYFAUjf9",
     /// credential_expiration: "2025-06-04T19:25:00Z"
     /// }}
-    Secret(SecretArgsStandard),
+    Secret {
+        /// Authentication method for identity creation
+        #[command(flatten)]
+        auth_credential: AuthCredentialArgs,
+    },
     #[command(verbatim_doc_comment)]
     /// Creates an identity whose type is 'private key'
     /// This type of identity does not expire.
@@ -253,57 +259,34 @@ pub enum StandardIdentityType {
     /// client_id: 8150a0ee,
     /// organization_id: b961cf81,
     /// identity_type: L2(pub_key: LS0tLS1))
-    Key(KeyArgsStandard),
-}
+    Key {
+        /// Authentication method for identity creation
+        #[command(flatten)]
+        auth_credential: AuthCredentialArgs,
 
-#[derive(Args, Debug, Clone)]
-pub struct SecretArgsStandard {
-    /// Basic information need for auth name, client_id, etc.
-    #[command(flatten)]
-    basic_auth_args: BasicAuthArgs,
-
-    /// Authentication method for identity creation
-    #[command(flatten)]
-    auth_credential: AuthCredentialArgs,
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct KeyArgsStandard {
-    /// Basic information need for auth name, client_id, etc.
-    #[command(flatten)]
-    basic_auth_args: BasicAuthArgs,
-
-    /// Authentication method for identity creation
-    #[command(flatten)]
-    auth_credential: AuthCredentialArgs,
-
-    /// Options for configuring the output destination (required for Key identity)
-    #[command(flatten)]
-    output_options: OutputDestinationArgs,
+        /// Options for configuring the output destination (required for Key identity)
+        #[command(flatten)]
+        output_options: OutputDestinationArgs,
+    },
 }
 
 impl StandardIdentityType {
     fn get_iam_credential(&self) -> IAMAuthCredential {
         let auth_credential = match self {
-            StandardIdentityType::Secret(secret_args) => &secret_args.auth_credential,
-            StandardIdentityType::Key(key_args) => &key_args.auth_credential,
+            StandardIdentityType::Secret { auth_credential } => auth_credential,
+            StandardIdentityType::Key {
+                auth_credential, ..
+            } => auth_credential,
         };
 
         if let Some(token) = &auth_credential.bearer_access_token {
-            return IAMAuthCredential::BearerToken(token.clone());
+            IAMAuthCredential::BearerToken(token.clone())
         } else if let Some(api_key) = &auth_credential.api_key {
-            return IAMAuthCredential::ApiKey(api_key.clone());
+            IAMAuthCredential::ApiKey(api_key.clone())
         } else {
             // This should never happen. We told clap that one of the arguments in
             // AuthCredentialArgs must be provided.
             panic!("Either --bearer-access-token or --api-key must be provided");
-        }
-    }
-
-    fn get_basic_auth_args(&self) -> BasicAuthArgs {
-        match self {
-            StandardIdentityType::Secret(secret_args) => secret_args.basic_auth_args.clone(),
-            StandardIdentityType::Key(key_args) => key_args.basic_auth_args.clone(),
         }
     }
 }
@@ -312,46 +295,27 @@ impl StandardIdentityType {
 pub enum IdentityTypeBootstrap {
     #[command(verbatim_doc_comment)]
     /// Creates secret (L1, expires) bootstrap identity.
-    Secret(SecretArgsBootstrap),
+    Secret {
+        #[arg(long)]
+        api_key: String,
+    },
     #[command(verbatim_doc_comment)]
     /// Creates key (L2, does not expire) bootstrap identity.
-    Key(KeyArgsBootstrap),
-}
+    Key {
+        #[arg(long)]
+        api_key: String,
 
-#[derive(Args, Debug, Clone)]
-pub struct SecretArgsBootstrap {
-    #[command(flatten)]
-    basic_auth_args: BasicAuthArgs,
-
-    #[arg(long)]
-    api_key: String,
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct KeyArgsBootstrap {
-    #[command(flatten)]
-    basic_auth_args: BasicAuthArgs,
-
-    #[arg(long)]
-    api_key: String,
-
-    #[command(flatten)]
-    output_options: OutputDestinationArgs,
+        #[command(flatten)]
+        output_options: OutputDestinationArgs,
+    },
 }
 
 impl IdentityTypeBootstrap {
     fn get_iam_credential(&self) -> IAMAuthCredential {
         IAMAuthCredential::ApiKey(match self {
-            IdentityTypeBootstrap::Secret(secret_args) => secret_args.api_key.clone(),
-            IdentityTypeBootstrap::Key(key_args) => key_args.api_key.clone(),
+            IdentityTypeBootstrap::Secret { api_key } => api_key.clone(),
+            IdentityTypeBootstrap::Key { api_key, .. } => api_key.clone(),
         })
-    }
-
-    fn get_basic_auth_args(&self) -> BasicAuthArgs {
-        match self {
-            IdentityTypeBootstrap::Secret(secret_args) => secret_args.basic_auth_args.clone(),
-            IdentityTypeBootstrap::Key(key_args) => key_args.basic_auth_args.clone(),
-        }
     }
 }
 

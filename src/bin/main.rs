@@ -5,8 +5,9 @@ use nr_auth::commands::retrieve_token::RetrieveTokenCommand;
 use nr_auth::http::client::HttpClient;
 use nr_auth::http::config::HttpConfig;
 use nr_auth::parameters::{
-    AuthenticationArgs, Commands, DEFAULT_AUTHENTICATOR_TIMEOUT, IdentityType, IdentityVariant,
-    OutputTokenFormat, ProxyArgs, build_proxy_args, create_metadata_for_token_retrieve,
+    AuthenticationArgs, BasicAuthArgs, Commands, DEFAULT_AUTHENTICATOR_TIMEOUT, IdentityType,
+    IdentityVariant, OutputTokenFormat, ProxyArgs, build_proxy_args,
+    create_metadata_for_token_retrieve,
 };
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use std::error::Error;
@@ -28,12 +29,22 @@ fn main() -> Result<(), Box<dyn Error>> {
     let http_client = init_http_client(cli_command.proxy_args)?;
 
     match cli_command.command {
-        Commands::CreateIdentity { identity_type } => {
-            handle_create_identity_common(http_client, IdentityType::Standard(identity_type))
-        }
-        Commands::CreateBootstrapIdentity { identity_type } => {
-            handle_create_identity_common(http_client, IdentityType::Bootstrap(identity_type))
-        }
+        Commands::CreateIdentity {
+            basic_auth_args,
+            identity_type,
+        } => handle_create_identity_common(
+            http_client,
+            basic_auth_args,
+            IdentityType::Standard(identity_type),
+        ),
+        Commands::CreateBootstrapIdentity {
+            basic_auth_args,
+            identity_type,
+        } => handle_create_identity_common(
+            http_client,
+            basic_auth_args,
+            IdentityType::Bootstrap(identity_type),
+        ),
         Commands::Authenticate {
             auth_args,
             output_token_format,
@@ -43,9 +54,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn handle_create_identity_common(
     http_client: HttpClient,
+    basic_auth_args: BasicAuthArgs,
     identity_type: IdentityType,
 ) -> Result<(), Box<dyn Error>> {
-    let metadata = identity_type.get_creation_metadata();
+    let metadata = basic_auth_args.to_system_identity_creation_metadata();
     let iam_client = HttpIAMClient::new(http_client, metadata);
     let create_command = CreateCommand::new(&iam_client);
 
