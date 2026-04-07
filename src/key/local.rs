@@ -1,4 +1,6 @@
-use crate::key::creator::{Creator, KeyType, PublicKeyPem};
+//! Local filesystem key pair generator.
+//! Generates RSA key pairs and persists the private key to a local file path.
+use crate::key::generation::{KeyType, PublicKeyPem};
 use crate::key::rsa::rsa;
 use std::fs::{self, File};
 use std::io::Write;
@@ -23,30 +25,43 @@ pub enum LocalKeyCreationError {
     UnableToWritePrivateKey(String),
 }
 
-/// Options for creating a cryptographic key.
+/// Configuration for [`LocalKeyPairGenerator`].
 #[derive(Debug)]
-pub struct KeyPairGeneratorLocalConfig {
+pub struct LocalKeyPairGeneratorConfig {
     /// The type of key to be created.
     pub key_type: KeyType,
     /// The file path where the private key will be stored.
     pub file_path: PathBuf,
 }
 
-/// A creator for generating and managing cryptographic keys locally.
+/// Generates a key pair and persists the private key to the local filesystem.
 #[derive(Debug)]
-pub struct LocalCreator {
+pub struct LocalKeyPairGenerator {
     /// The type of key to be created.
     key_type: KeyType,
     /// The file path where the private key will be stored.
     file_path: PathBuf,
 }
 
-impl Creator for LocalCreator {
-    type Error = LocalKeyCreationError;
-    /// Creates a cryptographic key based on the provided options and stores the private key locally.
+impl From<LocalKeyPairGeneratorConfig> for LocalKeyPairGenerator {
+    fn from(
+        LocalKeyPairGeneratorConfig {
+            key_type,
+            file_path: path,
+        }: LocalKeyPairGeneratorConfig,
+    ) -> Self {
+        Self {
+            key_type,
+            file_path: path,
+        }
+    }
+}
+
+impl LocalKeyPairGenerator {
+    /// Creates a cryptographic key and stores the private key locally.
     ///
     /// Returns the public key in PEM format, or an error if key creation fails.
-    fn create(&self) -> Result<PublicKeyPem, Self::Error> {
+    pub fn generate(&self) -> Result<PublicKeyPem, LocalKeyCreationError> {
         let key_pair = match self.key_type {
             KeyType::Rsa4096 => rsa(&self.key_type)
                 .map_err(|err| LocalKeyCreationError::UnableToGenerateKey(err.to_string()))?,
@@ -56,23 +71,7 @@ impl Creator for LocalCreator {
 
         Ok(key_pair.public_key)
     }
-}
 
-impl From<KeyPairGeneratorLocalConfig> for LocalCreator {
-    fn from(
-        KeyPairGeneratorLocalConfig {
-            key_type,
-            file_path: path,
-        }: KeyPairGeneratorLocalConfig,
-    ) -> Self {
-        Self {
-            key_type,
-            file_path: path,
-        }
-    }
-}
-
-impl LocalCreator {
     /// Persists the private key to the specified file path.
     fn persist_private_key(&self, key: &[u8]) -> Result<(), LocalKeyCreationError> {
         Self::validate_path(&self.file_path)?;
@@ -120,28 +119,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_local_creator_create_path_on_non_existent_parent_dir() {
+    fn test_local_key_pair_generator_create_path_on_non_existent_parent_dir() {
         let tmp_dir = tempdir().unwrap();
         let key_path = tmp_dir.path().join("ad-hoc-dir").join("key-filename");
 
-        let config = KeyPairGeneratorLocalConfig {
+        let config = LocalKeyPairGeneratorConfig {
             key_type: KeyType::Rsa4096,
             file_path: key_path,
         };
-        let creator = LocalCreator::from(config);
-        let result = creator.create();
+        let creator = LocalKeyPairGenerator::from(config);
+        let result = creator.generate();
         assert!(result.is_ok());
     }
 
     #[test]
-    fn test_local_creator_create_file_already_exists() {
+    fn test_local_key_pair_generator_create_file_already_exists() {
         let tmp_file = NamedTempFile::new().unwrap();
-        let config = KeyPairGeneratorLocalConfig {
+        let config = LocalKeyPairGeneratorConfig {
             key_type: KeyType::Rsa4096,
             file_path: tmp_file.path().to_path_buf(),
         };
-        let creator = LocalCreator::from(config);
-        let result = creator.create();
+        let creator = LocalKeyPairGenerator::from(config);
+        let result = creator.generate();
         assert_matches!(
             result,
             Err(LocalKeyCreationError::InvalidPath(error_message)) => {
@@ -151,19 +150,19 @@ mod tests {
     }
 
     #[test]
-    fn test_local_creator_create() {
+    fn test_local_key_pair_generator_create() {
         let tmp_dir = TempDir::new().expect("Failed to create temp directory");
         let key_path = tmp_dir.path();
 
         let key_name = String::from("key");
-        let config = KeyPairGeneratorLocalConfig {
+        let config = LocalKeyPairGeneratorConfig {
             key_type: KeyType::Rsa4096,
             file_path: key_path.join(&key_name),
         };
 
-        let creator = LocalCreator::from(config);
+        let creator = LocalKeyPairGenerator::from(config);
 
-        let pub_key = creator.create().expect("Failed to create key pair");
+        let pub_key = creator.generate().expect("Failed to create key pair");
         let pub_key_content =
             String::from_utf8(pub_key.clone()).expect("Public key is not valid UTF-8");
         assert!(

@@ -4,7 +4,6 @@ use std::fmt::Debug;
 use serde::Serialize;
 
 pub mod creation_response;
-pub mod generator;
 pub mod iam_client;
 pub mod identity_creator;
 pub mod input_data;
@@ -88,7 +87,6 @@ impl fmt::Display for SystemIdentity {
 mod tests {
     use super::input_data::auth_method::AuthMethod;
     use crate::system_identity::input_data::SystemTokenCreationMetadata;
-    use mockall::Sequence;
     use std::clone::Clone;
     use std::convert::{Into, TryFrom};
     use std::option::Option::Some;
@@ -97,12 +95,10 @@ mod tests {
     use crate::{
         http_client::tests::MockHttpClient,
         jwt::signer::local::{LocalPrivateKeySigner, test::RS256_PRIVATE_KEY},
-        key::creator::tests::MockCreator,
         system_identity::{
             ClientSecret, SystemIdentity,
-            generator::L2SystemIdentityGenerator,
             iam_client::{http::HttpIAMClient, http::IAMAuthCredential},
-            identity_creator::tests::MockL2IAMClient,
+            identity_creator::L2IdentityCreator,
             input_data::{
                 SystemIdentityCreationMetadata, auth_method::ClientSecret as AuthClientSecret,
                 environment::NewRelicEnvironment,
@@ -213,13 +209,6 @@ mod tests {
                 Ok(response)
             });
 
-        // More mocks, this time for the key creator
-        let mut key_creator = MockCreator::new();
-        key_creator
-            .expect_create()
-            .once()
-            .returning(|| Ok(vec![1, 2, 3]));
-
         let authenticator = HttpAuthenticator::new(
             token_retriever_http_client,
             cli_input.environment.token_renewal_endpoint(),
@@ -251,18 +240,8 @@ mod tests {
             cli_input, // I compare with this value later on, so we keep it here
         );
 
-        // As we are creating concretions, we only need to set expectations for the key creator
-        // (which could be just abstracting the filesystem) and the HTTP client.
-        // However, the final structures that we create are actually generic over
-        // `IAMClient`s and `KeyCreator`s, so that makes it extensible for other, non-HTTP-based
-        // implementations.
-        let system_identity_generator = L2SystemIdentityGenerator {
-            key_creator,
-            iam_client,
-        };
-
         let auth_credential = IAMAuthCredential::BearerToken(token.access_token().to_string());
-        let result = system_identity_generator.generate(&auth_credential);
+        let result = iam_client.create_l2_system_identity(&auth_credential, &[1, 2, 3]);
         assert!(
             result.is_ok(),
             "{}",
@@ -277,49 +256,6 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn create_system_identity_mocked() {
-        let mut key_creator = MockCreator::new();
-        let mut iam_client = MockL2IAMClient::new();
-        let mut sequence = Sequence::new();
-
-        key_creator
-            .expect_create()
-            .once()
-            .in_sequence(&mut sequence)
-            .returning(|| Ok(vec![1, 2, 3]));
-        iam_client
-            .expect_create_l2_system_identity()
-            .once()
-            .in_sequence(&mut sequence)
-            .returning(|_, _| {
-                Ok(SystemIdentity {
-                    client_id: "client-id".to_string(),
-                    name: "test".to_string().into(),
-                    identity_type: super::SystemIdentityType::L2 {
-                        pub_key: String::from_utf8_lossy(&[1u8, 2u8, 3u8]).to_string(),
-                    },
-                    id: "id".to_string(),
-                    organization_id: "org-id".to_string(),
-                })
-            });
-
-        let system_identity_generator = L2SystemIdentityGenerator {
-            key_creator,
-            iam_client: &iam_client,
-        };
-
-        let auth_credential = IAMAuthCredential::BearerToken("test-token".to_string());
-        let result = system_identity_generator.generate(&auth_credential);
-        assert!(result.is_ok());
-        let result = result.unwrap();
-        assert_eq!(result.name, Some("test".to_string()));
-        assert_eq!(result.client_id, "client-id");
-        assert!(matches!(
-            result.identity_type,
-            super::SystemIdentityType::L2 { pub_key } if pub_key == String::from_utf8_lossy(&[1u8, 2u8, 3u8])
-        ));
-    }
     #[test]
     fn test_system_identity_display_l1() {
         let system_identity = SystemIdentity {

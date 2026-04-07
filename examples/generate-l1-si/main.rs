@@ -9,9 +9,9 @@ use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::key::PrivateKeyPem;
 use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
-use nr_auth::system_identity::generator::L1SystemIdentityGenerator;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::iam_client::http::IAMAuthCredential;
+use nr_auth::system_identity::identity_creator::L1IdentityCreator;
 use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
@@ -127,10 +127,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let iam_client = &HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
 
-    let system_identity_generator = L1SystemIdentityGenerator { iam_client };
-
     let auth_credential = IAMAuthCredential::BearerToken(token.access_token().to_string());
-    let result = system_identity_generator.generate(&auth_credential)?;
+    let result = iam_client.create_l1_system_identity(&auth_credential)?;
 
     // Use `reveal` on the client secret to get the string value
     println!("System Identity created successfully: {result:?}");

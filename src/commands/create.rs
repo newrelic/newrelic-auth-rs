@@ -1,10 +1,10 @@
 use crate::http_client::HttpClient;
-use crate::key::creator::KeyType;
-use crate::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
+use crate::key::generation::KeyType;
+use crate::key::local::{LocalKeyPairGenerator, LocalKeyPairGeneratorConfig};
 use crate::system_identity::SystemIdentity;
-use crate::system_identity::generator::{L1SystemIdentityGenerator, L2SystemIdentityGenerator};
 use crate::system_identity::iam_client::http::HttpIAMClient;
 use crate::system_identity::iam_client::http::IAMAuthCredential;
+use crate::system_identity::identity_creator::{L1IdentityCreator, L2IdentityCreator};
 use crate::system_identity::input_data::output_platform::OutputPlatform;
 use thiserror::Error;
 
@@ -34,11 +34,9 @@ where
         self,
         auth_credentials: &IAMAuthCredential,
     ) -> Result<SystemIdentity, CreateError> {
-        L1SystemIdentityGenerator {
-            iam_client: self.iam_client,
-        }
-        .generate(auth_credentials)
-        .map_err(|e| CreateError::CreateError(e.to_string()))
+        self.iam_client
+            .create_l1_system_identity(auth_credentials)
+            .map_err(|e| CreateError::CreateError(e.to_string()))
     }
 
     /// Create L2 identity using IAMAuthCredential (supports both Bearer token and API key)
@@ -52,17 +50,17 @@ where
         }
         .to_path_buf();
 
-        let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
+        let key_creator = LocalKeyPairGenerator::from(LocalKeyPairGeneratorConfig {
             key_type: KeyType::Rsa4096,
             file_path: output_key_path,
         });
 
-        L2SystemIdentityGenerator {
-            key_creator,
-            iam_client: self.iam_client,
-        }
-        .generate(auth_credentials)
-        .map_err(|e| CreateError::CreateError(e.to_string()))
+        let pub_key = key_creator
+            .generate()
+            .map_err(|e| CreateError::CreateError(e.to_string()))?;
+        self.iam_client
+            .create_l2_system_identity(auth_credentials, pub_key.as_slice())
+            .map_err(|e| CreateError::CreateError(e.to_string()))
     }
 }
 
