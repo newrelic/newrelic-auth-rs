@@ -1,6 +1,6 @@
 use rcgen::{KeyPair as RcKeyPair, PKCS_RSA_SHA512, RsaKeySize};
 
-use crate::key::creator::{KeyPair, KeyType};
+use crate::key::generation::{KeyPair, KeyType};
 
 /// Generates an RSA key pair based on the specified key type.
 ///

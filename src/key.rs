@@ -1,6 +1,6 @@
 use crate::jwt::signer::local::{LocalPrivateKeySigner, LocalPrivateKeySignerError};
 
-pub mod creator;
+pub mod generation;
 pub mod local;
 pub mod rsa;
 

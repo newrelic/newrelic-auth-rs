@@ -663,13 +663,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## pin-utils <https://crates.io/crates/pin-utils>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## potential_utf <https://crates.io/crates/potential_utf>
 
 Distributed under the following license(s):

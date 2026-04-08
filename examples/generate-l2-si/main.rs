@@ -8,12 +8,12 @@ use nr_auth::http::config::{HttpConfig, ProxyConfig};
 use nr_auth::jwt::signer::JwtSignerImpl;
 use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::key::PrivateKeyPem;
-use nr_auth::key::creator::KeyType;
-use nr_auth::key::local::{KeyPairGeneratorLocalConfig, LocalCreator};
+use nr_auth::key::generation::KeyType;
+use nr_auth::key::local::{LocalKeyPairGenerator, LocalKeyPairGeneratorConfig};
 use nr_auth::parameters::DEFAULT_AUTHENTICATOR_TIMEOUT;
-use nr_auth::system_identity::generator::L2SystemIdentityGenerator;
 use nr_auth::system_identity::iam_client::http::HttpIAMClient;
 use nr_auth::system_identity::iam_client::http::IAMAuthCredential;
+use nr_auth::system_identity::identity_creator::L2IdentityCreator;
 use nr_auth::system_identity::input_data::SystemIdentityCreationMetadata;
 use nr_auth::system_identity::input_data::auth_method::{AuthMethod, ClientSecret};
 use nr_auth::system_identity::input_data::environment::NewRelicEnvironment;
@@ -129,18 +129,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let iam_client = &HttpIAMClient::new(http_client, system_identity_creation_metadata.to_owned());
 
-    let key_creator = LocalCreator::from(KeyPairGeneratorLocalConfig {
+    let key_creator = LocalKeyPairGenerator::from(LocalKeyPairGeneratorConfig {
         key_type: KeyType::Rsa4096,
         file_path,
     });
 
-    let system_identity_generator = L2SystemIdentityGenerator {
-        iam_client,
-        key_creator,
-    };
-
     let auth_credential = IAMAuthCredential::BearerToken(token.access_token().to_string());
-    let result = system_identity_generator.generate(&auth_credential)?;
+    let pub_key = key_creator.generate()?;
+    let result = iam_client.create_l2_system_identity(&auth_credential, pub_key.as_slice())?;
 
     println!("System Identity created successfully: {result:?}");
 
