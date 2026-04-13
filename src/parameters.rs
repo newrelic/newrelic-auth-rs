@@ -290,9 +290,9 @@ impl StandardIdentityType {
         };
 
         if let Some(token) = &auth_credential.bearer_access_token {
-            return IAMAuthCredential::BearerToken(token.clone());
+            IAMAuthCredential::BearerToken(token.clone())
         } else if let Some(api_key) = &auth_credential.api_key {
-            return IAMAuthCredential::ApiKey(api_key.clone());
+            IAMAuthCredential::ApiKey(api_key.clone())
         } else {
             // This should never happen. We told clap that one of the arguments in
             // AuthCredentialArgs must be provided.
