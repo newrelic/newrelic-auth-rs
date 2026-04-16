@@ -287,6 +287,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## futures-io <https://crates.io/crates/futures-io>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## futures-macro <https://crates.io/crates/futures-macro>
 
 Distributed under the following license(s):
