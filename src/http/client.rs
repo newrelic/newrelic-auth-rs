@@ -171,7 +171,6 @@ impl From<HttpResponseError> for OauthHttpClientError {
             HttpResponseError::GenericTransportError(_) => {
                 OauthHttpClientError::TransportError(err.to_string())
             }
-            HttpResponseError::TransportError(msg) => OauthHttpClientError::TransportError(msg),
             HttpResponseError::BuildingRequest(msg)
             | HttpResponseError::BuildingResponse(msg)
             | HttpResponseError::ReadingResponse(msg) => {
@@ -187,8 +186,6 @@ enum HttpResponseError {
     ReadingResponse(String),
     #[error("could not build response: {0}")]
     BuildingResponse(String),
-    #[error("http transport error: `{0}`")]
-    TransportError(String),
     #[error("could not build request: {0}")]
     BuildingRequest(String),
     #[error(
