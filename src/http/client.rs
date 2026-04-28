@@ -54,9 +54,7 @@ impl HttpClient {
 
         debug!("Request body: {:?}", req);
 
-        let res = req
-            .send()
-            .map_err(from_reqwest_error)?;
+        let res = req.send().map_err(from_reqwest_error)?;
 
         try_build_response(res)
     }
@@ -162,20 +160,15 @@ impl OauthHttpClient for HttpClient {
 impl From<HttpResponseError> for OauthHttpClientError {
     fn from(err: HttpResponseError) -> Self {
         match err {
-            HttpResponseError::ConnectError(_) 
-            |
-            HttpResponseError::TimeoutError(_) 
-            |
-            HttpResponseError::DnsError(_) 
-            |
-            HttpResponseError::GenericTransportError(_) => {
+            HttpResponseError::ConnectError(_)
+            | HttpResponseError::TimeoutError(_)
+            | HttpResponseError::DnsError(_)
+            | HttpResponseError::GenericTransportError(_) => {
                 OauthHttpClientError::TransportError(err.to_string())
             }
             HttpResponseError::BuildingRequest(msg)
             | HttpResponseError::BuildingResponse(msg)
-            | HttpResponseError::ReadingResponse(msg) => {
-                OauthHttpClientError::InvalidResponse(msg)
-            }
+            | HttpResponseError::ReadingResponse(msg) => OauthHttpClientError::InvalidResponse(msg),
         }
     }
 }
