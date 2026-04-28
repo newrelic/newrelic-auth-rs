@@ -11,6 +11,8 @@ use std::{
 };
 use tracing::{debug, warn};
 
+type ReqwestError = reqwest::Error;
+
 const CERT_EXTENSION: &str = "pem";
 #[derive(Debug, Clone)]
 pub struct HttpClient {
@@ -52,9 +54,7 @@ impl HttpClient {
 
         debug!("Request body: {:?}", req);
 
-        let res = req
-            .send()
-            .map_err(|err| HttpResponseError::TransportError(err.to_string()))?;
+        let res = req.send().map_err(from_reqwest_error)?;
 
         try_build_response(res)
     }
@@ -160,10 +160,15 @@ impl OauthHttpClient for HttpClient {
 impl From<HttpResponseError> for OauthHttpClientError {
     fn from(err: HttpResponseError) -> Self {
         match err {
-            HttpResponseError::TransportError(msg) => OauthHttpClientError::TransportError(msg),
-            HttpResponseError::BuildingResponse(msg) | HttpResponseError::ReadingResponse(msg) => {
-                OauthHttpClientError::InvalidResponse(msg)
+            HttpResponseError::ConnectError(_)
+            | HttpResponseError::TimeoutError(_)
+            | HttpResponseError::DnsError(_)
+            | HttpResponseError::GenericTransportError(_) => {
+                OauthHttpClientError::TransportError(err.to_string())
             }
+            HttpResponseError::BuildingRequest(msg)
+            | HttpResponseError::BuildingResponse(msg)
+            | HttpResponseError::ReadingResponse(msg) => OauthHttpClientError::InvalidResponse(msg),
         }
     }
 }
@@ -174,8 +179,36 @@ enum HttpResponseError {
     ReadingResponse(String),
     #[error("could not build response: {0}")]
     BuildingResponse(String),
-    #[error("http transport error: `{0}`")]
-    TransportError(String),
+    #[error("could not build request: {0}")]
+    BuildingRequest(String),
+    #[error(
+        "connection error: could not connect to the host. this is often caused by a firewall, proxy, or network routing issue. original error: {0}"
+    )]
+    ConnectError(#[source] ReqwestError),
+    #[error("timeout error: the request timed out. original error: {0}")]
+    TimeoutError(#[source] ReqwestError),
+    #[error(
+        "dns resolution error: could not resolve the host. please check your dns configuration. original error: {0}"
+    )]
+    DnsError(#[source] ReqwestError),
+    #[error("generic transport error: {0}")]
+    GenericTransportError(#[source] ReqwestError),
+}
+
+fn from_reqwest_error(e: ReqwestError) -> HttpResponseError {
+    if e.is_connect() {
+        HttpResponseError::ConnectError(e)
+    } else if e.is_timeout() {
+        HttpResponseError::TimeoutError(e)
+    } else if e.is_builder() || e.is_request() {
+        if e.to_string().to_lowercase().contains("dns") {
+            HttpResponseError::DnsError(e)
+        } else {
+            HttpResponseError::BuildingRequest(e.to_string())
+        }
+    } else {
+        HttpResponseError::GenericTransportError(e)
+    }
 }
 
 #[cfg(test)]
