@@ -20,9 +20,6 @@ pub enum HttpClientError {
     /// Represents an unexpected response.
     #[error("invalid http response: `{0}`")]
     InvalidResponse(String),
-    /// Represents an http crate consume body error.
-    #[error("`{0}`")]
-    HTTPBodyError(String),
 }
 
 /// A synchronous trait that defines the internal methods for HTTP clients.

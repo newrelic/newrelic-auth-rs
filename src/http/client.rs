@@ -181,7 +181,7 @@ impl From<HttpResponseError> for OauthHttpClientError {
                     status_code,
                     String::from_utf8_lossy(&body)
                 );
-                OauthHttpClientError::HTTPBodyError(msg)
+                OauthHttpClientError::InvalidResponse(msg)
             }
             HttpResponseError::BuildingRequest(msg)
             | HttpResponseError::BuildingResponse(msg)
@@ -198,7 +198,7 @@ enum HttpResponseError {
     BuildingResponse(String),
     #[error("could not build request: {0}")]
     BuildingRequest(String),
-    // Represents a response that was received, but had a non-successful status code.
+    /// Represents a response that was received, but had a non-successful status code.
     #[error(
         "unsuccessful response: {status_code} - body: {}",
         String::from_utf8_lossy(body)
@@ -247,6 +247,7 @@ mod tests {
     use httpmock::MockServer;
     use std::fs::File;
     use std::io::Write;
+    use std::time::Duration;
     use tempfile::tempdir;
 
     const INVALID_TESTING_CERT: &str =
@@ -376,5 +377,41 @@ mod tests {
         let ca_bundle_file = PathBuf::default();
         let certificates = certs_from_paths(&ca_bundle_file, ca_bundle_dir).unwrap();
         assert_eq!(certificates.len(), 1);
+    }
+
+    #[test]
+    fn test_error_conversions() {
+        let http_err = HttpResponseError::UnsuccessfulResponse {
+            status_code: StatusCode::UNAUTHORIZED,
+            body: b"invalid token".to_vec(),
+        };
+        let oauth_err: OauthHttpClientError = http_err.into();
+        assert_matches!(oauth_err, OauthHttpClientError::InvalidResponse(_));
+        assert!(oauth_err.to_string().contains("HTTP Error 401"));
+    }
+
+    #[test]
+    fn test_http_client_timeout() {
+        let mock_server = MockServer::start();
+        mock_server.mock(|when, then| {
+            when.path("/");
+            then.delay(Duration::from_millis(200)).status(200);
+        });
+
+        let http_config = HttpConfig::new(
+            Duration::from_millis(50),
+            Duration::from_millis(50),
+            Default::default(),
+        );
+        let http_client = HttpClient::new(http_config).unwrap();
+
+        let request = Request::builder()
+            .uri(mock_server.url("/").as_str())
+            .method("GET")
+            .body(Vec::new())
+            .unwrap();
+
+        let result = http_client.send(request);
+        assert_matches!(result, Err(HttpResponseError::TimeoutError(_)));
     }
 }
