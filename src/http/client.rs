@@ -1,7 +1,7 @@
 use crate::http::config::HttpConfig;
 use crate::http_client::{HttpClient as OauthHttpClient, HttpClientError as OauthHttpClientError};
 use http::Request;
-use http::{Response as HttpResponse, Response};
+use http::{Response as HttpResponse, Response, StatusCode};
 use reqwest::blocking::{Client, Response as BlockingResponse};
 use reqwest::tls::TlsInfo;
 use reqwest::{Certificate, Proxy};
@@ -56,7 +56,16 @@ impl HttpClient {
 
         let res = req.send().map_err(from_reqwest_error)?;
 
-        try_build_response(res)
+        if res.status().is_success() {
+            try_build_response(res)
+        } else {
+            let status_code = res.status();
+            let body = res
+                .bytes()
+                .map_err(|err| HttpResponseError::ReadingResponse(err.to_string()))?
+                .to_vec();
+            Err(HttpResponseError::UnsuccessfulResponse { status_code, body })
+        }
     }
 }
 
@@ -166,6 +175,14 @@ impl From<HttpResponseError> for OauthHttpClientError {
             | HttpResponseError::GenericTransportError(_) => {
                 OauthHttpClientError::TransportError(err.to_string())
             }
+            HttpResponseError::UnsuccessfulResponse { status_code, body } => {
+                let msg = format!(
+                    "HTTP Error {}: {}",
+                    status_code,
+                    String::from_utf8_lossy(&body)
+                );
+                OauthHttpClientError::HTTPBodyError(msg)
+            }
             HttpResponseError::BuildingRequest(msg)
             | HttpResponseError::BuildingResponse(msg)
             | HttpResponseError::ReadingResponse(msg) => OauthHttpClientError::InvalidResponse(msg),
@@ -181,6 +198,15 @@ enum HttpResponseError {
     BuildingResponse(String),
     #[error("could not build request: {0}")]
     BuildingRequest(String),
+    // Represents a response that was received, but had a non-successful status code.
+    #[error(
+        "unsuccessful response: {status_code} - body: {}",
+        String::from_utf8_lossy(body)
+    )]
+    UnsuccessfulResponse {
+        status_code: StatusCode,
+        body: Vec<u8>,
+    },
     #[error(
         "connection error: could not connect to the host. this is often caused by a firewall, proxy, or network routing issue. original error: {0}"
     )]
