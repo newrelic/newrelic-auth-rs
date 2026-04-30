@@ -296,7 +296,7 @@ impl StandardIdentityType {
         } else {
             // This should never happen. We told clap that one of the arguments in
             // AuthCredentialArgs must be provided.
-            panic!("Either --bearer-access-token or --api-key must be provided");
+            unreachable!("Either --bearer-access-token or --api-key must be provided");
         }
     }
 
