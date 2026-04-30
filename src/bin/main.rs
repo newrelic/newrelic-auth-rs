@@ -29,10 +29,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match cli_command.command {
         Commands::CreateIdentity { identity_type } => {
-            handle_create_identity_common(http_client, IdentityType::Standard(identity_type))
+            handle_create_identity(http_client, IdentityType::Standard(identity_type))
         }
         Commands::CreateBootstrapIdentity { identity_type } => {
-            handle_create_identity_common(http_client, IdentityType::Bootstrap(identity_type))
+            handle_create_identity(http_client, IdentityType::Bootstrap(identity_type))
         }
         Commands::Authenticate {
             auth_args,
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn handle_create_identity_common(
+fn handle_create_identity(
     http_client: HttpClient,
     identity_type: IdentityType,
 ) -> Result<(), Box<dyn Error>> {
