@@ -119,13 +119,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## cesu8 <https://crates.io/crates/cesu8>
-
-Distributed under the following license(s):
-
-* Apache-2.0
-* MIT
-
 ## cfg-if <https://crates.io/crates/cfg-if>
 
 Distributed under the following license(s):
@@ -514,6 +507,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## jni-macros <https://crates.io/crates/jni-macros>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## jni-sys <https://crates.io/crates/jni-sys>
 
 Distributed under the following license(s):
@@ -726,6 +726,13 @@ Distributed under the following license(s):
 * Apache-2.0
 * ISC
 
+## rustc_version <https://crates.io/crates/rustc_version>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## rustls <https://crates.io/crates/rustls>
 
 Distributed under the following license(s):
@@ -803,6 +810,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## semver <https://crates.io/crates/semver>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## serde <https://crates.io/crates/serde>
 
 Distributed under the following license(s):
@@ -857,6 +871,20 @@ Distributed under the following license(s):
 
 * Apache-2.0
 * MIT
+
+## simd_cesu8 <https://crates.io/crates/simd_cesu8>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
+## simdutf8 <https://crates.io/crates/simdutf8>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
 
 ## simple_asn1 <https://crates.io/crates/simple_asn1>
 
