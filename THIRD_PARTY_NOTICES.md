@@ -479,13 +479,6 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
-## iri-string <https://crates.io/crates/iri-string>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## is_terminal_polyfill <https://crates.io/crates/is_terminal_polyfill>
 
 Distributed under the following license(s):
