@@ -7,14 +7,16 @@ const STAGING_TOKEN_RENEWAL_ENDPOINT_STR: &str =
     "https://system-identity-oauth.staging-service.newrelic.com/oauth2/token";
 const STAGING_IDENTITY_CREATION_ENDPOINT_STR: &str = "https://staging-api.newrelic.com/graphql";
 
-// EU endpoints
-const EU_TOKEN_RENEWAL_ENDPOINT_STR: &str =
+const TOKEN_RENEWAL_ENDPOINT_STR: &str =
     "https://system-identity-oauth.service.newrelic.com/oauth2/token";
+
+// EU endpoints
 const EU_IDENTITY_CREATION_ENDPOINT_STR: &str = "https://api.eu.newrelic.com/graphql";
 
+// JP endpoints
+const JP_IDENTITY_CREATION_ENDPOINT_STR: &str = "https://api.jp.newrelic.com/graphql";
+
 // US endpoints
-const US_TOKEN_RENEWAL_ENDPOINT_STR: &str =
-    "https://system-identity-oauth.service.newrelic.com/oauth2/token";
 const US_IDENTITY_CREATION_ENDPOINT_STR: &str = "https://api.newrelic.com/graphql";
 
 /// Represents the environment in which a System Identity is created (US, EU, Staging).
@@ -22,6 +24,7 @@ const US_IDENTITY_CREATION_ENDPOINT_STR: &str = "https://api.newrelic.com/graphq
 pub enum NewRelicEnvironment {
     US,
     EU,
+    JP,
     Staging,
     Custom {
         token_renewal_endpoint: Uri,
@@ -36,6 +39,7 @@ impl TryFrom<&str> for NewRelicEnvironment {
         match value.to_lowercase().as_str() {
             "us" => Ok(Self::US),
             "eu" => Ok(Self::EU),
+            "jp" => Ok(Self::JP),
             "staging" => Ok(Self::Staging),
             _ => Err(format!("Invalid environment: {value}")),
         }
@@ -51,6 +55,8 @@ impl NewRelicEnvironment {
                 .expect("Failed to parse known URL: US_IDENTITY_CREATION_ENDPOINT"),
             Self::EU => Uri::try_from(EU_IDENTITY_CREATION_ENDPOINT_STR)
                 .expect("Failed to parse known URL: EU_IDENTITY_CREATION_ENDPOINT"),
+            Self::JP => Uri::try_from(JP_IDENTITY_CREATION_ENDPOINT_STR)
+                .expect("Failed to parse known URL: JP_IDENTITY_CREATION_ENDPOINT"),
             Self::Staging => Uri::try_from(STAGING_IDENTITY_CREATION_ENDPOINT_STR)
                 .expect("Failed to parse known URL: STAGING_IDENTITY_CREATION_ENDPOINT"),
             Self::Custom {
@@ -63,10 +69,8 @@ impl NewRelicEnvironment {
     /// Get a reference to the URI for the token renewal endpoint for the current environment.
     pub fn token_renewal_endpoint(&self) -> Uri {
         match self {
-            Self::US => Uri::try_from(US_TOKEN_RENEWAL_ENDPOINT_STR)
-                .expect("Failed to parse known URL: US_TOKEN_RENEWAL_ENDPOINT"),
-            Self::EU => Uri::try_from(EU_TOKEN_RENEWAL_ENDPOINT_STR)
-                .expect("Failed to parse known URL: EU_TOKEN_RENEWAL_ENDPOINT"),
+            Self::JP | Self::EU | Self::US => Uri::try_from(TOKEN_RENEWAL_ENDPOINT_STR)
+                .expect("Failed to parse known URL: TOKEN_RENEWAL_ENDPOINT"),
             Self::Staging => Uri::try_from(STAGING_TOKEN_RENEWAL_ENDPOINT_STR)
                 .expect("Failed to parse known URL: STAGING_TOKEN_RENEWAL_ENDPOINT"),
             Self::Custom {
@@ -87,12 +91,17 @@ mod tests {
     #[case(
         NewRelicEnvironment::US,
         US_IDENTITY_CREATION_ENDPOINT_STR,
-        US_TOKEN_RENEWAL_ENDPOINT_STR
+        TOKEN_RENEWAL_ENDPOINT_STR
     )]
     #[case(
         NewRelicEnvironment::EU,
         EU_IDENTITY_CREATION_ENDPOINT_STR,
-        EU_TOKEN_RENEWAL_ENDPOINT_STR
+        TOKEN_RENEWAL_ENDPOINT_STR
+    )]
+    #[case(
+        NewRelicEnvironment::JP,
+        JP_IDENTITY_CREATION_ENDPOINT_STR,
+        TOKEN_RENEWAL_ENDPOINT_STR
     )]
     #[case(
         NewRelicEnvironment::Staging,
