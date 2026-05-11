@@ -168,6 +168,8 @@ pub enum Environments {
     US,
     #[value(name = "EU", alias = "Eu", alias = "eu")]
     EU,
+    #[value(name = "JP", alias = "Jp", alias = "jp")]
+    JP,
     #[value(name = "STAGING", alias = "Staging", alias = "staging")]
     STAGING,
 }
@@ -326,6 +328,7 @@ impl From<Environments> for NewRelicEnvironment {
         match value {
             Environments::US => NewRelicEnvironment::US,
             Environments::EU => NewRelicEnvironment::EU,
+            Environments::JP => NewRelicEnvironment::JP,
             Environments::STAGING => NewRelicEnvironment::Staging,
         }
     }
