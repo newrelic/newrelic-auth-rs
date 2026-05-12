@@ -165,6 +165,7 @@ pub enum Environments {
     US,
     EU,
     JP,
+    #[value(alias = "stg")]
     STAGING,
 }
 
