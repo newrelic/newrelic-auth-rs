@@ -1395,6 +1395,13 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## zeroize_derive <https://crates.io/crates/zeroize_derive>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## zerotrie <https://crates.io/crates/zerotrie>
 
 Distributed under the following license(s):
