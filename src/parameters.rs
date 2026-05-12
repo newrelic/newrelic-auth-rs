@@ -70,7 +70,7 @@ pub enum Commands {
         auth_args: AuthenticationArgs,
 
         /// Select format how the Token should be obtained
-        #[arg(long)]
+        #[arg(long, ignore_case = true)]
         output_token_format: OutputTokenFormat,
     },
 }
@@ -110,7 +110,7 @@ pub struct AuthenticationArgs {
     client_id: String,
 
     /// Environment to target
-    #[arg(short, long)]
+    #[arg(short, long, ignore_case = true)]
     environment: Environments,
 
     /// Options for configuring authentication inputs.
@@ -122,10 +122,8 @@ pub struct AuthenticationArgs {
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
 pub enum OutputTokenFormat {
     /// Returns only the access token without type or expiration date
-    #[value(name = "PLAIN", alias = "Plain", alias = "plain")]
     PLAIN,
     /// Returns full token information in json format
-    #[value(name = "JSON", alias = "Json", alias = "json")]
     JSON,
 }
 
@@ -158,19 +156,15 @@ pub struct BasicAuthArgs {
     client_id: Option<String>,
 
     /// Environment to target
-    #[arg(long, short)]
+    #[arg(long, short, ignore_case = true)]
     environment: Environments,
 }
 
 #[derive(ValueEnum, Copy, Clone, Debug, PartialEq)]
 pub enum Environments {
-    #[value(name = "US", alias = "Us", alias = "us")]
     US,
-    #[value(name = "EU", alias = "Eu", alias = "eu")]
     EU,
-    #[value(name = "JP", alias = "Jp", alias = "jp")]
     JP,
-    #[value(name = "STAGING", alias = "Staging", alias = "staging")]
     STAGING,
 }
 
