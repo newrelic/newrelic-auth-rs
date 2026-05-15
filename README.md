@@ -71,6 +71,9 @@ HTTPS_PROXY=https://localhost:8080 newrelic_auth_cli [...]
 ``` 
 
 
+## Release Process
+
+For information about the release process, see the [release documentation](https://github.com/newrelic/newrelic-agent-control/blob/main/docs/RELEASE.md).
 
 ## Support
 
