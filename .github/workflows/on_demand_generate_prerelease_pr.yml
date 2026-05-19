@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   prerelease:
-    uses: newrelic/newrelic-agent-control/.github/workflows/shared_create_prerelease_pr.yml@main
+    uses: newrelic/newrelic-agent-control/.github/workflows/shared_create_prerelease_pr.yml@9e641ddf22dbc62e3c1d02ddb3ef77f491207715 # main
     secrets:
       app_id: ${{ secrets.AGENT_CONTROL_APP_ID }}
       app_private_key: ${{ secrets.AGENT_CONTROL_APP_PKEY }}
