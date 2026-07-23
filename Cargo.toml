@@ -20,7 +20,7 @@ uuid = { version = "1.24.0", features = ["serde", "v7"] }
 tracing = "0.1.44"
 http = "1.4.2"
 rcgen = { version = "0.14.8", default-features = false, features = ["aws_lc_rs", "pem"] }
-base64 = "0.22.1"
+base64 = "0.23.0"
 tracing-subscriber = "0.3.23"
 
 [dev-dependencies]
@@ -33,7 +33,7 @@ dotenvy = "0.15.7"
 vaultrs = "0.8.0"
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
 tracing-subscriber = "0.3.23"
-base64 = "0.22.1"
+base64 = "0.23.0"
 sha2 = "0.11.0"
 tempfile = "3.27.0"
 rstest = "0.26.1"
