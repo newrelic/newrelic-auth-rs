@@ -663,6 +663,13 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## pkg-config <https://crates.io/crates/pkg-config>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## potential_utf <https://crates.io/crates/potential_utf>
 
 Distributed under the following license(s):
@@ -1153,22 +1160,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## wasip2 <https://crates.io/crates/wasip2>
-
-Distributed under the following license(s):
-
-* Apache-2.0 WITH LLVM-exception
-* Apache-2.0
-* MIT
-
-## wasip3 <https://crates.io/crates/wasip3>
-
-Distributed under the following license(s):
-
-* Apache-2.0 WITH LLVM-exception
-* Apache-2.0
-* MIT
-
 ## wasm-bindgen <https://crates.io/crates/wasm-bindgen>
 
 Distributed under the following license(s):
@@ -1342,14 +1333,6 @@ Distributed under the following license(s):
 
 * MIT
 * Apache-2.0
-
-## wit-bindgen <https://crates.io/crates/wit-bindgen>
-
-Distributed under the following license(s):
-
-* Apache-2.0 WITH LLVM-exception
-* Apache-2.0
-* MIT
 
 ## writeable <https://crates.io/crates/writeable>
 
