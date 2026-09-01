@@ -3,5 +3,18 @@
   "extends": [
     "github>newrelic/newrelic-agent-control//.github/renovate-shared-base.json"
   ],
-  "rangeStrategy": "update-lockfile"
+  "rangeStrategy": "update-lockfile",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
+      "depNameTemplate": "alpine/kubectl",
+      "datasourceTemplate": "docker",
+      "matchStrings": [
+        "FROM alpine/kubectl:(?<currentValue>\\S+) AS kubectl"
+      ]
+    }
+  ]
 }
