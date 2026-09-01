@@ -43,7 +43,7 @@ jobs:
 
       - uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
-          tool: cargo-zigbuild@0.20.1
+          tool: cargo-zigbuild@0.23.3
 
       - name: Build newrelic auth cli
         run: |
