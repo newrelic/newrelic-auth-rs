@@ -75,7 +75,7 @@ jobs:
           echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
 
       - name: Install Rust ${{ env.RUST_VERSION }}
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: >-
@@ -85,7 +85,7 @@ jobs:
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
 
-      - uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+      - uses: taiki-e/install-action@3f74d7c16a4242f1c95561e98edc25d36adb4375 # v2.87.12
         with:
           tool: cargo-zigbuild@0.20.1
 
@@ -125,7 +125,7 @@ jobs:
           echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
 
       - name: Install Rust ${{ env.RUST_VERSION }}
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-pc-windows-msvc
