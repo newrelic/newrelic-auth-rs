@@ -243,7 +243,11 @@ pub struct KeyArgsBootstrap {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    #[arg(long)]
+    /// New Relic User API Key for identity creation. Prefer the NEW_RELIC_API_KEY
+    /// environment variable over this flag: a value passed directly on the command
+    /// line is visible in `ps` output and shell history for as long as this process
+    /// runs, which matters for a key that does not expire.
+    #[arg(long, env = "NEW_RELIC_API_KEY")]
     api_key: String,
 
     #[command(flatten)]
@@ -255,7 +259,11 @@ pub struct SecretArgsBootstrap {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    #[arg(long)]
+    /// New Relic User API Key for identity creation. Prefer the NEW_RELIC_API_KEY
+    /// environment variable over this flag: a value passed directly on the command
+    /// line is visible in `ps` output and shell history for as long as this process
+    /// runs.
+    #[arg(long, env = "NEW_RELIC_API_KEY")]
     api_key: String,
 }
 
