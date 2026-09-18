@@ -195,6 +195,13 @@ Distributed under the following license(s):
 * MIT
 * Apache-2.0
 
+## core_detect <https://crates.io/crates/core_detect>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
 ## deranged <https://crates.io/crates/deranged>
 
 Distributed under the following license(s):
@@ -588,6 +595,27 @@ Distributed under the following license(s):
 
 * MIT
 
+## multiversion <https://crates.io/crates/multiversion>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## multiversion-macros <https://crates.io/crates/multiversion-macros>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
+
+## multiversion_no_op <https://crates.io/crates/multiversion_no_op>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## nu-ansi-term <https://crates.io/crates/nu-ansi-term>
 
 Distributed under the following license(s):
@@ -795,6 +823,13 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * MIT
+
+## scopeguard <https://crates.io/crates/scopeguard>
+
+Distributed under the following license(s):
+
+* MIT
+* Apache-2.0
 
 ## security-framework <https://crates.io/crates/security-framework>
 
