@@ -1,8 +1,5 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-project"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Project.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Project.png"><img alt="New Relic Open Source community project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Project.png"></picture></a>
 
-| ⚠️ | `nr-auth` is in preview and licensed under the New Relic Pre-Release Software Notice. |
-|----|:----------------------------------------------------------------------------------------------------|
-
 # `nr-auth`
 
 `nr-auth` aims to provide all the functionality needed to authenticate with System Identity Service and retrieve
@@ -98,9 +95,10 @@ To all contributors, we thank you! Without your contribution, this project would
 
 ## License
 
-`newrelic-auth-rs` is licensed under the New Relic Prerelease Software License.
+`newrelic-auth-rs` is licensed under the New Relic Software License.
 
-This project also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.
+It also uses source code from third-party libraries. You can find full details on which libraries are used and the terms
+under which they are licensed in the third-party notices document.
 
 ## Upstream archive
 

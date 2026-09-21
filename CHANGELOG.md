@@ -11,6 +11,9 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 ### enhancement
 - `create-bootstrap-identity secret` and `create-bootstrap-identity key` now accept the API key via the `NEW_RELIC_API_KEY` environment variable, in addition to `--api-key`. Passing it as a flag leaves it visible in `ps` output and shell history for the life of the process; the env var avoids that.
 
+### bugfix
+- Include ca-certificates into the Docker image
+
 ## v0.5.3 - 2026-09-18
 
 ### ⛓️ Dependencies

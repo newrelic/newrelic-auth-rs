@@ -10,7 +10,8 @@ COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y jq && \
+    apt-get install -y jq ca-certificates && \
+    update-ca-certificates && \
     apt-get clean
 
 COPY --chmod=755 target/newrelic-auth-cli-${TARGETARCH} /bin/newrelic-auth-cli
