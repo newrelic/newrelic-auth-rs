@@ -33,7 +33,7 @@ docker run -v /our/pey/path:/private-key.pem  newrelic/agent-control-system-iden
 
 Authentication Command Usage:
 
-`authenticate` command returns the token that can be direcly used in your API calls using system identities (Authorization header)
+`authenticate` command returns the token that can be directly used in your API calls using system identities (Authorization header)
 ```bash
 # Authenticate using a client secret
 newrelic_auth_cli authenticate --client-id your_client_id --environment STAGING --client-secret your_client_secret --output-token-format JSON
