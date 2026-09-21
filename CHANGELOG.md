@@ -8,6 +8,9 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 
 ## Unreleased
 
+### bugfix
+- Include ca-certificates into the Docker image
+
 ## v0.5.3 - 2026-09-18
 
 ### ⛓️ Dependencies
