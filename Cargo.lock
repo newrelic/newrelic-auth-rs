@@ -1388,7 +1388,7 @@ dependencies = [
 
 [[package]]
 name = "nr-auth"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "assert_matches",
  "base64 0.23.1",
