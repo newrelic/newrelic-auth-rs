@@ -102,14 +102,3 @@ jobs:
       uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # release/v1
       with:
         jobs: ${{ toJSON(needs) }}
-
-  # TODO: remove temporal check
-  check-rc-image:
-    name: Check RC image (temp)
-    uses: ./.github/workflows/component_check_image.yml
-    with:
-      image-tag: 0.5.4-rc
-      environment: "us"
-    secrets:
-      client_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_CLIENT_ID_US }}
-      private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
