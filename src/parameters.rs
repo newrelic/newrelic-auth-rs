@@ -117,6 +117,20 @@ pub struct AuthenticationArgs {
     /// At least one authentication method must be specified.
     #[command(flatten)]
     input_auth_args: AuthInputArgs,
+
+    /// Advisory, local-only limit on how many tokens this CLI will issue for this same
+    /// parent client_id within a trailing hour, tracked in a file under
+    /// ~/.newrelic-auth-cli/rate-limit. This is NOT a security boundary — see the
+    /// rate_limit module's doc comment — it only guards against an accidental runaway
+    /// loop in your own automation on this one machine. Unset by default (no limit).
+    #[arg(long)]
+    max_tokens_per_hour: Option<u32>,
+}
+
+impl AuthenticationArgs {
+    pub fn max_tokens_per_hour(&self) -> Option<u32> {
+        self.max_tokens_per_hour
+    }
 }
 
 #[derive(ValueEnum, Clone, Debug, PartialEq)]

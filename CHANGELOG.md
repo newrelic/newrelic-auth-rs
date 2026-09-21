@@ -8,6 +8,10 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 
 ## Unreleased
 
+### enhancement
+- `authenticate` and `create-bootstrap-identity key` now emit a structured audit log line (client_id, organization_id, environment, outcome — never a secret or the token itself) on every call, at `info` level so it's visible without a non-default log level.
+- `authenticate` accepts an optional `--max-tokens-per-hour` flag: an advisory, local-only rate limit on token issuance per parent client_id, tracked in a file under `~/.newrelic-auth-cli/rate-limit`. This is explicitly not a security boundary — see the `rate_limit` module's doc comment — it exists to catch an accidental runaway loop in a caller's own automation, not to enforce a real cap. A real, unbypassable cap on children minted per parent still needs a server-side change; see the parent-mints-child CDD.
+
 ### bugfix
 - Include ca-certificates into the Docker image
 
