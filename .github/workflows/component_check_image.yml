@@ -33,6 +33,8 @@ jobs:
         run: |
           umask 077
           printf '%s' "$PRIVATE_KEY_PEM" > "${RUNNER_TEMP}/private_key.pem"
+          # The image runs as `nobody`, which needs read access to the mounted file
+          chmod 644 "${RUNNER_TEMP}/private_key.pem"
 
       - name: Check authenticate command
         run: |
