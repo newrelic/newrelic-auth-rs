@@ -33,9 +33,20 @@ jobs:
       organization_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_ORGANIZATION_ID_US }}
       private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
 
+  check-nightly-image:
+    name: Check nightly image
+    needs: [ build-image ]
+    uses: ./.github/workflows/component_check_image.yml
+    with:
+      image-tag: nightly
+      environment: "us"
+    secrets:
+      client_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_CLIENT_ID_US }}
+      private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
+
   notify-failure:
     if: ${{ failure() }}
-    needs: [ security-image, build-image, check-system-identity-endpoints-us ]
+    needs: [ security-image, build-image, check-system-identity-endpoints-us, check-nightly-image ]
     runs-on: ubuntu-latest
     steps:
     - name: Notify failure via Slack

@@ -57,6 +57,17 @@ jobs:
       organization_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_ORGANIZATION_ID_US }}
       private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
 
+  check-rc-image:
+    name: Check RC image
+    needs: [ build-image ]
+    uses: ./.github/workflows/component_check_image.yml
+    with:
+      image-tag: ${{ github.event.release.tag_name }}-rc
+      environment: "us"
+    secrets:
+      client_id: ${{ secrets.SYSTEM_IDENTITY_CHECKS_CLIENT_ID_US }}
+      private_key_pem: ${{ secrets.SYSTEM_IDENTITY_CHECKS_PRIVATE_KEY_PEM_US }}
+
   build-binaries-linux:
     runs-on: ubuntu-latest
     name: Build/Push binaries linux
@@ -154,7 +165,7 @@ jobs:
 
   notify-failure:
     if: ${{ failure() }}
-    needs: [ build-image, check-system-identity-endpoints-us, build-binaries-linux, build-binaries-windows ]
+    needs: [ build-image, check-system-identity-endpoints-us, check-rc-image, build-binaries-linux, build-binaries-windows ]
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure via Slack

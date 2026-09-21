@@ -1,0 +1,46 @@
+name: 📞 Image checks
+on:
+  workflow_call:
+    inputs:
+      image-tag:
+        description: 'Image tag to check'
+        type: string
+        required: true
+      environment:
+        description: 'NR Environment for the checks'
+        type: string
+        required: true
+    secrets:
+      client_id:
+        required: true
+      private_key_pem:
+        required: true
+permissions:
+  contents: read
+
+env:
+  DOCKER_IMAGE_NAME_AUTH: newrelic/agent-control-system-identity-registration
+
+jobs:
+  checks:
+    name: Run checks (${{ inputs.image-tag }})
+    runs-on: ubuntu-latest
+    env:
+      CLIENT_ID: ${{ secrets.client_id }}
+      PRIVATE_KEY_PEM: ${{ secrets.private_key_pem }}
+    steps:
+      - name: Write private key to file
+        run: |
+          umask 077
+          printf '%s' "$PRIVATE_KEY_PEM" > "${RUNNER_TEMP}/private_key.pem"
+
+      - name: Check authenticate command
+        run: |
+          docker run --rm \
+            -v "${RUNNER_TEMP}/private_key.pem:/tmp/private_key.pem:ro" \
+            "${DOCKER_IMAGE_NAME_AUTH}:${{ inputs.image-tag }}" \
+            authenticate \
+            --client-id "$CLIENT_ID" \
+            --environment "${{ inputs.environment }}" \
+            --private-key-path /tmp/private_key.pem \
+            --output-token-format PLAIN > /dev/null
