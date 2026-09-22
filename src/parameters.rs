@@ -70,7 +70,11 @@ pub enum Commands {
         auth_args: AuthenticationArgs,
 
         /// Select format how the Token should be obtained
-        #[arg(long, ignore_case = true)]
+        #[arg(
+            long,
+            ignore_case = true,
+            env = "NR_AUTH_AUTHENTICATE_OUTPUT_TOKEN_FORMAT"
+        )]
         output_token_format: OutputTokenFormat,
     },
 }
@@ -81,9 +85,10 @@ pub struct ProxyArgs {
     ///
     /// The priority for the proxy configuration is as follows:
     /// 1. Arguments provided directly in the application.
-    /// 2. Environment variables (`HTTP_PROXY` and `HTTPS_PROXY`).
+    /// 2. The `NR_AUTH_PROXY_URL` environment variable.
+    /// 3. The standard `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
     ///
-    /// If neither arguments nor environment variables are provided, the client operates without a proxy.
+    /// If none of these are provided, the client operates without a proxy.
     ///
     /// **Proxy URL Format:**
     /// `<protocol>://<user>:<password>@<host>:<port>`
@@ -91,26 +96,36 @@ pub struct ProxyArgs {
     /// - `user` and `password`: Optional credentials for authentication.
     /// - `host`: Required domain or IP address.
     /// - `port`: Optional port number.
-    #[arg(long, verbatim_doc_comment)]
+    #[arg(
+        long,
+        env = "NR_AUTH_PROXY_URL",
+        hide_env_values = true,
+        verbatim_doc_comment
+    )]
     proxy_url: Option<String>,
 
     /// System path with the CA certificates in PEM format. All `.pem` files in the directory are read.
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_PROXY_CA_DIR")]
     proxy_ca_dir: Option<PathBuf>,
 
     /// System path with the CA certificate in PEM format.
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_PROXY_CA_FILE")]
     proxy_ca_file: Option<PathBuf>,
 }
 
 #[derive(Args, Debug)]
 pub struct AuthenticationArgs {
     /// ID of the client
-    #[arg(long, short)]
+    #[arg(long, short, env = "NR_AUTH_AUTHENTICATE_CLIENT_ID")]
     client_id: String,
 
     /// Environment to target
-    #[arg(short, long, ignore_case = true)]
+    #[arg(
+        short,
+        long,
+        ignore_case = true,
+        env = "NR_AUTH_AUTHENTICATE_ENVIRONMENT"
+    )]
     environment: Environments,
 
     /// Options for configuring authentication inputs.
@@ -131,22 +146,26 @@ pub enum OutputTokenFormat {
 #[group(required = true, multiple = false)]
 pub struct AuthInputArgs {
     /// Client secret for authentication during creation
-    #[arg(long)]
+    #[arg(
+        long,
+        env = "NR_AUTH_AUTHENTICATE_CLIENT_SECRET",
+        hide_env_values = true
+    )]
     client_secret: Option<String>,
 
     /// Path to the private key file used for authentication
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_AUTHENTICATE_PRIVATE_KEY_PATH")]
     private_key_path: Option<PathBuf>,
 }
 
 #[derive(Args, Debug, Clone)]
 pub struct BasicAuthArgs {
     /// Name for the new resource
-    #[arg(long, short)]
+    #[arg(long, short, env = "NR_AUTH_IDENTITY_NAME")]
     name: Option<String>,
 
     /// Organization ID for the resource
-    #[arg(long, short)]
+    #[arg(long, short, env = "NR_AUTH_IDENTITY_ORGANIZATION_ID")]
     organization_id: String,
 
     /// [DEPRECATED] Optional client ID - no longer used by the API.
@@ -156,7 +175,7 @@ pub struct BasicAuthArgs {
     client_id: Option<String>,
 
     /// Environment to target
-    #[arg(long, short, ignore_case = true)]
+    #[arg(long, short, ignore_case = true, env = "NR_AUTH_IDENTITY_ENVIRONMENT")]
     environment: Environments,
 }
 
@@ -243,7 +262,7 @@ pub struct KeyArgsBootstrap {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_BOOTSTRAP_API_KEY", hide_env_values = true)]
     api_key: String,
 
     #[command(flatten)]
@@ -255,7 +274,7 @@ pub struct SecretArgsBootstrap {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_BOOTSTRAP_API_KEY", hide_env_values = true)]
     api_key: String,
 }
 
@@ -263,11 +282,15 @@ pub struct SecretArgsBootstrap {
 #[group(required = true, multiple = false)]
 pub struct AuthCredentialArgs {
     /// Bearer access token obtained from authentication (from authenticate command)
-    #[arg(long)]
+    #[arg(
+        long,
+        env = "NR_AUTH_IDENTITY_BEARER_ACCESS_TOKEN",
+        hide_env_values = true
+    )]
     bearer_access_token: Option<String>,
 
     /// New Relic User API Key for identity creation (does not expire, alternative to bearer token)
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_IDENTITY_API_KEY", hide_env_values = true)]
     api_key: Option<String>,
 }
 
@@ -280,11 +303,11 @@ pub enum OutputPlatformChoice {
 #[derive(Args, Debug, Clone)]
 pub struct OutputDestinationArgs {
     /// Platform for the output of the generated key or resource.
-    #[arg(long, value_enum)]
+    #[arg(long, value_enum, env = "NR_AUTH_OUTPUT_PLATFORM")]
     output_platform: OutputPlatformChoice,
 
     /// Path to the file where the private key output will be saved (required if --output-platform=local-file).
-    #[arg(long)]
+    #[arg(long, env = "NR_AUTH_OUTPUT_LOCAL_FILEPATH")]
     output_local_filepath: Option<PathBuf>,
 }
 
@@ -427,7 +450,186 @@ pub fn build_proxy_args(proxy_args: ProxyArgs) -> Result<ProxyConfig, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use clap::{CommandFactory, Parser};
+    use std::ffi::OsStr;
     use std::path::PathBuf;
+
+    /// Mirrors the `Cli` struct in `src/bin/main.rs` so the env var wiring on every flag can be
+    /// inspected without actually running the binary or touching the process environment (which
+    /// would be shared, and racy, across tests running in parallel).
+    #[derive(Parser, Debug)]
+    struct TestCli {
+        #[command(subcommand)]
+        command: Commands,
+
+        #[command(flatten)]
+        proxy_args: ProxyArgs,
+    }
+
+    fn assert_arg_env(command: &clap::Command, arg_id: &str, expected_env: &str, hidden: bool) {
+        let arg = command
+            .get_arguments()
+            .find(|a| a.get_id().as_str() == arg_id)
+            .unwrap_or_else(|| {
+                panic!(
+                    "arg `{arg_id}` not found on command `{}`",
+                    command.get_name()
+                )
+            });
+
+        assert_eq!(
+            arg.get_env(),
+            Some(OsStr::new(expected_env)),
+            "unexpected env var for `{arg_id}`"
+        );
+        assert_eq!(
+            arg.is_hide_env_values_set(),
+            hidden,
+            "unexpected hide_env_values for `{arg_id}`"
+        );
+    }
+
+    #[test]
+    fn test_proxy_args_env_vars() {
+        let command = TestCli::command();
+
+        assert_arg_env(&command, "proxy_url", "NR_AUTH_PROXY_URL", true);
+        assert_arg_env(&command, "proxy_ca_dir", "NR_AUTH_PROXY_CA_DIR", false);
+        assert_arg_env(&command, "proxy_ca_file", "NR_AUTH_PROXY_CA_FILE", false);
+    }
+
+    #[test]
+    fn test_authenticate_command_env_vars() {
+        let command = TestCli::command();
+        let authenticate = command
+            .find_subcommand("authenticate")
+            .expect("authenticate subcommand should exist");
+
+        assert_arg_env(
+            authenticate,
+            "client_id",
+            "NR_AUTH_AUTHENTICATE_CLIENT_ID",
+            false,
+        );
+        assert_arg_env(
+            authenticate,
+            "environment",
+            "NR_AUTH_AUTHENTICATE_ENVIRONMENT",
+            false,
+        );
+        assert_arg_env(
+            authenticate,
+            "output_token_format",
+            "NR_AUTH_AUTHENTICATE_OUTPUT_TOKEN_FORMAT",
+            false,
+        );
+        assert_arg_env(
+            authenticate,
+            "client_secret",
+            "NR_AUTH_AUTHENTICATE_CLIENT_SECRET",
+            true,
+        );
+        assert_arg_env(
+            authenticate,
+            "private_key_path",
+            "NR_AUTH_AUTHENTICATE_PRIVATE_KEY_PATH",
+            false,
+        );
+    }
+
+    #[test]
+    fn test_create_identity_command_env_vars() {
+        let command = TestCli::command();
+        let create_identity = command
+            .find_subcommand("create-identity")
+            .expect("create-identity subcommand should exist");
+
+        for identity_type in ["secret", "key"] {
+            let subcommand = create_identity
+                .find_subcommand(identity_type)
+                .unwrap_or_else(|| panic!("create-identity {identity_type} should exist"));
+
+            assert_arg_env(subcommand, "name", "NR_AUTH_IDENTITY_NAME", false);
+            assert_arg_env(
+                subcommand,
+                "organization_id",
+                "NR_AUTH_IDENTITY_ORGANIZATION_ID",
+                false,
+            );
+            assert_arg_env(
+                subcommand,
+                "environment",
+                "NR_AUTH_IDENTITY_ENVIRONMENT",
+                false,
+            );
+            assert_arg_env(
+                subcommand,
+                "bearer_access_token",
+                "NR_AUTH_IDENTITY_BEARER_ACCESS_TOKEN",
+                true,
+            );
+            assert_arg_env(subcommand, "api_key", "NR_AUTH_IDENTITY_API_KEY", true);
+        }
+
+        let key_subcommand = create_identity.find_subcommand("key").unwrap();
+        assert_arg_env(
+            key_subcommand,
+            "output_platform",
+            "NR_AUTH_OUTPUT_PLATFORM",
+            false,
+        );
+        assert_arg_env(
+            key_subcommand,
+            "output_local_filepath",
+            "NR_AUTH_OUTPUT_LOCAL_FILEPATH",
+            false,
+        );
+    }
+
+    #[test]
+    fn test_create_bootstrap_identity_command_env_vars() {
+        let command = TestCli::command();
+        let create_bootstrap_identity = command
+            .find_subcommand("create-bootstrap-identity")
+            .expect("create-bootstrap-identity subcommand should exist");
+
+        for identity_type in ["secret", "key"] {
+            let subcommand = create_bootstrap_identity
+                .find_subcommand(identity_type)
+                .unwrap_or_else(|| {
+                    panic!("create-bootstrap-identity {identity_type} should exist")
+                });
+
+            assert_arg_env(subcommand, "name", "NR_AUTH_IDENTITY_NAME", false);
+            assert_arg_env(
+                subcommand,
+                "organization_id",
+                "NR_AUTH_IDENTITY_ORGANIZATION_ID",
+                false,
+            );
+            assert_arg_env(
+                subcommand,
+                "environment",
+                "NR_AUTH_IDENTITY_ENVIRONMENT",
+                false,
+            );
+            assert_arg_env(subcommand, "api_key", "NR_AUTH_BOOTSTRAP_API_KEY", true);
+        }
+
+        let key_subcommand = create_bootstrap_identity.find_subcommand("key").unwrap();
+        assert_arg_env(
+            key_subcommand,
+            "output_platform",
+            "NR_AUTH_OUTPUT_PLATFORM",
+            false,
+        );
+        assert_arg_env(
+            key_subcommand,
+            "output_local_filepath",
+            "NR_AUTH_OUTPUT_LOCAL_FILEPATH",
+            false,
+        );
+    }
 
     #[test]
     fn test_build_proxy_with_args() {

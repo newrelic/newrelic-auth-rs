@@ -67,6 +67,10 @@ Notice that the command support proxy:
 HTTPS_PROXY=https://localhost:8080 newrelic_auth_cli [...]
 ``` 
 
+### Environment Variables
+
+Every flag can also be set through an `NR_AUTH_*` environment variable instead of a command line argument (an explicit flag always takes priority). Run `newrelic_auth_cli <command> --help` to see the exact variable name for each flag.
+
 
 ## Release Process
 
