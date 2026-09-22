@@ -70,11 +70,7 @@ pub enum Commands {
         auth_args: AuthenticationArgs,
 
         /// Select format how the Token should be obtained
-        #[arg(
-            long,
-            ignore_case = true,
-            env = "NR_AUTH_AUTHENTICATE_OUTPUT_TOKEN_FORMAT"
-        )]
+        #[arg(long, ignore_case = true, env = "NR_AUTH_OUTPUT_TOKEN_FORMAT")]
         output_token_format: OutputTokenFormat,
     },
 }
@@ -116,16 +112,11 @@ pub struct ProxyArgs {
 #[derive(Args, Debug)]
 pub struct AuthenticationArgs {
     /// ID of the client
-    #[arg(long, short, env = "NR_AUTH_AUTHENTICATE_CLIENT_ID")]
+    #[arg(long, short, env = "NR_AUTH_CLIENT_ID")]
     client_id: String,
 
     /// Environment to target
-    #[arg(
-        short,
-        long,
-        ignore_case = true,
-        env = "NR_AUTH_AUTHENTICATE_ENVIRONMENT"
-    )]
+    #[arg(short, long, ignore_case = true, env = "NR_AUTH_ENVIRONMENT")]
     environment: Environments,
 
     /// Options for configuring authentication inputs.
@@ -146,26 +137,22 @@ pub enum OutputTokenFormat {
 #[group(required = true, multiple = false)]
 pub struct AuthInputArgs {
     /// Client secret for authentication during creation
-    #[arg(
-        long,
-        env = "NR_AUTH_AUTHENTICATE_CLIENT_SECRET",
-        hide_env_values = true
-    )]
+    #[arg(long, env = "NR_AUTH_CLIENT_SECRET", hide_env_values = true)]
     client_secret: Option<String>,
 
     /// Path to the private key file used for authentication
-    #[arg(long, env = "NR_AUTH_AUTHENTICATE_PRIVATE_KEY_PATH")]
+    #[arg(long, env = "NR_AUTH_PRIVATE_KEY_PATH")]
     private_key_path: Option<PathBuf>,
 }
 
 #[derive(Args, Debug, Clone)]
 pub struct BasicAuthArgs {
     /// Name for the new resource
-    #[arg(long, short, env = "NR_AUTH_IDENTITY_NAME")]
+    #[arg(long, alias = "identity-name", env = "NR_AUTH_IDENTITY_NAME")]
     name: Option<String>,
 
     /// Organization ID for the resource
-    #[arg(long, short, env = "NR_AUTH_IDENTITY_ORGANIZATION_ID")]
+    #[arg(long, short, env = "NR_AUTH_ORGANIZATION_ID")]
     organization_id: String,
 
     /// [DEPRECATED] Optional client ID - no longer used by the API.
@@ -175,7 +162,7 @@ pub struct BasicAuthArgs {
     client_id: Option<String>,
 
     /// Environment to target
-    #[arg(long, short, ignore_case = true, env = "NR_AUTH_IDENTITY_ENVIRONMENT")]
+    #[arg(long, short, ignore_case = true, env = "NR_AUTH_ENVIRONMENT")]
     environment: Environments,
 }
 
@@ -262,7 +249,7 @@ pub struct KeyArgsBootstrap {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    #[arg(long, env = "NR_AUTH_BOOTSTRAP_API_KEY", hide_env_values = true)]
+    #[arg(long, env = "NR_AUTH_API_KEY", hide_env_values = true)]
     api_key: String,
 
     #[command(flatten)]
@@ -274,7 +261,7 @@ pub struct SecretArgsBootstrap {
     #[command(flatten)]
     basic_auth_args: BasicAuthArgs,
 
-    #[arg(long, env = "NR_AUTH_BOOTSTRAP_API_KEY", hide_env_values = true)]
+    #[arg(long, env = "NR_AUTH_API_KEY", hide_env_values = true)]
     api_key: String,
 }
 
@@ -282,15 +269,11 @@ pub struct SecretArgsBootstrap {
 #[group(required = true, multiple = false)]
 pub struct AuthCredentialArgs {
     /// Bearer access token obtained from authentication (from authenticate command)
-    #[arg(
-        long,
-        env = "NR_AUTH_IDENTITY_BEARER_ACCESS_TOKEN",
-        hide_env_values = true
-    )]
+    #[arg(long, env = "NR_AUTH_BEARER_ACCESS_TOKEN", hide_env_values = true)]
     bearer_access_token: Option<String>,
 
     /// New Relic User API Key for identity creation (does not expire, alternative to bearer token)
-    #[arg(long, env = "NR_AUTH_IDENTITY_API_KEY", hide_env_values = true)]
+    #[arg(long, env = "NR_AUTH_API_KEY", hide_env_values = true)]
     api_key: Option<String>,
 }
 
@@ -505,34 +488,19 @@ mod tests {
             .find_subcommand("authenticate")
             .expect("authenticate subcommand should exist");
 
-        assert_arg_env(
-            authenticate,
-            "client_id",
-            "NR_AUTH_AUTHENTICATE_CLIENT_ID",
-            false,
-        );
-        assert_arg_env(
-            authenticate,
-            "environment",
-            "NR_AUTH_AUTHENTICATE_ENVIRONMENT",
-            false,
-        );
+        assert_arg_env(authenticate, "client_id", "NR_AUTH_CLIENT_ID", false);
+        assert_arg_env(authenticate, "environment", "NR_AUTH_ENVIRONMENT", false);
         assert_arg_env(
             authenticate,
             "output_token_format",
-            "NR_AUTH_AUTHENTICATE_OUTPUT_TOKEN_FORMAT",
+            "NR_AUTH_OUTPUT_TOKEN_FORMAT",
             false,
         );
-        assert_arg_env(
-            authenticate,
-            "client_secret",
-            "NR_AUTH_AUTHENTICATE_CLIENT_SECRET",
-            true,
-        );
+        assert_arg_env(authenticate, "client_secret", "NR_AUTH_CLIENT_SECRET", true);
         assert_arg_env(
             authenticate,
             "private_key_path",
-            "NR_AUTH_AUTHENTICATE_PRIVATE_KEY_PATH",
+            "NR_AUTH_PRIVATE_KEY_PATH",
             false,
         );
     }
@@ -553,22 +521,17 @@ mod tests {
             assert_arg_env(
                 subcommand,
                 "organization_id",
-                "NR_AUTH_IDENTITY_ORGANIZATION_ID",
+                "NR_AUTH_ORGANIZATION_ID",
                 false,
             );
-            assert_arg_env(
-                subcommand,
-                "environment",
-                "NR_AUTH_IDENTITY_ENVIRONMENT",
-                false,
-            );
+            assert_arg_env(subcommand, "environment", "NR_AUTH_ENVIRONMENT", false);
             assert_arg_env(
                 subcommand,
                 "bearer_access_token",
-                "NR_AUTH_IDENTITY_BEARER_ACCESS_TOKEN",
+                "NR_AUTH_BEARER_ACCESS_TOKEN",
                 true,
             );
-            assert_arg_env(subcommand, "api_key", "NR_AUTH_IDENTITY_API_KEY", true);
+            assert_arg_env(subcommand, "api_key", "NR_AUTH_API_KEY", true);
         }
 
         let key_subcommand = create_identity.find_subcommand("key").unwrap();
@@ -604,16 +567,11 @@ mod tests {
             assert_arg_env(
                 subcommand,
                 "organization_id",
-                "NR_AUTH_IDENTITY_ORGANIZATION_ID",
+                "NR_AUTH_ORGANIZATION_ID",
                 false,
             );
-            assert_arg_env(
-                subcommand,
-                "environment",
-                "NR_AUTH_IDENTITY_ENVIRONMENT",
-                false,
-            );
-            assert_arg_env(subcommand, "api_key", "NR_AUTH_BOOTSTRAP_API_KEY", true);
+            assert_arg_env(subcommand, "environment", "NR_AUTH_ENVIRONMENT", false);
+            assert_arg_env(subcommand, "api_key", "NR_AUTH_API_KEY", true);
         }
 
         let key_subcommand = create_bootstrap_identity.find_subcommand("key").unwrap();
