@@ -8,7 +8,9 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 
 ## Unreleased
 
-### Enhancement
+## v0.6.0 - 2026-09-23
+
+### 🚀 Enhancements
 - Support setting up CLI values through environment variables
 
 ## v0.5.4 - 2026-09-21
