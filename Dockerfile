@@ -1,6 +1,6 @@
 # Kubectl kept here for backwards compatibility since it was used as an init-container up until agent-control-deployment 1.6.6
 # Automatically updated by Renovate
-FROM alpine/kubectl:1.37.0 AS kubectl
+FROM alpine/kubectl:1.37.1 AS kubectl
 
 FROM debian:trixie-slim
 
