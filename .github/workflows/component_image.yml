@@ -28,7 +28,7 @@ jobs:
       - name: Obtain Rust version from project
         run: |
           RUST_VERSION=$(grep "rust-version" Cargo.toml | cut -d "=" -f2 | tr -d "[:space:]")
-          echo "RUST_VERSION=${RUST_VERSION}" >> $GITHUB_ENV
+          echo "RUST_VERSION=${RUST_VERSION}" >> "$GITHUB_ENV"
 
       - name: Install Rust ${{ env.RUST_VERSION }}
         uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master
@@ -66,8 +66,8 @@ jobs:
         run: |
           docker buildx build \
             --push \
-            --platform=$DOCKER_PLATFORMS \
-            -t $DOCKER_IMAGE_NAME_AUTH:${{ inputs.image-tag }} \
+            --platform="$DOCKER_PLATFORMS" \
+            -t "$DOCKER_IMAGE_NAME_AUTH:${{ inputs.image-tag }}" \
             --attest type=provenance,mode=max \
             --attest type=sbom \
             .
@@ -76,8 +76,8 @@ jobs:
         if: ${{ ! inputs.push }}
         run: |
           docker buildx build \
-            --platform=$DOCKER_PLATFORMS \
-            -t $DOCKER_IMAGE_NAME_AUTH:${{ inputs.image-tag }} \
+            --platform="$DOCKER_PLATFORMS" \
+            -t "$DOCKER_IMAGE_NAME_AUTH:${{ inputs.image-tag }}" \
             --attest type=provenance,mode=max \
             --attest type=sbom \
             .
