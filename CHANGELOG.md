@@ -8,6 +8,9 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 
 ## Unreleased
 
+### enhancement
+- CI now lints GitHub Actions workflows via actionlint.
+
 ## v0.6.1 - 2026-10-09
 
 ### ⛓️ Dependencies
