@@ -8,6 +8,15 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 
 ## Unreleased
 
+## v0.6.1 - 2026-10-09
+
+### ⛓️ Dependencies
+- Updated rust crate thiserror to v2.0.21
+- Updated alpine/kubectl to v1.37.1
+- Updated rust to v1.99.0
+- Updated rust crate uuid to v1.27.0
+- Updated rust crate tokio to v1.53.2
+
 ## v0.6.0 - 2026-09-23
 
 ### 🚀 Enhancements
