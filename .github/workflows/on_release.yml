@@ -3,8 +3,6 @@ on:
   release:
     types:
       - released
-    tags:
-      - '*'
 permissions:
   contents: read
 jobs:
@@ -26,6 +24,6 @@ jobs:
       - name: Push release tags
         run: |
           docker buildx imagetools create \
-            -t $DOCKER_IMAGE_NAME_AUTH:${{ github.event.release.tag_name }} \
-            -t $DOCKER_IMAGE_NAME_AUTH:latest \
-            $DOCKER_IMAGE_NAME_AUTH:${{ github.event.release.tag_name }}-rc
+            -t "$DOCKER_IMAGE_NAME_AUTH:${{ github.event.release.tag_name }}" \
+            -t "$DOCKER_IMAGE_NAME_AUTH:latest" \
+            "$DOCKER_IMAGE_NAME_AUTH:${{ github.event.release.tag_name }}-rc"
