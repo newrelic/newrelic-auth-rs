@@ -11,6 +11,10 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 ### enhancement
 - CI now lints GitHub Actions workflows via actionlint.
 
+### ⛓️ Dependencies
+- Updated rust crate rustls-webpki to v0.103.16 (RUSTSEC-2026-0382)
+- Updated rust crate webpki-root-certs to v1.0.10 (RUSTSEC-2026-0383)
+
 ## v0.6.1 - 2026-10-09
 
 ### ⛓️ Dependencies
