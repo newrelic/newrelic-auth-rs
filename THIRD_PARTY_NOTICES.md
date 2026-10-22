@@ -239,13 +239,6 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
-## errno <https://crates.io/crates/errno>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
 ## find-msvc-tools <https://crates.io/crates/find-msvc-tools>
 
 Distributed under the following license(s):
@@ -288,13 +281,6 @@ Distributed under the following license(s):
 * Apache-2.0
 
 ## futures-io <https://crates.io/crates/futures-io>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## futures-macro <https://crates.io/crates/futures-macro>
 
 Distributed under the following license(s):
 
@@ -873,13 +859,6 @@ Distributed under the following license(s):
 * MIT
 
 ## shlex <https://crates.io/crates/shlex>
-
-Distributed under the following license(s):
-
-* MIT
-* Apache-2.0
-
-## signal-hook-registry <https://crates.io/crates/signal-hook-registry>
 
 Distributed under the following license(s):
 
