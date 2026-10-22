@@ -8,8 +8,19 @@ Unreleased section should follow [Release Toolkit](https://github.com/newrelic/r
 
 ## Unreleased
 
-### enhancement
+## v0.7.0 - 2026-10-22
+
+### 🚀 Enhancements
 - CI now lints GitHub Actions workflows via actionlint.
+
+### ⛓️ Dependencies
+- Updated rust crate uuid to v1.28.0
+- Updated rust crate serde_json to v1.0.154
+- Updated rust crate sha2 to v0.11.1
+- Updated rust crate tokio to v1.54.1
+- Updated rust crate rstest to 0.28.0
+- Updated rust to v1.99.1
+- Updated rust crate httpmock to 0.9.0
 
 ## v0.6.1 - 2026-10-09
 
