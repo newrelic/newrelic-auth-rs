@@ -8,6 +8,12 @@ New changes are added as change files in `.changelog/`, not here: the release mo
 
 ## Unreleased
 
+## v0.7.1 - 2026-11-09
+
+### ⛓️ Dependencies
+- Updated rust crate uuid to v1.29.2
+- Updated alpine/kubectl to v1.37.2
+
 ## v0.7.0 - 2026-10-22
 
 ### 🚀 Enhancements

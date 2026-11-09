@@ -1132,6 +1132,13 @@ Distributed under the following license(s):
 * Apache-2.0
 * MIT
 
+## utf_types <https://crates.io/crates/utf_types>
+
+Distributed under the following license(s):
+
+* Apache-2.0
+* MIT
+
 ## uuid <https://crates.io/crates/uuid>
 
 Distributed under the following license(s):
