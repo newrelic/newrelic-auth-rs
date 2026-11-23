@@ -1,5 +1,5 @@
-use chrono::{TimeDelta, Utc};
 use http::Uri;
+use jiff::{SignedDuration, Timestamp};
 
 use crate::{
     TokenRetrieverError,
@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// A signed JWT should live enough for the System Identity Service to consume it.
-pub(super) const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
+pub(super) const DEFAULT_JWT_CLAIM_EXP: SignedDuration = SignedDuration::from_secs(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 pub(super) const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
@@ -31,9 +31,9 @@ impl<J: JwtSigner> AuthCredentialBuilder for JwtSignerAuthBuilder<J> {
         &self,
         client_id: String,
     ) -> Result<AuthCredential, TokenRetrieverError> {
-        let expires_at = Utc::now() + DEFAULT_JWT_CLAIM_EXP;
+        let expires_at = Timestamp::now() + DEFAULT_JWT_CLAIM_EXP;
 
-        let timestamp = expires_at.timestamp().try_into().map_err(|_| {
+        let timestamp = expires_at.as_second().try_into().map_err(|_| {
             TokenRetrieverError::TokenRetrieverError("converting token expiration time".into())
         })?;
 

@@ -1,0 +1,2 @@
+type: bugfix
+message: Replaced the unmaintained chrono with jiff. `Token::new` now takes a `jiff::Timestamp` instead of `chrono::DateTime<Utc>`, and fractional seconds in the serialized `expires_at` no longer keep trailing zeros.

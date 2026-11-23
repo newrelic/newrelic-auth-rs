@@ -2,8 +2,8 @@
 use std::env;
 use std::path::{Path, PathBuf};
 
-use chrono::{TimeDelta, Utc};
 use dotenvy::dotenv;
+use jiff::{SignedDuration, Timestamp};
 
 use http::Uri;
 use nr_auth::jwt::claims::Claims;
@@ -11,7 +11,7 @@ use nr_auth::jwt::signer::local::LocalPrivateKeySigner;
 use nr_auth::jwt::signer::{JwtSigner, JwtSignerImpl};
 
 /// A signed JWT should live enough for the System Identity Service to consume it.
-const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
+const DEFAULT_JWT_CLAIM_EXP: SignedDuration = SignedDuration::from_secs(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
@@ -43,10 +43,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signer = LocalPrivateKeySigner::try_from(PathBuf::from(private_key_path).as_path())?;
     let jwt_signer = JwtSignerImpl::Local(signer);
 
-    let expires_at = Utc::now() + DEFAULT_JWT_CLAIM_EXP;
+    let expires_at = Timestamp::now() + DEFAULT_JWT_CLAIM_EXP;
 
     let timestamp = expires_at
-        .timestamp()
+        .as_second()
         .try_into()
         .map_err(|_| "converting token expiration time")?;
 
