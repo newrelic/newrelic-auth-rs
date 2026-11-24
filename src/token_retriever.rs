@@ -151,7 +151,7 @@ where
 pub mod test {
     use std::{thread, time};
 
-    use chrono::{TimeDelta, Utc};
+    use jiff::{SignedDuration, Timestamp};
     use mockall::mock;
     use mockall::{Sequence, predicate::eq};
 
@@ -194,10 +194,10 @@ pub mod test {
             .expect_sign()
             .once()
             .withf(move |claims| {
-                let exp = Utc::now() + DEFAULT_JWT_CLAIM_EXP;
+                let exp = Timestamp::now() + DEFAULT_JWT_CLAIM_EXP;
                 claims.iss == client_id
                     && claims.aud == DEFAULT_AUDIENCE
-                    && claims.exp == exp.timestamp() as u64
+                    && claims.exp == exp.as_second() as u64
             })
             .returning(move |_| {
                 Ok(SignedJwt {
@@ -236,7 +236,7 @@ pub mod test {
         let expected_token = Token::new(
             fake_token.into(),
             TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(token_expires_in as i64),
+            Timestamp::now() + SignedDuration::from_secs(token_expires_in as i64),
         );
 
         let cache_miss_token = token_retriever.retrieve().unwrap();
@@ -272,7 +272,7 @@ pub mod test {
             .returning(move |_| {
                 Ok(TokenRetrievalResponse {
                     // generates a different token each time.
-                    access_token: Utc::now().to_string(),
+                    access_token: Timestamp::now().to_string(),
                     expires_in: token_expires_in,
                     token_type: "Bearer".into(),
                 })
@@ -384,7 +384,7 @@ pub mod test {
         let expected_token = Token::new(
             fake_token.into(),
             TokenType::Bearer,
-            Utc::now() + TimeDelta::seconds(token_expires_in as i64),
+            Timestamp::now() + SignedDuration::from_secs(token_expires_in as i64),
         );
 
         // Retries expired, error returned

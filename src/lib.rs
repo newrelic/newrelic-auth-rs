@@ -17,12 +17,12 @@
 //! Token:
 //!
 //! ```rust
-//! use chrono::{DateTime,Utc};
+//! use jiff::Timestamp;
 //! use nr_auth::token::TokenType;
 //! use nr_auth::token::AccessToken;
 //!
 //! pub struct Token {
-//!     expires_at: DateTime<Utc>,
+//!     expires_at: Timestamp,
 //!     access_token: AccessToken,
 //!     token_type: TokenType,
 //! }

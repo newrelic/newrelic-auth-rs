@@ -1,4 +1,3 @@
-use std::cmp::PartialOrd;
 use std::convert::TryFrom;
 use std::fmt;
 use std::result::Result;
@@ -6,7 +5,7 @@ use std::result::Result::{Err, Ok};
 use std::time::Duration;
 
 use crate::{TokenRetrieverError, authenticator::TokenRetrievalResponse};
-use chrono::{DateTime, TimeDelta, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 pub type AccessToken = String;
@@ -18,7 +17,7 @@ pub enum TokenType {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Token {
-    expires_at: DateTime<Utc>,
+    expires_at: Timestamp,
     access_token: AccessToken,
     token_type: TokenType,
 }
@@ -35,11 +34,7 @@ impl TryFrom<&str> for TokenType {
 }
 
 impl Token {
-    pub fn new(
-        access_token: AccessToken,
-        token_type: TokenType,
-        expires_at: DateTime<Utc>,
-    ) -> Self {
+    pub fn new(access_token: AccessToken, token_type: TokenType, expires_at: Timestamp) -> Self {
         Token {
             access_token,
             token_type,
@@ -48,7 +43,7 @@ impl Token {
     }
 
     pub fn is_expired(&self) -> bool {
-        self.expires_at.lt(&Utc::now())
+        self.expires_at < Timestamp::now()
     }
 
     pub fn access_token(&self) -> &AccessToken {
@@ -83,14 +78,9 @@ impl TryFrom<TokenRetrievalResponse> for Token {
             .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
 
         // Assuming we get seconds from the `expires_in` field of the JSON response
-        let time_delta = TimeDelta::from_std(Duration::from_secs(response.expires_in))
+        let expires_at = Timestamp::now()
+            .checked_add(Duration::from_secs(response.expires_in))
             .map_err(|e| TokenRetrieverError::TokenRetrieverError(e.to_string()))?;
-
-        let expires_at = Utc::now().checked_add_signed(time_delta).ok_or_else(|| {
-            TokenRetrieverError::TokenRetrieverError(
-                "Failed to calculate expiration time".to_string(),
-            )
-        })?;
 
         Ok(Token::new(access_token, token_type, expires_at))
     }
@@ -103,20 +93,21 @@ mod test {
         authenticator::TokenRetrievalResponse,
         token::{AccessToken, Token, TokenType},
     };
-    use chrono::{Duration, Utc};
+    use jiff::{SignedDuration, Timestamp};
+    use rstest::rstest;
     use std::convert::{From, TryFrom};
     use std::string::ToString;
 
     #[test]
     fn token_is_expired() {
-        let past = Utc::now() - Duration::milliseconds(10);
+        let past = Timestamp::now() - SignedDuration::from_millis(10);
         let token = Token::new(AccessToken::from("some-token"), TokenType::Bearer, past);
         assert!(token.is_expired())
     }
 
     #[test]
     fn token_is_not_expired() {
-        let future = Utc::now() + Duration::milliseconds(10);
+        let future = Timestamp::now() + SignedDuration::from_millis(10);
         let token = Token::new(AccessToken::from("some-token"), TokenType::Bearer, future);
         assert!(!token.is_expired())
     }
@@ -134,14 +125,31 @@ mod test {
             "Expected error due to invalid expiration time"
         );
 
-        let err_msg = result.unwrap_err();
+        let err = result.unwrap_err();
         assert!(
-            matches!(
-                &err_msg,
-                TokenRetrieverError::TokenRetrieverError(e) if e == "Source duration value is out of range for the target type"
-            ),
-            "{}",
-            format!("Expected TokenRetrieverError with specific message: '{err_msg}'"),
+            matches!(&err, TokenRetrieverError::TokenRetrieverError(_)),
+            "Expected TokenRetrieverError: '{err}'"
         );
+    }
+
+    #[rstest]
+    #[case::whole_seconds(0, "2026-11-23T10:00:00Z")]
+    #[case::millis(120_000_000, "2026-11-23T10:00:00.12Z")]
+    #[case::micros(123_456_000, "2026-11-23T10:00:00.123456Z")]
+    #[case::nanos(123_456_789, "2026-11-23T10:00:00.123456789Z")]
+    fn token_expires_at_serialization_format(#[case] nanos: i64, #[case] expected: &str) {
+        let expires_at = "2026-11-23T10:00:00Z".parse::<Timestamp>().unwrap()
+            + SignedDuration::from_nanos(nanos);
+        let token = Token::new(
+            AccessToken::from("some-token"),
+            TokenType::Bearer,
+            expires_at,
+        );
+
+        let json = serde_json::to_value(&token).unwrap();
+        assert_eq!(json["expires_at"], expected);
+
+        let back: Token = serde_json::from_value(json).unwrap();
+        assert_eq!(back, token);
     }
 }

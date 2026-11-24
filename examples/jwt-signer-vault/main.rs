@@ -4,9 +4,9 @@ use std::path::Path;
 
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
-use chrono::{TimeDelta, Utc};
 use dotenvy::dotenv;
 use http::Uri;
+use jiff::{SignedDuration, Timestamp};
 use jsonwebtoken::{Algorithm, Header};
 use sha2::{Digest, Sha512};
 use tracing::debug;
@@ -18,7 +18,7 @@ use vaultrs::transit::data::sign;
 use nr_auth::jwt::claims::Claims;
 
 /// A signed JWT should live enough for the System Identity Service to consume it.
-const DEFAULT_JWT_CLAIM_EXP: TimeDelta = TimeDelta::seconds(180);
+const DEFAULT_JWT_CLAIM_EXP: SignedDuration = SignedDuration::from_secs(180);
 /// The "aud" (audience) claim identifies the recipients that the JWT is intended for.
 const DEFAULT_AUDIENCE: &str = "https://www.newrelic.com/";
 
@@ -65,9 +65,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Build claims
     let url = Uri::try_from(DEFAULT_AUDIENCE).expect("constant valid url value");
-    let expires_at = Utc::now() + DEFAULT_JWT_CLAIM_EXP;
+    let expires_at = Timestamp::now() + DEFAULT_JWT_CLAIM_EXP;
     let timestamp = expires_at
-        .timestamp()
+        .as_second()
         .try_into()
         .map_err(|_| "converting token expiration time")?;
     let claims = Claims::new(client_id, url, timestamp);
