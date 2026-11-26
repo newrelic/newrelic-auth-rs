@@ -1,0 +1,77 @@
+name: Nix
+
+on:
+  pull_request:
+    paths:
+      - flake.nix
+      - flake.lock
+      - nix/**
+      - .github/workflows/nix.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  flake-check:
+    name: nix flake check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
+
+      # Formatting, hooks, clippy and tests, the same command used locally.
+      - run: nix flake check -L
+
+  dev-shell:
+    name: nix dev shell
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
+
+      - name: Pinned toolchain
+        run: nix develop -c cargo --version
+
+      - name: Make targets run inside the shell
+        run: nix develop -c make lint/actions
+
+  images:
+    name: nix container images
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
+
+      - name: Build the images
+        run: |
+          nix build .#docker-image -L --out-link result-image
+          nix build .#docker-image-with-kubectl -L --out-link result-image-with-kubectl
+
+      - name: Closure sizes
+        run: |
+          nix path-info -Sh .#cli-musl .#docker-image .#docker-image-with-kubectl
+          echo "Closure of the image, without the image archive itself:"
+          nix path-info -r .#docker-image | wc -l
+
+      - name: Load and run the image
+        run: |
+          docker load < result-image
+          docker run --rm newrelic/agent-control-system-identity-registration:nix --help
+
+      - name: The image has no shell
+        run: |
+          if docker run --rm --entrypoint /bin/sh newrelic/agent-control-system-identity-registration:nix -c true; then
+            echo "The image should not contain a shell" >&2
+            exit 1
+          fi
