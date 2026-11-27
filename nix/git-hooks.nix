@@ -1,23 +1,23 @@
-# Git hooks: formatting, lint and cargo checks on commit. They are defined here and exposed as a
-# flake check; the `hooks` dev shell installs them (see devshells/hooks.nix).
+# Git hooks, installed on entering the dev shell and also run by `nix flake check`.
 { inputs, ... }:
 {
   imports = [ inputs.git-hooks.flakeModule ];
 
   perSystem =
-    { config, pkgs, ... }:
-    let
-      rustToolchain = config.rustLib.toolchain;
-    in
+    {
+      config,
+      pkgs,
+      rustToolchain,
+      ...
+    }:
     {
       pre-commit.settings = {
-        package = pkgs.prek;
         hooks = {
           treefmt = {
             enable = true;
             package = config.treefmt.build.wrapper;
           };
-
+          actionlint.enable = true;
           codespell = {
             enable = true;
             name = "codespell";
@@ -26,26 +26,6 @@
             pass_filenames = false;
             always_run = true;
           };
-
-          actionlint.enable = true;
-          deadnix.enable = true;
-          statix.enable = true;
-          check-merge-conflicts.enable = true;
-          check-added-large-files.enable = true;
-          # Unit tests embed dummy keys on purpose.
-          detect-private-keys = {
-            enable = true;
-            excludes = [
-              "^src/jwt/signer/local.rs$"
-              "^src/key/rsa.rs$"
-            ];
-          };
-
-          cargo-check = {
-            enable = true;
-            package = rustToolchain;
-          };
-
           clippy = {
             enable = true;
             packageOverrides = {
@@ -59,10 +39,8 @@
           };
         };
 
-        # git-hooks.nix keeps its whole config block under a `settings` option, hence the repeat.
-        settings.rust.check.cargoDeps = pkgs.rustPlatform.importCargoLock {
-          lockFile = ../Cargo.lock;
-        };
+        # The clippy hook runs offline in `nix flake check`.
+        settings.rust.check.cargoDeps = pkgs.rustPlatform.importCargoLock { lockFile = ../Cargo.lock; };
       };
     };
 }

@@ -60,7 +60,7 @@ jobs:
 
       - name: Closure sizes
         run: |
-          nix path-info -Sh .#cli-musl .#docker-image .#docker-image-with-kubectl
+          nix path-info -Sh .#cli-static .#docker-image .#docker-image-with-kubectl
           echo "Closure of the image, without the image archive itself:"
           nix path-info -r .#docker-image | wc -l
 
